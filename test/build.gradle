@@ -16,8 +16,5 @@ buildscript {
 }
 
 dependencies {
-
-    compile group: 'org.apache.camel', name:'camel-core', version:'2.6.0'
-    compile group: 'org.apache.camel', name:'camel-mail', version:'2.6.0'
-
+    compile project(':core')
 }

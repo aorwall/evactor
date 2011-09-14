@@ -23,6 +23,9 @@ class SimpleProcess(val processId: String, val components: List[Component]) exte
    */
   def startNewActivity(logevent: LogEvent) =
     components.head.componentId == logevent.componentId && logevent.state == State.START
+
+  override def toString() = "SimpleProcess ( id: " + processId + ", components: " + components + ")"
+
 }
 
 class SimpleActivityBuilder(val processId: String, val components: List[Component], var retries: Map[String, Int]) extends ActivityBuilder with Logging {

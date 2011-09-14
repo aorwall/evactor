@@ -7,4 +7,6 @@ case class Component (val componentId: String, val maxRetries: Int) {
     case _ => false
   }
 
+  override def toString() = "Component (id: " + componentId + ", maxRetries: " + maxRetries + ")"
+
 }
