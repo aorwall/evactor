@@ -1,0 +1,38 @@
+apply plugin: 'scala'
+
+ideaModule {
+    beforeConfigured { module ->
+        module.dependencies.clear()
+    }
+    whenConfigured { module ->
+        module.dependencies*.exported = true
+    }
+}
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+
+dependencies {
+    scalaTools 'org.scala-lang:scala-compiler:2.9.1'
+    scalaTools 'org.scala-lang:scala-library:2.9.1'
+
+    compile group: 'commons-logging', name: 'commons-logging', version: '1.1.1'
+    compile group: 'commons-codec', name: 'commons-codec', version: '1.4'
+    compile group: 'commons-lang', name: 'commons-lang', version: '2.6'
+
+    compile group: 'se.scalablesolutions.akka', name:'akka-actor', version:'1.2-RC5'
+    compile group: 'se.scalablesolutions.akka', name:'akka-typed-actor', version:'1.2-RC5'
+    compile group: 'se.scalablesolutions.akka', name:'akka-camel', version:'1.2-RC5'
+
+    compile group: 'se.scalablesolutions.akka', name:'akka-remote', version:'1.2-RC5'
+    compile group: 'se.scalablesolutions.akka', name:'akka-testkit', version:'1.2-RC5'
+
+    compile group: 'org.codehaus.aspectwerkz', name: 'aspectwerkz', version: '2.2.3'
+
+    compile group: 'org.apache.camel', name:'camel-core', version:'2.6.0'
+    compile group: 'org.apache.camel', name:'camel-mail', version:'2.6.0'
+
+}
