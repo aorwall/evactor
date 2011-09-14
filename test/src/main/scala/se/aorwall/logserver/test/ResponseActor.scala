@@ -6,7 +6,7 @@ import akka.actor.Actor
 class ResponseActor extends Actor {
 
    def receive = {
-    case a: Activity => print(a)
+    case a: Activity => Main.count()
   }
 
 }

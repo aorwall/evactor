@@ -16,16 +16,12 @@ class RequestActor (components: List[String], logReceiver: ActorRef) extends Act
   }
 
   def sendRequests(): Unit = {
-    var failed = false
+    var state = State.SUCCESS
     val correlationId = System.currentTimeMillis()+""
 
-     for (component <- components ; if !failed) {
-
-        debug(logReceiver.isRunning)
-
+     for (component <- components ; if state != State.INTERNAL_FAILURE) {
         logReceiver ! new Log("server", component, correlationId, "client", System.currentTimeMillis, State.START, "")
-        failed = Random.nextBoolean
-        val state = if(failed) Random.nextInt(3)+11
+        val state = if(Random.nextInt(5) > 3) {State.INTERNAL_FAILURE}
                     else State.SUCCESS
         Thread.sleep(Random.nextInt(300)+5L)
 

@@ -14,6 +14,7 @@ class ProcessActor (businessProcess: BusinessProcess, analyserPool: ActorRef) ex
 
   def receive = {
     case logEvent: LogEvent if(businessProcess.contains(logEvent.componentId)) => sendToRunningActivity(logEvent)
+    case _ =>
   }
 
   def sendToRunningActivity(logevent: LogEvent) = {
