@@ -22,7 +22,6 @@ trait BusinessProcess {
 
   /**
    * Defines if a new activity should be started
-   * TODO: Remove?
    */
   def startNewActivity(logevent: LogEvent): Boolean
 
@@ -41,7 +40,7 @@ abstract class ActivityBuilder {
   def isFinished(): Boolean
 
   /**
-   * Create new activity if finished
+   * Create activity with current state
    */
   def createActivity(): Activity
 }

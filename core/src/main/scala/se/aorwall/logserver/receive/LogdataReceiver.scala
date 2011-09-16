@@ -22,18 +22,16 @@ class LogdataReceiver extends Actor with Storing with Logging {
   }
 
   def processLogdata(logdata: Log) = {
-
     //TODO storage.storeLogdata(logdata)
 
     val logEvent = new LogEvent(logdata.correlationId, logdata.componentId, logdata.timestamp, logdata.state)
-    info("created logEvent: " + logEvent)
+    debug("created logEvent: " + logEvent)
 
     val monitoredProcesses = Actor.registry.actorsFor[ProcessActor] // TODO: Try using a listener to the ActorRegistry instead
     debug("found " + monitoredProcesses.size + " process actors")
 
     // send logevent object to all process actors
     for(processActor <- monitoredProcesses) processActor ! logEvent
-
   }
 
 }

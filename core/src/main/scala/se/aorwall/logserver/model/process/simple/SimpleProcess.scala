@@ -4,6 +4,7 @@ import collection.immutable.Map
 import grizzled.slf4j.Logging
 import se.aorwall.logserver.model.{Activity, State, LogEvent}
 import se.aorwall.logserver.model.process.{ActivityBuilder, BusinessProcess}
+import collection.mutable.ListBuffer
 
 class SimpleProcess(val processId: String, val components: List[Component]) extends BusinessProcess with Logging {
 
@@ -30,13 +31,14 @@ class SimpleProcess(val processId: String, val components: List[Component]) exte
 
 class SimpleActivityBuilder(val processId: String, val components: List[Component], var retries: Map[String, Int]) extends ActivityBuilder with Logging {
 
-  var startEvent: LogEvent = null
+  var startEvent: LogEvent = null  //TODO: Fix null?
   var endEvent: LogEvent = null
 
   val failureStates = Set(State.INTERNAL_FAILURE, State.CLIENT_FAILURE, State.UNKNOWN_FAILURE)
   val endComponent = components.last
 
   def addLogEvent(logevent: LogEvent): Unit = {
+
     if(components.head.componentId == logevent.componentId && logevent.state == State.START)
        startEvent = logevent
     else if(endComponent.componentId == logevent.componentId && logevent.state == State.SUCCESS)
@@ -52,8 +54,17 @@ class SimpleActivityBuilder(val processId: String, val components: List[Componen
     }
   }
 
-
   def isFinished(): Boolean = startEvent != null && endEvent != null
 
-  def createActivity() = new Activity(processId, endEvent.correlationId, endEvent.state, startEvent.timestamp, endEvent.timestamp)
+  def createActivity() = {
+    if(startEvent != null && endEvent != null){
+      new Activity(processId, endEvent.correlationId, endEvent.state, startEvent.timestamp, endEvent.timestamp)
+    } else if(startEvent != null) {
+      new Activity(processId, startEvent.correlationId, State.TIMEOUT, startEvent.timestamp, 0L)
+    } else if(endEvent != null) {
+       throw new RuntimeException("SimpleActivityBuilder was trying to create a activity with only an end log event. End event: " + endEvent)
+    } else  {
+       throw new RuntimeException("SimpleActivityBuilder was trying to create a activity without either a start or an end log event.")
+    }
+  }
 }

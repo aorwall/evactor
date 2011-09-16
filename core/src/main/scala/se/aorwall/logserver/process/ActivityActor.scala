@@ -24,8 +24,10 @@ class ActivityActor(val activityBuilder: ActivityBuilder, val analyser: ActorRef
 
      activityBuilder.addLogEvent(logevent)
 
-     if(activityBuilder.isFinished())
+     if(activityBuilder.isFinished()){
+       debug("Finished: " + logevent)
        sendActivity(activityBuilder.createActivity())
+     }
   }
 
   def sendActivity(activity: Activity): Unit = {
