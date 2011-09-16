@@ -1,9 +1,10 @@
-package se.aorwall.logserver.model.process.simple
+package se.aorwall.logserver.process.simple
 
 import grizzled.slf4j.Logging
 import se.aorwall.logserver.model.{State, Log, LogEvent}
 import org.scalatest.{WordSpec, FunSuite}
 import org.scalatest.matchers.MustMatchers
+import se.aorwall.logserver.model.process.simple.{SimpleProcess, Component}
 
 class SimpleProcessSpec extends WordSpec with MustMatchers with Logging {
 

@@ -20,9 +20,9 @@ class ProcessActor(businessProcess: BusinessProcess, analyserPool: ActorRef) ext
   def sendToRunningActivity(logevent: LogEvent) = {
     debug("About to process logEvent object: " + logevent)
 
-    val id = businessProcess.processId + ":" + logevent.correlationId
+    val id = businessProcess.getActivityId(logevent)
 
-    //TODO storage.storeLogEvent(businessProcess.processId, logevent)
+    //TODO storage.storeLogEvent(id, logevent)
 
     val actors = Actor.registry.actorsFor(id)
 

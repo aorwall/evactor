@@ -14,8 +14,9 @@ class SimpleProcess(val processId: String, val components: List[Component]) exte
      componentMap.contains(componentId)
   }
 
-  def getActivityBuilder(): ActivityBuilder = {
+  def getActivityId(logevent: LogEvent) = processId + ":" + logevent.correlationId
 
+  def getActivityBuilder(): ActivityBuilder = {
     new SimpleActivityBuilder(processId, components, components map { comp: Component => (comp.componentId, comp.maxRetries) } toMap)
   }
 

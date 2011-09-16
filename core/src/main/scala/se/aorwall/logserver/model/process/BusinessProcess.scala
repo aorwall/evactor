@@ -16,6 +16,11 @@ trait BusinessProcess {
   def contains(componentId: String): Boolean
 
   /**
+   * Generate a unique activity id based on the log event
+   */
+  def getActivityId(logevent: LogEvent): String
+
+  /**
    * Return a new instance of the Business Processes ActivityBuilder
    */
   def getActivityBuilder(): ActivityBuilder
