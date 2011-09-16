@@ -16,12 +16,18 @@ trait BusinessProcess {
   def contains(componentId: String): Boolean
 
   /**
+   * Generate a unique activity id based on the log event
+   */
+  def getActivityId(logevent: LogEvent): String
+
+  /**
    * Return a new instance of the Business Processes ActivityBuilder
    */
   def getActivityBuilder(): ActivityBuilder
 
   /**
    * Defines if a new activity should be started
+   * TODO: Remove?
    */
   def startNewActivity(logevent: LogEvent): Boolean
 
@@ -40,7 +46,7 @@ abstract class ActivityBuilder {
   def isFinished(): Boolean
 
   /**
-   * Create activity with current state
+   * Create new activity if finished
    */
   def createActivity(): Activity
 }

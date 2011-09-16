@@ -1,9 +1,10 @@
-package se.aorwall.logserver.model.process.simple
+package se.aorwall.logserver.process.simple
 
 import grizzled.slf4j.Logging
 import se.aorwall.logserver.model.{State, Log, LogEvent}
 import org.scalatest.{WordSpec, FunSuite}
 import org.scalatest.matchers.MustMatchers
+import se.aorwall.logserver.model.process.simple.{SimpleProcess, Component}
 
 class SimpleProcessSpec extends WordSpec with MustMatchers with Logging {
 
@@ -54,24 +55,6 @@ class SimpleProcessSpec extends WordSpec with MustMatchers with Logging {
       activity.state must be(State.SUCCESS)
     }
 
-    "create an activity with state SUCCESS when flow with just one component is succesfully processed" in {
-      val oneComponentProcess = new SimpleProcess("process", List(startComp))
-      val activityBuilder = oneComponentProcess.getActivityBuilder()
-      activityBuilder.addLogEvent(new LogEvent("corrId", startCompId, 0L, State.START))
-      activityBuilder.addLogEvent(new LogEvent("corrId", startCompId, 0L, State.SUCCESS))
-      activityBuilder.isFinished() must be === true
-    }
-
-    "create an activity with state INTERNAL_FAILURE when flow with just one component receives a log event with the state INTERNAL_FAILURE" in {
-      val oneComponentProcess = new SimpleProcess("process", List(startComp))
-      val activityBuilder = oneComponentProcess.getActivityBuilder()
-      activityBuilder.addLogEvent(new LogEvent("corrId", startCompId, 0L, State.START))
-      activityBuilder.addLogEvent(new LogEvent("corrId", startCompId, 0L, State.INTERNAL_FAILURE))
-      activityBuilder.isFinished() must be === true
-
-      val activity = activityBuilder.createActivity()
-      activity.state must be(State.INTERNAL_FAILURE)
-    }
 
     "create an activity with state INTERNAL_FAILURE when a log event has the state INTERNAL_FAILURE" in {
       val activityBuilder = process.getActivityBuilder()

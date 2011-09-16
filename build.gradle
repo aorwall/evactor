@@ -36,6 +36,10 @@ subprojects {
         compile group: 'se.scalablesolutions.akka', name:'akka-remote', version:'1.2-RC5'
         compile group: 'se.scalablesolutions.akka', name:'akka-testkit', version:'1.2-RC5'
 
+        compile group: 'commons-logging', name: 'commons-logging', version: '1.1.1'
+        compile group: 'commons-codec', name: 'commons-codec', version: '1.4'
+        compile group: 'commons-lang', name: 'commons-lang', version: '2.6'
+
         compile group: 'org.codehaus.aspectwerkz', name: 'aspectwerkz', version: '2.2.3'
 
         testCompile group: 'org.scalatest', name: 'scalatest_2.9.1', version: '1.6.1'
@@ -44,9 +48,9 @@ subprojects {
         // logging
         compile group: 'org.clapper', name:'grizzled-slf4j_2.9.1', version:'0.6.6'
         compile group: 'org.slf4j', name: 'slf4j-api', version: '1.6.2'
-        runtime group: 'ch.qos.logback', name: 'logback-classic', version: '0.9.28'
-        runtime group: 'ch.qos.logback', name: 'logback-core', version: '0.9.28'
-        runtime group: 'se.scalablesolutions.akka', name:'akka-slf4j', version:'1.2-RC5'
+        compile group: 'ch.qos.logback', name: 'logback-classic', version: '0.9.28'
+        compile group: 'ch.qos.logback', name: 'logback-core', version: '0.9.28'
+        compile group: 'se.scalablesolutions.akka', name:'akka-slf4j', version:'1.2-RC5'
     }
 
     version = '0.1'
