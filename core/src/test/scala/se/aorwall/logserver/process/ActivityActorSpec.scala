@@ -5,7 +5,7 @@ import org.scalatest.matchers.MustMatchers
 import org.mockito.Mockito._
 import akka.testkit.{TestKit, TestActorRef}
 import se.aorwall.logserver.model.process.simple.{SimpleActivityBuilder}
-import se.aorwall.logserver.model.{Activity, State, LogEvent}
+import se.aorwall.logserver.model.{Log, Activity, State}
 
 class ActivityActorSpec extends WordSpec with MustMatchers with TestKit {
 
@@ -18,7 +18,7 @@ class ActivityActorSpec extends WordSpec with MustMatchers with TestKit {
     val activityActor = activityActorRef.underlyingActor
 
     "add incoming log events to request list " in {
-      val logEvent = new LogEvent("329380921309", "startComponent", 0L, State.START)
+      val logEvent = new Log("server", "startComponent", "329380921309", "client", 0L, State.START, "hello")
 
       when(activityBuilder.isFinished()).thenReturn(false)
 
@@ -27,7 +27,7 @@ class ActivityActorSpec extends WordSpec with MustMatchers with TestKit {
     }
 
     "send the activity to analyser when it's finished " in {
-      val logEvent = new LogEvent("329380921309", "startComponent", 0L, State.SUCCESS)
+      val logEvent = new Log("server", "startComponent", "329380921309", "client", 0L, State.SUCCESS, "hello")
       val activity = new Activity("processId", "correlationId", State.SUCCESS, 0L, 10L)
 
       when(activityBuilder.isFinished()).thenReturn(true)

@@ -1,11 +1,10 @@
 package se.aorwall.logserver.process
 
 import grizzled.slf4j.Logging
-import collection.mutable.Map
 import se.aorwall.logserver.storage.Storing
-import se.aorwall.logserver.model.{Activity, LogEvent}
 import akka.actor.{ActorRef, Actor}
-import se.aorwall.logserver.model.process.{ActivityBuilder, BusinessProcess}
+import se.aorwall.logserver.model.process.{ActivityBuilder}
+import se.aorwall.logserver.model.{Log, Activity}
 
 /**
  * One Activity Actor for each running activity
@@ -15,10 +14,10 @@ class ActivityActor(val activityBuilder: ActivityBuilder, val analyser: ActorRef
   // TODO: Check if there already are log events stored in db for this activity : storage.readLogEvents(businessProcess.processId, startEvent.correlationId)
 
   def receive = {
-      case logevent: LogEvent => process(logevent)
+      case logevent: Log => process(logevent)
   }
 
-  def process(logevent: LogEvent): Unit = {
+  def process(logevent: Log): Unit = {
 
      debug("Received log event with state: " + logevent.state )
 

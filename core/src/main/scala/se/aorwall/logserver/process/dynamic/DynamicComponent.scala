@@ -2,7 +2,7 @@ package se.aorwall.logserver.process.dynamic
 
 import grizzled.slf4j.Logging
 import se.aorwall.logserver.model.process.{ActivityBuilder, BusinessProcess}
-import se.aorwall.logserver.model.{Activity, State, LogEvent}
+import se.aorwall.logserver.model.{Log, Activity, State}
 
 /**
  * Create a new process based on the componentId in the incoming log event
@@ -16,22 +16,22 @@ class DynamicComponent () extends BusinessProcess with Logging {
    */
   def contains(componentId: String) = true
 
-  def getActivityId(logevent: LogEvent) = logevent.componentId + ":" + logevent.correlationId
+  def getActivityId(logevent: Log) = logevent.componentId + ":" + logevent.correlationId
 
   def getActivityBuilder(): ActivityBuilder = new DynamicComponentActivityBuilder()
 
   /**
    * Check if state = START
    */
-  def startNewActivity(logevent: LogEvent) =  logevent.state == State.START
+  def startNewActivity(logevent: Log) =  logevent.state == State.START
 }
 
 class DynamicComponentActivityBuilder () extends ActivityBuilder {
 
-  var startEvent: LogEvent = null  //TODO: Fix null?
-  var endEvent: LogEvent = null
+  var startEvent: Log = null  //TODO: Fix null?
+  var endEvent: Log = null
 
-  def addLogEvent(logevent: LogEvent): Unit = {
+  def addLogEvent(logevent: Log): Unit = {
      if(logevent.state == State.START){
        startEvent = logevent
      } else if(logevent.state >= 10) {

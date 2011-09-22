@@ -9,7 +9,7 @@ class AbsenceOfRequestsAnalyser (val processId: String, val alerter: ActorRef, v
   extends StatementAnalyser (processId, alerter) with Logging {
 
   def analyse(activity: Activity) = {
-    if(activity.correlationId == "")
+    if(activity.activityId == "")
       alert("No activities within the timeframe " + timeframe + "ms")
     else
       backToNormal("Back to normal")

@@ -2,9 +2,9 @@ package se.aorwall.logserver.model.process.simple
 
 import collection.immutable.Map
 import grizzled.slf4j.Logging
-import se.aorwall.logserver.model.{Activity, State, LogEvent}
 import se.aorwall.logserver.model.process.{ActivityBuilder, BusinessProcess}
 import collection.mutable.ListBuffer
+import se.aorwall.logserver.model.{Log, Activity, State}
 
 class SimpleProcess(val processId: String, val components: List[Component]) extends BusinessProcess with Logging {
 
@@ -14,7 +14,7 @@ class SimpleProcess(val processId: String, val components: List[Component]) exte
      componentMap.contains(componentId)
   }
 
-  def getActivityId(logevent: LogEvent) = processId + ":" + logevent.correlationId
+  def getActivityId(logevent: Log) = processId + ":" + logevent.correlationId
 
   def getActivityBuilder(): ActivityBuilder = {
     new SimpleActivityBuilder(processId, components, components map { comp: Component => (comp.componentId, comp.maxRetries) } toMap)
@@ -23,7 +23,7 @@ class SimpleProcess(val processId: String, val components: List[Component]) exte
   /**
    * Check if first component is the same as the one in the logevent and state is START
    */
-  def startNewActivity(logevent: LogEvent) =
+  def startNewActivity(logevent: Log) =
     components.head.componentId == logevent.componentId && logevent.state == State.START
 
   override def toString() = "SimpleProcess ( id: " + processId + ", components: " + components + ")"
@@ -32,13 +32,13 @@ class SimpleProcess(val processId: String, val components: List[Component]) exte
 
 class SimpleActivityBuilder(val processId: String, val components: List[Component], var retries: Map[String, Int]) extends ActivityBuilder with Logging {
 
-  var startEvent: LogEvent = null  //TODO: Fix null?
-  var endEvent: LogEvent = null
+  var startEvent: Log = null  //TODO: Fix null?
+  var endEvent: Log = null
 
   val failureStates = Set(State.INTERNAL_FAILURE, State.CLIENT_FAILURE, State.UNKNOWN_FAILURE)
   val endComponent = components.last
 
-  def addLogEvent(logevent: LogEvent): Unit = {
+  def addLogEvent(logevent: Log): Unit = {
 
     if(components.head.componentId == logevent.componentId && logevent.state == State.START)
        startEvent = logevent

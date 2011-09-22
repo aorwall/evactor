@@ -1,7 +1,7 @@
 package se.aorwall.logserver.process.simple
 
 import grizzled.slf4j.Logging
-import se.aorwall.logserver.model.{State, Log, LogEvent}
+import se.aorwall.logserver.model.{State, Log}
 import org.scalatest.{WordSpec, FunSuite}
 import org.scalatest.matchers.MustMatchers
 import se.aorwall.logserver.model.process.simple.{SimpleProcess, Component}
@@ -27,15 +27,15 @@ class SimpleProcessSpec extends WordSpec with MustMatchers with Logging {
     }
 
     "return true if a request to the start component with state START is provided" in {
-      process.startNewActivity(new LogEvent("corrId", startCompId, 0L, State.START)) must be === true
+      process.startNewActivity(new Log("server", startCompId, "corrId", "client", 0L, State.START, "")) must be === true
     }
 
     "return false if a request to the start component with another state is provided" in {
-      process.startNewActivity(new LogEvent("corrId", startCompId, 0L, State.SUCCESS)) must be === false
+      process.startNewActivity(new Log("server", startCompId, "corrId", "client", 0L, State.SUCCESS, "")) must be === false
     }
 
     "return false if a request to another component with state START is provided" in {
-      process.startNewActivity(new LogEvent("corrId", endCompId, 0L, State.START)) must be === false
+      process.startNewActivity(new Log("server", endCompId, "corrId", "client", 0L, State.START, "")) must be === false
     }
 
   }
@@ -44,11 +44,11 @@ class SimpleProcessSpec extends WordSpec with MustMatchers with Logging {
 
     "create an activity with state SUCCESS when flow is succesfully processed" in {
       val activityBuilder = process.getActivityBuilder()
-      activityBuilder.addLogEvent(new LogEvent("corrId", startCompId, 0L, State.START))
-      activityBuilder.addLogEvent(new LogEvent("corrId", startCompId, 0L, State.SUCCESS))
+      activityBuilder.addLogEvent(new Log("server", startCompId, "corrId", "client", 0L, State.START, ""))
+      activityBuilder.addLogEvent(new Log("server", startCompId, "corrId", "client", 0L, State.SUCCESS, ""))
       activityBuilder.isFinished() must be === false
-      activityBuilder.addLogEvent(new LogEvent("corrId", endCompId, 0L, State.START))
-      activityBuilder.addLogEvent(new LogEvent("corrId", endCompId, 0L, State.SUCCESS))
+      activityBuilder.addLogEvent(new Log("server", endCompId, "corrId", "client", 0L, State.START, ""))
+      activityBuilder.addLogEvent(new Log("server", endCompId, "corrId", "client", 0L, State.SUCCESS, ""))
       activityBuilder.isFinished() must be === true
 
       val activity = activityBuilder.createActivity()
@@ -58,16 +58,16 @@ class SimpleProcessSpec extends WordSpec with MustMatchers with Logging {
     "create an activity with state SUCCESS when flow with just one component is succesfully processed" in {
       val oneComponentProcess = new SimpleProcess("process", List(startComp))
       val activityBuilder = oneComponentProcess.getActivityBuilder()
-      activityBuilder.addLogEvent(new LogEvent("corrId", startCompId, 0L, State.START))
-      activityBuilder.addLogEvent(new LogEvent("corrId", startCompId, 0L, State.SUCCESS))
+      activityBuilder.addLogEvent(new Log("server", startCompId, "corrId", "client", 0L, State.START, ""))
+      activityBuilder.addLogEvent(new Log("server", startCompId, "corrId", "client", 0L, State.SUCCESS, ""))
       activityBuilder.isFinished() must be === true
     }
 
     "create an activity with state INTERNAL_FAILURE when flow with just one component receives a log event with the state INTERNAL_FAILURE" in {
       val oneComponentProcess = new SimpleProcess("process", List(startComp))
       val activityBuilder = oneComponentProcess.getActivityBuilder()
-      activityBuilder.addLogEvent(new LogEvent("corrId", startCompId, 0L, State.START))
-      activityBuilder.addLogEvent(new LogEvent("corrId", startCompId, 0L, State.INTERNAL_FAILURE))
+      activityBuilder.addLogEvent(new Log("server", startCompId, "corrId", "client", 0L, State.START, ""))
+      activityBuilder.addLogEvent(new Log("server", startCompId, "corrId", "client", 0L, State.INTERNAL_FAILURE, ""))
       activityBuilder.isFinished() must be === true
 
       val activity = activityBuilder.createActivity()
@@ -76,8 +76,8 @@ class SimpleProcessSpec extends WordSpec with MustMatchers with Logging {
 
     "create an activity with state INTERNAL_FAILURE when a log event has the state INTERNAL_FAILURE" in {
       val activityBuilder = process.getActivityBuilder()
-      activityBuilder.addLogEvent(new LogEvent("corrId", startCompId, 0L, State.START))
-      activityBuilder.addLogEvent(new LogEvent("corrId", startCompId, 0L, State.INTERNAL_FAILURE))
+      activityBuilder.addLogEvent(new Log("server", startCompId, "corrId", "client", 0L, State.START, ""))
+      activityBuilder.addLogEvent(new Log("server", startCompId, "corrId", "client", 0L, State.INTERNAL_FAILURE, ""))
       activityBuilder.isFinished() must be === true
 
       val activity = activityBuilder.createActivity()
@@ -86,16 +86,16 @@ class SimpleProcessSpec extends WordSpec with MustMatchers with Logging {
 
     "create an activity with state BACKEND_FAILURE when received log events with BACKEND_FAILURE" in {
       val activityBuilder = process.getActivityBuilder()
-      activityBuilder.addLogEvent(new LogEvent("corrId", startCompId, 0L, State.START))
-      activityBuilder.addLogEvent(new LogEvent("corrId", startCompId, 0L, State.SUCCESS))
+      activityBuilder.addLogEvent(new Log("server", startCompId, "corrId", "client", 0L, State.START, ""))
+      activityBuilder.addLogEvent(new Log("server", startCompId, "corrId", "client", 0L, State.SUCCESS, ""))
       activityBuilder.isFinished() must be === false
-      activityBuilder.addLogEvent(new LogEvent("corrId", endCompId, 0L, State.START))
-      activityBuilder.addLogEvent(new LogEvent("corrId", endCompId, 0L, State.BACKEND_FAILURE))
-      activityBuilder.addLogEvent(new LogEvent("corrId", endCompId, 0L, State.START))
-      activityBuilder.addLogEvent(new LogEvent("corrId", endCompId, 0L, State.BACKEND_FAILURE))
+      activityBuilder.addLogEvent(new Log("server", endCompId, "corrId", "client", 0L, State.START, ""))
+      activityBuilder.addLogEvent(new Log("server", endCompId, "corrId", "client", 0L, State.BACKEND_FAILURE, ""))
+      activityBuilder.addLogEvent(new Log("server", endCompId, "corrId", "client", 0L, State.START, ""))
+      activityBuilder.addLogEvent(new Log("server", endCompId, "corrId", "client", 0L, State.BACKEND_FAILURE, ""))
       activityBuilder.isFinished() must be === false
-      activityBuilder.addLogEvent(new LogEvent("corrId", endCompId, 0L, State.START))
-      activityBuilder.addLogEvent(new LogEvent("corrId", endCompId, 0L, State.BACKEND_FAILURE))
+      activityBuilder.addLogEvent(new Log("server", endCompId, "corrId", "client", 0L, State.START, ""))
+      activityBuilder.addLogEvent(new Log("server", endCompId, "corrId", "client", 0L, State.BACKEND_FAILURE, ""))
       activityBuilder.isFinished() must be === true
 
       val activity = activityBuilder.createActivity()

@@ -3,7 +3,7 @@ package se.aorwall.logserver.process.dynamic
 import org.scalatest.WordSpec
 import org.scalatest.matchers.MustMatchers
 import grizzled.slf4j.Logging
-import se.aorwall.logserver.model.{State, LogEvent}
+import se.aorwall.logserver.model.{Log, State}
 
 class DynamicComponentSpec extends WordSpec with MustMatchers with Logging {
 
@@ -17,11 +17,11 @@ class DynamicComponentSpec extends WordSpec with MustMatchers with Logging {
     }
 
     "return true if a request to the start component with state START is provided" in {
-      process.startNewActivity(new LogEvent("corrId", compId, 0L, State.START)) must be === true
+      process.startNewActivity(new Log("server", compId, "corrId", "client", 0L, State.START, "")) must be === true
     }
 
     "return false if a request to the start component with another state is provided" in {
-      process.startNewActivity(new LogEvent("corrId", compId, 0L, State.SUCCESS)) must be === false
+      process.startNewActivity(new Log("server", compId, "corrId", "client", 0L, State.SUCCESS, "")) must be === false
     }
 
   }
@@ -30,8 +30,8 @@ class DynamicComponentSpec extends WordSpec with MustMatchers with Logging {
 
     "create an activity with state SUCCESS when a component is succesfully processed" in {
       val activityBuilder = process.getActivityBuilder()
-      activityBuilder.addLogEvent(new LogEvent("corrId", compId, 0L, State.START))
-      activityBuilder.addLogEvent(new LogEvent("corrId", compId, 0L, State.SUCCESS))
+      activityBuilder.addLogEvent(new Log("server", compId, "corrId", "client", 0L, State.START, ""))
+      activityBuilder.addLogEvent(new Log("server", compId, "corrId", "client", 0L, State.SUCCESS, ""))
       activityBuilder.isFinished() must be === true
 
       val activity = activityBuilder.createActivity()
@@ -40,8 +40,8 @@ class DynamicComponentSpec extends WordSpec with MustMatchers with Logging {
 
     "create an activity with state INTERNAL_FAILURE when the request to the component has state INTERNAL_FAILURE" in {
       val activityBuilder = process.getActivityBuilder()
-      activityBuilder.addLogEvent(new LogEvent("corrId", compId, 0L, State.START))
-      activityBuilder.addLogEvent(new LogEvent("corrId", compId, 0L, State.INTERNAL_FAILURE))
+      activityBuilder.addLogEvent(new Log("server", compId, "corrId", "client", 0L, State.START, ""))
+      activityBuilder.addLogEvent(new Log("server", compId, "corrId", "client", 0L, State.INTERNAL_FAILURE, ""))
       activityBuilder.isFinished() must be === true
 
       val activity = activityBuilder.createActivity()
