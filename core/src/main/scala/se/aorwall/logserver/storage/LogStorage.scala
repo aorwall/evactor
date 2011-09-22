@@ -1,6 +1,6 @@
 package se.aorwall.logserver.storage
 
-import se.aorwall.logserver.model.{Activity, Log, LogEvent}
+import se.aorwall.logserver.model.{Activity, Log}
 import collection.mutable.Map
 
 /**
@@ -10,13 +10,34 @@ import collection.mutable.Map
 
 trait LogStorage {
 
-  def storeLogdata(logdata: Log): Unit
+  /**
+   * Store a log object to specified activity
+   */
+  def storeLog(activityId: String, log: Log): Unit
 
-  def storeLogEvent(processId: String, logevent: LogEvent): Unit
+  /**
+   * Read all log objects for a specified activity
+   */
+  def readLogs(activityId: String): List[Log]
 
-  def readLogEvents(processId: String, correlationId: String): Map[String, List[Int]]
+  /**
+   * Remove an activity and it's log objects
+   */
+  def removeActivity(activityId: String): Unit
 
-  def removeLogEvents(processId: String, correlationId: String): Unit
+  /**
+   * Store an activity object
+   */
+  def storeActivity(activity: Activity): Unit
 
-  def storeActivity(activity: Activity)
+  /**
+   * Read activity objects
+   */
+  def readActivities(processId: String, fromTimestamp: Option[Long], count: Int ): List[Activity]
+
+  /**
+   * Check if an activity exists
+   */
+  def activityExists(activityId: String): Boolean
+
 }

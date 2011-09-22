@@ -5,19 +5,19 @@ import grizzled.slf4j.Logging
 import akka.actor.{ActorRef, Actor}
 import Actor._
 import se.aorwall.logserver.storage.Storing
-import se.aorwall.logserver.model.LogEvent
 import se.aorwall.logserver.model.process.BusinessProcess
+import se.aorwall.logserver.model.{Log}
 
 class ProcessActor(businessProcess: BusinessProcess, analyserPool: ActorRef) extends Actor with Storing with Logging {
 
   val runningActivites = new HashMap[String, ActorRef]
 
   def receive = {
-    case logEvent: LogEvent if(businessProcess.contains(logEvent.componentId)) => sendToRunningActivity(logEvent)
+    case logEvent: Log if(businessProcess.contains(logEvent.componentId)) => sendToRunningActivity(logEvent)
     case _ =>
   }
 
-  def sendToRunningActivity(logevent: LogEvent) = {
+  def sendToRunningActivity(logevent: Log) = {
     debug("About to process logEvent object: " + logevent)
 
     val id = businessProcess.getActivityId(logevent)
@@ -30,7 +30,7 @@ class ProcessActor(businessProcess: BusinessProcess, analyserPool: ActorRef) ext
 
       if (!businessProcess.startNewActivity(logevent)) {
         warn("Didn't receive the start component of the activity: " + logevent)
-        // TOOD: Check if a activity is already finished
+        // TOOD: Check if a activity is already finished in another actor to not block other requests
       }
 
       // TODO: Load old activites  storage.getLogEvent(businessProcess.processId, logevent)?
