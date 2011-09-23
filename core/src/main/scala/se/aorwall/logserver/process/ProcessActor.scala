@@ -4,11 +4,11 @@ import collection.mutable.HashMap
 import grizzled.slf4j.Logging
 import akka.actor.{ActorRef, Actor}
 import Actor._
-import se.aorwall.logserver.storage.Storing
 import se.aorwall.logserver.model.process.BusinessProcess
 import se.aorwall.logserver.model.{Log}
+import se.aorwall.logserver.storage.LogStorage
 
-class ProcessActor(businessProcess: BusinessProcess, analyserPool: ActorRef) extends Actor with Storing with Logging {
+class ProcessActor(businessProcess: BusinessProcess, storage: LogStorage, analyserPool: ActorRef) extends Actor with Logging {
 
   val runningActivites = new HashMap[String, ActorRef]
 
@@ -22,22 +22,26 @@ class ProcessActor(businessProcess: BusinessProcess, analyserPool: ActorRef) ext
 
     val id = businessProcess.getActivityId(logevent)
 
-    //TODO storage.storeLogEvent(id, logevent)
+    storage.storeLog(id, logevent)
 
     val actors = Actor.registry.actorsFor(id)
 
     if (actors.length == 0) {
 
-      if (!businessProcess.startNewActivity(logevent)) {
-        warn("Didn't receive the start component of the activity: " + logevent)
-        // TOOD: Check if a activity is already finished in another actor to not block other requests
-      }
+      if (!businessProcess.startNewActivity(logevent) && storage.activityExists(businessProcess.processId, id)) {
+        warn("A finished activity with id " + id + " already exists.")
+      } else {
+        val actor = actorOf(new ActivityActor(businessProcess.getActivityBuilder(), storage, analyserPool))
+        actor.id = id
+        actor.start
 
-      // TODO: Load old activites  storage.getLogEvent(businessProcess.processId, logevent)?
-      val actor = actorOf(new ActivityActor(businessProcess.getActivityBuilder(), analyserPool))
-      actor.id = id
-      actor.start
-      actor ! logevent
+        // Read existing logs for activity
+        storage.readLogs(id).foreach(log => actor ! log)
+
+        // ...and finally send the new log if the actor is still alive
+        if(actor.isRunning)
+          actor ! logevent
+      }
     } else if (actors.length > 0) {
       actors(0) ! logevent
     } else {

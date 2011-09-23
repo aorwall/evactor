@@ -6,12 +6,14 @@ import model.process.simple.{SimpleProcess, Component}
 import model.{State, Log}
 import monitor.{ActivityAnalyserPool, ActivityAnalyser}
 import org.scalatest.FunSuite
+import org.mockito.Mockito._
 import akka.util.duration._
 import akka.actor.{ Actor}
 import Actor._
 import process.ProcessActor
 import receive.LogdataReceiver
 import akka.testkit.{CallingThreadDispatcher, TestKit}
+import storage.LogStorage
 
 /**
  * Testing the whole log data flow.
@@ -20,6 +22,7 @@ class LogdataIntegrationSuite extends FunSuite with TestKit {
 
   test("Recieve a logdata objects and create activity object") {
     val processId = "process"
+    val storage = mock(classOf[LogStorage])
 
     val logReceiver = actorOf(new LogdataReceiver)
     val analyserPool = actorOf(new ActivityAnalyserPool)
@@ -32,7 +35,7 @@ class LogdataIntegrationSuite extends FunSuite with TestKit {
     val process = new SimpleProcess(processId, List(startComp, endComp))
 
     // Define actors for processing and analysing activites
-    val processActor = actorOf(new ProcessActor(process, analyserPool))
+    val processActor = actorOf(new ProcessActor(process, storage, analyserPool))
     val latencyActor = actorOf(new LatencyAnalyser(processId, testActor, 2000) with LengthWindow {override val noOfRequests = 2} )
 
     // Set CallingThreadDispatcher.global
