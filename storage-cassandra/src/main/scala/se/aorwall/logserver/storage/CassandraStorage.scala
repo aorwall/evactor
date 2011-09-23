@@ -4,13 +4,14 @@ import se.aorwall.logserver.model.{Activity, Log}
 import me.prettyprint.hector.api.factory.HFactory
 import me.prettyprint.cassandra.utils.TimeUUIDUtils
 import me.prettyprint.hector.api.Keyspace
-import me.prettyprint.cassandra.serializers.{StringSerializer, ObjectSerializer, UUIDSerializer}
+import me.prettyprint.cassandra.serializers.{StringSerializer, ObjectSerializer, UUIDSerializer, LongSerializer}
 import grizzled.slf4j.Logging
 import scala.collection.JavaConversions._
 
 class CassandraStorage(keyspace: Keyspace) extends LogStorage with Logging {
 
   val LOG_CF = "Log"
+  val ACTIVITY_TIMELINE_CF = "ActivityTimeline"
   val ACTIVITY_CF = "Activity"
 
   def storeLog(activityId: String, log: Log): Unit = {
@@ -44,12 +45,18 @@ class CassandraStorage(keyspace: Keyspace) extends LogStorage with Logging {
     val mutator = HFactory.createMutator(keyspace, StringSerializer.get)
     val timeuuid = TimeUUIDUtils.getTimeUUID(activity.endTimestamp)
 
-    // column family: Activites
+    // column family: ActivityTimeline
     // row key: process id
     // column key: end timestamp?
     // value: activity object
     // TODO: Add expiration time if found in business process configuration
-    mutator.insert(activity.processId, ACTIVITY_CF, HFactory.createColumn(timeuuid, activity, UUIDSerializer.get, ObjectSerializer.get))
+    mutator.insert(activity.processId, ACTIVITY_TIMELINE_CF, HFactory.createColumn(timeuuid, activity, UUIDSerializer.get, ObjectSerializer.get))
+
+    // column family: Activity
+    // row key: process id
+    // column key: activityId
+    // TODO: maybe set a secondary index on AtivityTimeline instead of having this cf for looking up activities?
+    mutator.insert(activity.processId, ACTIVITY_CF, HFactory.createColumn(activity.activityId, "", StringSerializer.get, StringSerializer.get))
 
     // TODO: also save in state column family or something...?
 
@@ -74,14 +81,12 @@ class CassandraStorage(keyspace: Keyspace) extends LogStorage with Logging {
                  }} toList
   }
 
-  def activityExists(activityId: String): Boolean = {
-     HFactory.createSliceQuery(keyspace, StringSerializer.get, UUIDSerializer.get, ObjectSerializer.get)
-            .setColumnFamily(LOG_CF)
-            .setKey(activityId)
-            .setRange(null, null, false, 1)
+  def activityExists(processId: String, activityId: String): Boolean = {
+     HFactory.createColumnQuery(keyspace, StringSerializer.get, StringSerializer.get, ObjectSerializer.get)
+            .setColumnFamily(ACTIVITY_CF)
+            .setKey(processId)
+            .setName(activityId)
             .execute()
-            .get()
-            .getColumns()
-            .size() > 0
+            .get() != null
   }
 }
