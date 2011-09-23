@@ -5,7 +5,7 @@ package se.aorwall.logserver.model
  */
 
 case class Activity (processId: String,
-                correlationId: String,
+                activityId: String,
                 state: Int,
                 startTimestamp: Long,
                 endTimestamp: Long) {
