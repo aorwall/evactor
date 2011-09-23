@@ -38,6 +38,6 @@ trait LogStorage {
   /**
    * Check if an activity exists
    */
-  def activityExists(activityId: String): Boolean
+  def activityExists(processId: String, activityId: String): Boolean
 
 }
