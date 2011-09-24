@@ -15,7 +15,8 @@ import akka.actor.{ActorRef, Actor}
  */
 trait Statement {
 
-  def createActor(processId: String): ActorRef
+  val statementId: String
 
+  def createActor(processId: String): ActorRef
 
 }
