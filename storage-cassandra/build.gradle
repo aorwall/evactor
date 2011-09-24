@@ -28,6 +28,8 @@ dependencies {
     compile group: 'org.cliffc.high_scale_lib', name: 'high-scale-lib', version: '1.0'
 
     compile group: 'com.google.guava', name: 'guava', version: 'r09'
+    compile group: 'joda-time', name: 'joda-time', version: '2.0'
+    compile group: 'org.joda', name: 'joda-convert', version: '1.1'
 
     //TODO: exclude log4j
 
