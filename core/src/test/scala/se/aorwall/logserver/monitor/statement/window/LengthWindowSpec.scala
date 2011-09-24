@@ -11,7 +11,7 @@ class LengthWindowSpec extends WordSpec with MustMatchers {
         val noOfRequests = 3
       } with LengthWindow
 
-  "A LengthWindow" must {
+  "A LengthWindowConf" must {
 
     "return inactive activites if there are more activities than the specified length" in {
       val activities = TreeMap(1L -> 11, 2L -> 22, 3L -> 33, 4L -> 44, 5L -> 55)

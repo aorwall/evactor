@@ -1,7 +1,8 @@
 package se.aorwall.logserver.model.statement
 
-import se.aorwall.logserver.model.{Alert, Activity}
-import akka.actor.{ActorRef, Actor}
+import akka.actor.{Actor, ActorRef}
+import Actor._
+import se.aorwall.logserver.alert.Alerter
 
 /**
  * A statement should:
@@ -13,10 +14,10 @@ import akka.actor.{ActorRef, Actor}
  * Maybe a Factory for each StatementAnalyser to publish the statement to the configuration
  * environment?
  */
-trait Statement {
-
-  val statementId: String
+abstract class Statement (val statementId: String, val alertEndpoint: String) {
 
   def createActor(processId: String): ActorRef
+
+  def createAlerter() = actorOf(new Alerter(alertEndpoint))
 
 }

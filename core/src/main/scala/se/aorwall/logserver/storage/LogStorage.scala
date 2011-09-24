@@ -1,6 +1,6 @@
 package se.aorwall.logserver.storage
 
-import se.aorwall.logserver.model.{Alert, Activity, Log}
+import se.aorwall.logserver.model.{Activity, Log}
 
 /**
  * Interface for log storage
