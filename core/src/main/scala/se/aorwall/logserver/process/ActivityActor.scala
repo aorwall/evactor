@@ -4,12 +4,12 @@ import grizzled.slf4j.Logging
 import akka.actor.{ActorRef, Actor}
 import se.aorwall.logserver.model.process.{ActivityBuilder}
 import se.aorwall.logserver.model.{Log, Activity}
-import se.aorwall.logserver.storage.{LogStorage, Storing}
+import se.aorwall.logserver.storage.{LogStorage}
 
 /**
  * One Activity Actor for each running activity
  */
-class ActivityActor(activityBuilder: ActivityBuilder, storage: LogStorage, analyser: ActorRef) extends Actor with Storing with Logging{
+class ActivityActor(activityBuilder: ActivityBuilder, storage: LogStorage, analyser: ActorRef) extends Actor with Logging{
 
   override def preStart {
     storage.readLogs(self.id).foreach(log => process(log))

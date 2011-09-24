@@ -3,7 +3,6 @@ package se.aorwall.logserver.receive
 import akka.actor.{Actor}
 import grizzled.slf4j.Logging
 import se.aorwall.logserver.process.ProcessActor
-import se.aorwall.logserver.storage.Storing
 import se.aorwall.logserver.model.{Log}
 import akka.routing.{SmallestMailboxSelector, FixedSizeCapacitor, DefaultActorPool}
 import akka.actor.Actor._
@@ -14,7 +13,7 @@ import akka.config.Supervision.OneForOneStrategy
  * 2. Save in DB
  * 3. Send to process actors
  */
-class LogdataReceiver extends Actor with Storing with Logging {
+class LogdataReceiver extends Actor with Logging {
   self.faultHandler = new OneForOneStrategy(List(classOf[Throwable]), 5, 5000)
 
   def receive = {
