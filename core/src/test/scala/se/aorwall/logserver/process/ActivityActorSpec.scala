@@ -6,14 +6,17 @@ import org.mockito.Mockito._
 import akka.testkit.{TestKit, TestActorRef}
 import se.aorwall.logserver.model.process.simple.{SimpleActivityBuilder}
 import se.aorwall.logserver.model.{Log, Activity, State}
+import se.aorwall.logserver.storage.LogStorage
 
 class ActivityActorSpec extends WordSpec with MustMatchers with TestKit {
 
   "A ActivityActor" must {
 
     val activityBuilder = mock(classOf[SimpleActivityBuilder])
+    val storage = mock(classOf[LogStorage])
 
-    val activityActorRef = TestActorRef(new ActivityActor(activityBuilder, testActor))
+    val activityActorRef = TestActorRef(new ActivityActor(activityBuilder, storage, testActor))
+    when(storage.readLogs(activityActorRef.id)).thenReturn(List())
     activityActorRef.start
     val activityActor = activityActorRef.underlyingActor
 

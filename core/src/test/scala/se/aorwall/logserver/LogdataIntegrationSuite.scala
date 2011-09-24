@@ -23,6 +23,7 @@ class LogdataIntegrationSuite extends FunSuite with TestKit {
   test("Recieve a logdata objects and create activity object") {
     val processId = "process"
     val storage = mock(classOf[LogStorage])
+    when(storage.readLogs("process:329380921309")).thenReturn(List())
 
     val logReceiver = actorOf(new LogdataReceiver)
     val analyserPool = actorOf(new ActivityAnalyserPool)

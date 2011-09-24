@@ -11,6 +11,10 @@ import se.aorwall.logserver.storage.{LogStorage, Storing}
  */
 class ActivityActor(activityBuilder: ActivityBuilder, storage: LogStorage, analyser: ActorRef) extends Actor with Storing with Logging{
 
+  override def preStart {
+    storage.readLogs(self.id).foreach(log => process(log))
+  }
+
   def receive = {
       case logevent: Log => process(logevent)
   }
@@ -29,10 +33,14 @@ class ActivityActor(activityBuilder: ActivityBuilder, storage: LogStorage, analy
 
     debug("sending activity: " + activity)
 
-    // Save activity in db
-    storage.storeActivity(activity)
+    // Save activity in db and send to analyser
 
-    analyser ! activity
+    if(storage.activityExists(activity.processId, activity.activityId)){
+      warn("An activity for process " + activity.processId + " with id " + activity.activityId + " already exists")
+    } else {
+      storage.storeActivity(activity)
+      analyser ! activity
+    }
 
     // stop actor
     self.stop
