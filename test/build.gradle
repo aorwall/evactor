@@ -1,0 +1,24 @@
+apply plugin: 'scala'
+
+ideaModule {
+    beforeConfigured { module ->
+        module.dependencies.clear()
+    }
+    whenConfigured { module ->
+        module.dependencies*.exported = true
+    }
+}
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+
+dependencies {
+    compile project(':core')
+    compile project(':storage-cassandra')
+
+    compile group: 'com.ecyrd.speed4j', name: 'speed4j', version: '0.10'
+    compile group: 'org.mockito', name:'mockito-core', version: '1.8.1'
+}

@@ -11,13 +11,18 @@ import se.aorwall.logserver.process.{ActivityActor, ProcessActor}
 import org.slf4j.LoggerFactory
 import akka.actor.Actor
 import Actor._
+import me.prettyprint.hector.api.factory.HFactory
+import me.prettyprint.cassandra.service.CassandraHostConfigurator
+import me.prettyprint.cassandra.connection.SpeedForJOpTimer
+import org.mockito.Mockito._
+import se.aorwall.logserver.storage.{LogStorage, CassandraStorage}
 
 object Main extends Logging {
   LoggerFactory.getILoggerFactory  // TODO: Temporary fix to get rid of http://www.slf4j.org/codes.html#substituteLogger
 
   val noOfProcesses = 10
   val businessProcesses = 0 until noOfProcesses map (x => createBusinessProcess(x))
-  val noOfRequests = 50
+  val noOfRequests = 100000
 
   def createBusinessProcess(no: Int) =
       new SimpleProcess("process" + no, 0 until (Random.nextInt(3)+1) map (x => new Component(UUID.randomUUID().toString+x, 0))  toList) // create process with a component list with unique id:s
@@ -27,9 +32,17 @@ object Main extends Logging {
 
   def main(args: Array[String]) {
 
+    // Need a cassandra server up and running on localhost 9160 with the correct Column Families
+    val cassandraHostConfigurator = new CassandraHostConfigurator("localhost:9160")
+    cassandraHostConfigurator.setOpTimer(new SpeedForJOpTimer("TestCluster"));
+    val cluster = HFactory.getOrCreateCluster("TestCluster", cassandraHostConfigurator)
+
+    val keyspace = HFactory.createKeyspace("LogserverTest", cluster)
+    val storage = new CassandraStorage(keyspace)
+
     val responseActor = actorOf[ResponseActor]
 
-    val processActors = businessProcesses.map(p => actorOf(new ProcessActor(p, responseActor)))
+    val processActors = businessProcesses.map(p => actorOf(new ProcessActor(p, storage, responseActor)))
     businessProcesses.foreach(p => info(p))
 
     val logReceiver = actorOf(new LogdataReceiverPool)
@@ -54,7 +67,12 @@ object Main extends Logging {
 
     info("Finished requests after " + (System.currentTimeMillis-start) + " ms")
 
-    Thread.sleep(200)
+    var time = 0
+    val maxTime = 180000
+    while (finishedActivites < noOfRequests && time < maxTime){
+        Thread.sleep(1000)
+        time = time + 1000
+    }
 
     info("No of finished activites: " + finishedActivites + ", last activity finished after " + (lastFinishedActivity - start))
 
@@ -71,6 +89,7 @@ object Main extends Logging {
       a.stop
     }
 
+    cluster.getConnectionManager().shutdown();
   }
 
   def count() = {

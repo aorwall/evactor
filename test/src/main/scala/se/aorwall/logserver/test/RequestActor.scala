@@ -33,9 +33,6 @@ class RequestActor(components: List[String], logReceiver: ActorRef) extends Acto
       debug("send: " + stop)
       logReceiver ! stop
       Thread.sleep(Random.nextInt(3) + 1L)
-
-      if (state == State.INTERNAL_FAILURE) info("Fail: " + correlationId + ": " + component)
-
     }
   }
 
