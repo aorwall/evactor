@@ -35,9 +35,6 @@ class ProcessActor(businessProcess: BusinessProcess, storage: LogStorage, analys
         actor.id = id
         actor.start
 
-        // Read existing logs for activity
-        storage.readLogs(id).foreach(log => actor ! log)
-
         // ...and finally send the new log if the actor is still alive
         if(actor.isRunning)
           actor ! logevent
