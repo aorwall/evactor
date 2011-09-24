@@ -1,12 +1,12 @@
 package se.aorwall.logserver.monitor.statement
 
 import window.LengthWindow
-import se.aorwall.logserver.model.Activity
 import akka.testkit.TestActorRef
 import akka.testkit.TestKit
 import akka.util.duration._
 import org.scalatest.{WordSpec}
 import org.scalatest.matchers.MustMatchers
+import se.aorwall.logserver.model.{Alert, Activity}
 
 class LatencyAnalyserSpec extends WordSpec with MustMatchers with TestKit {
 
@@ -25,7 +25,7 @@ class LatencyAnalyserSpec extends WordSpec with MustMatchers with TestKit {
       latencyActor ! new Activity(process, correlationid, 11, 20, 100) // nothing happens
       //expectNoMsg
       latencyActor ! new Activity(process, correlationid, 10, 30, 39) // avg latency 6ms, trig alert!
-      expectMsg("Average latency 6ms is higher than the maximum allowed latency 5ms")
+      expectMsg(new Alert(process, "Average latency 6ms is higher than the maximum allowed latency 5ms", true))
 
       latencyActor.stop
     }
@@ -40,10 +40,10 @@ class LatencyAnalyserSpec extends WordSpec with MustMatchers with TestKit {
       latencyActor ! new Activity(process, correlationid, 10, 0, 10) // avg latency 10ms
       latencyActor ! new Activity(process, correlationid, 10, 10, 110) // avg latency 55ms
       latencyActor ! new Activity(process, correlationid, 10, 20, 70) // avg latency 75ms, trig alert!
-      expectMsg("Average latency 75ms is higher than the maximum allowed latency 60ms")
+      expectMsg(new Alert(process, "Average latency 75ms is higher than the maximum allowed latency 60ms", true))
 
       latencyActor ! new Activity(process, correlationid, 10, 30, 90) // avg latency 55ms, back to normal!
-      expectMsg("back to normal!")
+      expectMsg(new Alert(process, "back to normal!", false))
 
       latencyActor.stop
     }

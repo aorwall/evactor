@@ -1,12 +1,12 @@
 package se.aorwall.logserver.monitor.statement
 
-import se.aorwall.logserver.model.Activity
 import akka.testkit.TestActorRef
 import akka.testkit.TestKit
 import window.{TimeWindow}
 import akka.util.duration._
 import org.scalatest.{WordSpec}
 import org.scalatest.matchers.MustMatchers
+import se.aorwall.logserver.model.{Alert, Activity}
 
 class FailureAnalyserSpec extends WordSpec with MustMatchers with TestKit {
 
@@ -25,7 +25,7 @@ class FailureAnalyserSpec extends WordSpec with MustMatchers with TestKit {
      failureActor ! new Activity(process, correlationid, 13, 20, 100) // nothing happens
      //expectNoMsg
      failureActor ! new Activity(process, correlationid, 11, 30, 39) //  trig alert!
-     expectMsg("3 failed activites in process " + process + " with state List(11, 12) is more than allowed (2)")
+     expectMsg(new Alert(process, "3 failed activites in process " + process + " with state List(11, 12) is more than allowed (2)", true))
 
      failureActor.stop
    }
@@ -43,7 +43,7 @@ class FailureAnalyserSpec extends WordSpec with MustMatchers with TestKit {
         failureActor ! new Activity(process, correlationid, 11, currentTime-40, currentTime)
         failureActor ! new Activity(process, correlationid, 11, currentTime-1000, currentTime) // to old, nothing happens
         failureActor ! new Activity(process, correlationid, 11, currentTime-30, currentTime)
-        expectMsg("3 failed activites in process " + process + " with state List(11) is more than allowed (2)")
+        expectMsg(new Alert(process, "3 failed activites in process " + process + " with state List(11) is more than allowed (2)", true))
      }
    }
 

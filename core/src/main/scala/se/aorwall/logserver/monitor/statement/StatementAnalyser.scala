@@ -3,12 +3,22 @@ package se.aorwall.logserver.monitor.statement
 import scala.Predef._
 import grizzled.slf4j.Logging
 import akka.actor.{Actor, ActorRef}
-import se.aorwall.logserver.model.Activity
+import se.aorwall.logserver.model.{Alert, Activity}
+import se.aorwall.logserver.storage.LogStorage
+import akka.stm._
 
 abstract class StatementAnalyser (processId: String, alerter: ActorRef) extends Actor with Logging {  // get processid, statement, alert actor?
 
   self.id = processId
-  private var triggered = false
+  private val triggeredRef = Ref(false)
+
+  def triggered = atomic {
+     triggeredRef.get
+  }
+
+  def triggered(trig: Boolean) = atomic {
+     triggeredRef.set(trig)
+  }
 
   def receive = {
     case activity: Activity => analyse(activity)
@@ -24,16 +34,19 @@ abstract class StatementAnalyser (processId: String, alerter: ActorRef) extends 
   def alert(message: String) = if (!triggered) {
     warn("Alert: " + message)
 
-    alerter ! message
-
-    triggered = true
+    triggered(true)
+    sendAlert(message)
   }
 
   def backToNormal(message: String) = if (triggered) {
     info("Back to normal: "  + message)
 
-    alerter ! message
+    triggered(false)
+    sendAlert(message)
+  }
 
-    triggered = false
+  def sendAlert(message: String ){
+   val alert = new Alert(processId, message, triggered)
+   alerter ! alert
   }
 }

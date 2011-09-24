@@ -1,7 +1,6 @@
 package se.aorwall.logserver.storage
 
-import se.aorwall.logserver.model.{Activity, Log}
-import collection.mutable.Map
+import se.aorwall.logserver.model.{Alert, Activity, Log}
 
 /**
  * Interface for log storage

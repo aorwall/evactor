@@ -2,12 +2,12 @@ package se.aorwall.logserver.monitor.statement
 
 import akka.testkit.TestActorRef
 
-import se.aorwall.logserver.model.Activity
 import akka.testkit.TestKit
 import window.{TimeWindow, LengthWindow}
 import akka.util.duration._
 import org.scalatest.{WordSpec, FunSuite}
 import org.scalatest.matchers.MustMatchers
+import se.aorwall.logserver.model.{Alert, Activity}
 
 class AbsenceOfRequestsAnalyserSpec extends WordSpec with MustMatchers with TestKit {
 
@@ -24,7 +24,7 @@ class AbsenceOfRequestsAnalyserSpec extends WordSpec with MustMatchers with Test
       actor.start
 
       within(time * 2 millis) {
-        expectMsg("No activities within the timeframe 100ms")
+        expectMsg(new Alert(process, "No activities within the timeframe 100ms", true))
       }
 
     }
@@ -36,11 +36,11 @@ class AbsenceOfRequestsAnalyserSpec extends WordSpec with MustMatchers with Test
       actor.start
 
       within(time * 2 millis) {
-        expectMsg("No activities within the timeframe 100ms")
+        expectMsg(new Alert(process, "No activities within the timeframe 100ms", true))
       }
 
       actor ! new Activity(process, correlationid, 11, 0, 4)
-      expectMsg("Back to normal")
+      expectMsg(new Alert(process, "Back to normal", false))
     }
   }
 }

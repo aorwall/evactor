@@ -32,6 +32,9 @@ subprojects {
         compile group: 'se.scalablesolutions.akka', name:'akka-actor', version:'1.2-RC5'
         compile group: 'se.scalablesolutions.akka', name:'akka-typed-actor', version:'1.2-RC5'
         compile group: 'se.scalablesolutions.akka', name:'akka-camel', version:'1.2-RC5'
+        compile group: 'se.scalablesolutions.akka', name:'akka-stm', version:'1.2-RC5'
+        compile group: 'org.multiverse', name:'multiverse-core', version: '0.6'
+        compile group: 'org.multiverse', name:'multiverse-alpha-unborn', version: '0.6'
 
         compile group: 'se.scalablesolutions.akka', name:'akka-remote', version:'1.2-RC5'
         compile group: 'se.scalablesolutions.akka', name:'akka-testkit', version:'1.2-RC5'
