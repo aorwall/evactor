@@ -1,12 +1,12 @@
 package se.aorwall.logserver.monitor.statement
 
-import akka.testkit.TestActorRef
-import akka.testkit.TestKit
+import akka.actor.Actor._
 import window.{TimeWindow}
 import akka.util.duration._
 import org.scalatest.{WordSpec}
 import org.scalatest.matchers.MustMatchers
 import se.aorwall.logserver.model.{Alert, Activity}
+import akka.testkit.{CallingThreadDispatcher, TestKit}
 
 class FailureAnalyserSpec extends WordSpec with MustMatchers with TestKit {
 
@@ -17,7 +17,8 @@ class FailureAnalyserSpec extends WordSpec with MustMatchers with TestKit {
 
     "alert when the number of failed incoming activities exceeds max allowed failures" in {
 
-     val failureActor = TestActorRef(new FailureAnalyser(process, testActor, List(11,12), 2))
+     val failureActor = actorOf(new FailureAnalyser(process, testActor, List(11,12), 2))
+     failureActor.dispatcher = CallingThreadDispatcher.global
      failureActor.start
 
      failureActor ! new Activity(process, correlationid, 11, 0, 4) //
@@ -25,8 +26,10 @@ class FailureAnalyserSpec extends WordSpec with MustMatchers with TestKit {
      failureActor ! new Activity(process, correlationid, 13, 20, 100) // nothing happens
      //expectNoMsg
      failureActor ! new Activity(process, correlationid, 11, 30, 39) //  trig alert!
-     expectMsg(new Alert(process, "3 failed activites in process " + process + " with state List(11, 12) is more than allowed (2)", true))
 
+     within (300 millis) {
+      expectMsg(new Alert(process, "3 failed activites in process " + process + " with state List(11, 12) is more than allowed (2)", true))
+     }
      failureActor.stop
    }
 
@@ -35,7 +38,8 @@ class FailureAnalyserSpec extends WordSpec with MustMatchers with TestKit {
      val time = 100L
      val currentTime = System.currentTimeMillis()
 
-     val failureActor = TestActorRef(new FailureAnalyser(process, testActor, List(11), 2) with TimeWindow {override val timeframe = time} )
+     val failureActor = actorOf(new FailureAnalyser(process, testActor, List(11), 2) with TimeWindow {override val timeframe = time} )
+     failureActor.dispatcher = CallingThreadDispatcher.global
      failureActor.start
 
      within (time*2 millis) {
@@ -45,6 +49,8 @@ class FailureAnalyserSpec extends WordSpec with MustMatchers with TestKit {
         failureActor ! new Activity(process, correlationid, 11, currentTime-30, currentTime)
         expectMsg(new Alert(process, "3 failed activites in process " + process + " with state List(11) is more than allowed (2)", true))
      }
+
+     failureActor.stop
    }
 
    }

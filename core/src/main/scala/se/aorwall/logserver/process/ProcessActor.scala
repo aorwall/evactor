@@ -31,7 +31,7 @@ class ProcessActor(businessProcess: BusinessProcess, storage: LogStorage, analys
       if (!businessProcess.startNewActivity(logevent) && storage.activityExists(businessProcess.processId, id)) {
         warn("A finished activity with id " + id + " already exists.")
       } else {
-        val actor = actorOf(new ActivityActor(businessProcess.getActivityBuilder(), storage, analyserPool))
+        val actor = actorOf(new ActivityActor(businessProcess.getActivityBuilder(), storage, analyserPool, businessProcess.timeout))
         actor.id = id
         actor.start
 
@@ -44,5 +44,13 @@ class ProcessActor(businessProcess: BusinessProcess, storage: LogStorage, analys
     } else {
       warn("Didn't handle: " + logevent)
     }
+  }
+
+  override def preStart = {
+    trace("Starting processActor for " + businessProcess.processId)
+  }
+
+  override def postStop = {
+    trace("Stopping processActor for " + businessProcess.processId)
   }
 }

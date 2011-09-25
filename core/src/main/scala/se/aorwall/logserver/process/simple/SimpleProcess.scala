@@ -6,7 +6,7 @@ import se.aorwall.logserver.model.process.{ActivityBuilder, BusinessProcess}
 import collection.mutable.ListBuffer
 import se.aorwall.logserver.model.{Log, Activity, State}
 
-class SimpleProcess(val processId: String, val components: List[Component]) extends BusinessProcess with Logging {
+class SimpleProcess(val processId: String, val components: List[Component], val timeout: Long) extends BusinessProcess with Logging {
 
   val componentMap = components map { comp: Component => comp.componentId } toSet
 
@@ -32,8 +32,8 @@ class SimpleProcess(val processId: String, val components: List[Component]) exte
 
 class SimpleActivityBuilder(val processId: String, val components: List[Component], var retries: Map[String, Int]) extends ActivityBuilder with Logging {
 
-  var startEvent: Log = null  //TODO: Fix null?
-  var endEvent: Log = null
+  var startEvent: Option[Log] = None
+  var endEvent: Option[Log] = None
 
   val failureStates = Set(State.INTERNAL_FAILURE, State.CLIENT_FAILURE, State.UNKNOWN_FAILURE)
   val endComponent = components.last
@@ -41,31 +41,30 @@ class SimpleActivityBuilder(val processId: String, val components: List[Componen
   def addLogEvent(logevent: Log): Unit = {
 
     if(components.head.componentId == logevent.componentId && logevent.state == State.START)
-       startEvent = logevent
+       startEvent = Some(logevent)
     else if(endComponent.componentId == logevent.componentId && logevent.state == State.SUCCESS)
-       endEvent = logevent
+       endEvent = Some(logevent)
     else if(failureStates.contains(logevent.state) )
-       endEvent = logevent
+       endEvent = Some(logevent)
     else if (logevent.state == State.BACKEND_FAILURE) {
       val remainingRetries = retries.getOrElse(endComponent.componentId, 0)
       if(remainingRetries <= 0)
-         endEvent = logevent
+         endEvent = Some(logevent)
       else
          retries =  retries + (endComponent.componentId -> (remainingRetries-1)) //TODO
     }
   }
 
-  def isFinished(): Boolean = startEvent != null && endEvent != null
+  def isFinished(): Boolean = startEvent != None && endEvent != None
 
-  def createActivity() = {
-    if(startEvent != null && endEvent != null){
-      new Activity(processId, endEvent.correlationId, endEvent.state, startEvent.timestamp, endEvent.timestamp)
-    } else if(startEvent != null) {
-      new Activity(processId, startEvent.correlationId, State.TIMEOUT, startEvent.timestamp, 0L)
-    } else if(endEvent != null) {
-       throw new RuntimeException("SimpleActivityBuilder was trying to create a activity with only an end log event. End event: " + endEvent)
-    } else  {
+  def createActivity() = (startEvent, endEvent) match {
+    case (Some(start: Log), Some(end: Log)) =>
+      new Activity(processId, end.correlationId, end.state, start.timestamp, end.timestamp)
+    case (Some(start: Log), _) =>
+      new Activity(processId, start.correlationId, State.TIMEOUT, start.timestamp, 0L)
+    case (_, end: Log) =>
+       throw new RuntimeException("SimpleActivityBuilder was trying to create a activity with only an end log event. End event: " + end)
+    case (_, _) =>
        throw new RuntimeException("SimpleActivityBuilder was trying to create a activity without either a start or an end log event.")
-    }
   }
 }

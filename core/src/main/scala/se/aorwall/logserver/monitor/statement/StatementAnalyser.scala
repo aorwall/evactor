@@ -7,7 +7,7 @@ import se.aorwall.logserver.model.{Alert, Activity}
 import se.aorwall.logserver.storage.LogStorage
 import akka.stm._
 
-abstract class StatementAnalyser (processId: String, alerter: ActorRef) extends Actor with Logging {  // get processid, statement, alert actor?
+abstract class StatementAnalyser (processId: String, alerter: ActorRef) extends Actor with Logging {
 
   self.id = processId
   private val triggeredRef = Ref(false)
@@ -48,5 +48,13 @@ abstract class StatementAnalyser (processId: String, alerter: ActorRef) extends 
   def sendAlert(message: String ){
    val alert = new Alert(processId, message, triggered)
    alerter ! alert
+  }
+
+  override def preStart = {
+    trace("Starting statement monitor with id " + self.id)
+  }
+
+  override def postStop = {
+    trace("Stopping statement monitor with id " + self.id)
   }
 }

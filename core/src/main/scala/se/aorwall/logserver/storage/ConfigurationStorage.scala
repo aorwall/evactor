@@ -12,7 +12,7 @@ trait ConfigurationStorage {
 
   def readStatements(processId: String): List[Statement]
   def readStatement(processId: String, statementId: String): Statement
-  def storeStatement(processId: String, statement: Statement): Unit
+  def storeStatement(statement: Statement): Unit
   def deleteStatement(processId: String, statementId: String): Unit
 
 }

@@ -13,7 +13,7 @@ class SimpleProcessSpec extends WordSpec with MustMatchers with Logging {
 
   val startComp = new Component(startCompId, 1)
   val endComp = new Component(endCompId, 2)
-  val process = new SimpleProcess("process", List(startComp, endComp))
+  val process = new SimpleProcess("process", List(startComp, endComp), 0L)
 
   "A SimpleProcess" must {
 
@@ -56,7 +56,7 @@ class SimpleProcessSpec extends WordSpec with MustMatchers with Logging {
     }
 
     "create an activity with state SUCCESS when flow with just one component is succesfully processed" in {
-      val oneComponentProcess = new SimpleProcess("process", List(startComp))
+      val oneComponentProcess = new SimpleProcess("process", List(startComp), 0L)
       val activityBuilder = oneComponentProcess.getActivityBuilder()
       activityBuilder.addLogEvent(new Log("server", startCompId, "corrId", "client", 0L, State.START, ""))
       activityBuilder.addLogEvent(new Log("server", startCompId, "corrId", "client", 0L, State.SUCCESS, ""))
@@ -64,7 +64,7 @@ class SimpleProcessSpec extends WordSpec with MustMatchers with Logging {
     }
 
     "create an activity with state INTERNAL_FAILURE when flow with just one component receives a log event with the state INTERNAL_FAILURE" in {
-      val oneComponentProcess = new SimpleProcess("process", List(startComp))
+      val oneComponentProcess = new SimpleProcess("process", List(startComp), 0L)
       val activityBuilder = oneComponentProcess.getActivityBuilder()
       activityBuilder.addLogEvent(new Log("server", startCompId, "corrId", "client", 0L, State.START, ""))
       activityBuilder.addLogEvent(new Log("server", startCompId, "corrId", "client", 0L, State.INTERNAL_FAILURE, ""))

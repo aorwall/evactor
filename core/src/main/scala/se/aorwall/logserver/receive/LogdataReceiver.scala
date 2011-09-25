@@ -37,4 +37,11 @@ class LogdataReceiver(camelUri: String) extends Actor with Consumer with Logging
     for (processActor <- monitoredProcesses) processActor ! logevent
   }
 
+  override def preStart = {
+    trace("Starting Logdata receiver with endpoint " + camelUri)
+  }
+
+  override def postStop = {
+    trace("Stopping Logdata receiver with endpoint " + camelUri)
+  }
 }

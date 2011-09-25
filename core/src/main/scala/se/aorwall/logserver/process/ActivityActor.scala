@@ -1,22 +1,34 @@
 package se.aorwall.logserver.process
 
 import grizzled.slf4j.Logging
-import akka.actor.{ActorRef, Actor}
 import se.aorwall.logserver.model.process.{ActivityBuilder}
 import se.aorwall.logserver.model.{Log, Activity}
 import se.aorwall.logserver.storage.{LogStorage}
+import java.util.concurrent.{TimeUnit, ScheduledFuture}
+import akka.actor._
 
 /**
  * One Activity Actor for each running activity
  */
-class ActivityActor(activityBuilder: ActivityBuilder, storage: LogStorage, analyser: ActorRef) extends Actor with Logging{
+class ActivityActor(activityBuilder: ActivityBuilder, storage: LogStorage, analyser: ActorRef, timeout: Long) extends Actor with Logging{
+
+  var scheduledTimeout: Option[ScheduledFuture[AnyRef]] = None
 
   override def preStart {
-    storage.readLogs(self.id).foreach(log => process(log))
+    trace("Starting ActivityActor with id " + self.id)
+    val storedLogs = storage.readLogs(self.id)
+    storedLogs.foreach(log => process(log))
+
+    if(timeout > 0){
+       scheduledTimeout = Some(Scheduler.schedule(self, new Timeout, timeout, timeout, TimeUnit.SECONDS))
+    }
+
   }
 
   def receive = {
-      case logevent: Log => process(logevent)
+    case logevent: Log => process(logevent)
+    case Timeout() => sendActivity(activityBuilder.createActivity())
+    case msg => info("Can't handle: " + msg)
   }
 
   def process(logevent: Log): Unit = {
@@ -48,5 +60,15 @@ class ActivityActor(activityBuilder: ActivityBuilder, storage: LogStorage, analy
     self.stop
   }
 
-  // TODO: Timer that stops on timeout and calls createLogevent with state "timeout"
+  override def postStop = {
+    trace("Stopping ActivityActor with id " + self.id)
+    scheduledTimeout match {
+      case Some(s) => s.cancel(true)
+      case None => debug("No scheduled timeout to stop in ActivityActor with id: " + self.id)
+    }
+  }
+}
+
+case class Timeout() {
+
 }

@@ -9,6 +9,7 @@ import se.aorwall.logserver.model.{Log, Activity}
 trait BusinessProcess {
 
   val processId: String
+  val timeout: Long // Timeout set in seconds
 
   /**
    * Check if business process contains a specific component

@@ -23,11 +23,20 @@ class ActivityAnalyser extends Actor with Logging {
   def analyse(activity: Activity): Unit = {
 
     val statementAnalysers = Actor.registry.actorsFor(activity.processId)
-    info("found " + statementAnalysers.size + " process actors")
+    info("found " + statementAnalysers.size + " statement monitors")
 
     for(statementAnalyser <- statementAnalysers) statementAnalyser ! activity
 
   }
+
+  override def preStart = {
+    trace("Starting Activity monitor with id " + self.id)
+  }
+
+  override def postStop = {
+    trace("Stopping Activity monitor with id " + self.id)
+  }
+
 
 }
 

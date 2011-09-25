@@ -8,6 +8,8 @@ import akka.actor.{Actor, TypedActor, ActorRef}
 import akka.actor.Actor._
 import akka.stm._
 import se.aorwall.logserver.monitor.ActivityAnalyserPool
+import collection.immutable.HashMap
+import grizzled.slf4j.Logging
 
 /**
  * Handling the configuration of business processes and monitored statements
@@ -19,24 +21,29 @@ trait ConfigurationService {
 
   def removeBusinessProcess(processId: String): Unit
 
-  def addStatementToProcess(processId: String, statement: Statement): Unit
+  def addStatementToProcess(statement: Statement): Unit
 
   def removeStatementFromProcess(processId: String, statementId: String)
 }
 
-class ConfigurationServiceImpl(configurationStorage: ConfigurationStorage, logStorage: LogStorage) extends TypedActor with ConfigurationService {
+class ConfigurationServiceImpl(configurationStorage: ConfigurationStorage, logStorage: LogStorage) extends TypedActor with ConfigurationService with Logging {
 
   val activeProcesses = TransactionalMap[String, ActorRef]
+  val activeStatementMonitors = TransactionalMap[String, Map[String, Statement]]
+
   val analyserPool = actorOf(new ActivityAnalyserPool)
 
   override def preStart = {
+    trace("Starting ConfigurationService")
     // Read and start all processes and statements from configuration storage
     configurationStorage.readAllBusinessProcesses().foreach(p => startBusinessProcess(p))
     analyserPool.start()
   }
 
   override def postStop = {
+    trace("Stopping ConfigurationService")
     val processesToStop = activeProcesses.map(_._1)
+    trace("Will stop " + processesToStop.size + " active processes")
     processesToStop.foreach(p => stopBusinessProcess(p))
     analyserPool.stop()
   }
@@ -63,39 +70,56 @@ class ConfigurationServiceImpl(configurationStorage: ConfigurationStorage, logSt
   private def startBusinessProcess(businessProcess: BusinessProcess) = {
     val processActor = actorOf(new ProcessActor(businessProcess, logStorage, analyserPool))
     atomic {
+      processActor.start()
       activeProcesses += businessProcess.processId -> processActor
     }
 
     // Check for statements and start them to
-    configurationStorage.readStatements(businessProcess.processId).foreach(_.createActor(businessProcess.processId).start)
+    atomic {
+      activeStatementMonitors += businessProcess.processId -> HashMap[String, Statement]()
+    }
+
+    configurationStorage.readStatements(businessProcess.processId).foreach(stmt => startStatement(stmt))
+  }
+
+  /**
+   * start statement monitor
+   */
+  private def startStatement(statement: Statement) = {
+
+    atomic {
+      statement.startMonitor()
+      activeStatementMonitors(statement.processId) += statement.statementId -> statement
+    }
   }
 
   /**
    * stop process
    */
   private def stopBusinessProcess(processId: String) = {
-    activeProcesses(processId).stop
 
     atomic {
+      activeProcesses(processId).stop
       activeProcesses -= processId
-    }
 
-    // Check for active statement montitors and stop them to
-    val statementMonitors = Actor.registry.actorsFor(processId)
-    statementMonitors.foreach(_.stop())
+      // Check for active statement montitors and stop them to
+      val statementMonitors = activeStatementMonitors(processId)
+      trace("Will stop " + statementMonitors.size + " active statement monitors for process " + processId)
+      statementMonitors.map(_._2).foreach(_.stopMonitor())
+      activeStatementMonitors -= processId
+    }
   }
 
-  def addStatementToProcess(processId: String, statement: Statement): Unit = {
-    configurationStorage.storeStatement(processId, statement)
-    val statementMonitor = statement.createActor(processId)
-    statementMonitor.id = processId + ":" + statement.statementId
-    statementMonitor.start()
+  def addStatementToProcess(statement: Statement): Unit = {
+    configurationStorage.storeStatement(statement)
+    startStatement(statement)
   }
 
   def removeStatementFromProcess(processId: String, statementId: String): Unit = {
     configurationStorage.deleteStatement(processId, statementId)
-    val statementMonitors = Actor.registry.actorsFor(processId + ":" + statementId)
-    statementMonitors.foreach(_.stop())
+    atomic {
+       activeStatementMonitors(processId)(statementId).stopMonitor()
+       activeStatementMonitors(processId) -= statementId
+     }
   }
-
 }

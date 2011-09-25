@@ -7,7 +7,7 @@ import se.aorwall.logserver.model.{Log, Activity, State}
 /**
  * Create a new process based on the componentId in the incoming log event
  */
-class DynamicComponent () extends BusinessProcess with Logging {
+class DynamicComponent (val timeout: Long) extends BusinessProcess with Logging {
 
   val processId = "dynamicComponent"
 
@@ -28,28 +28,27 @@ class DynamicComponent () extends BusinessProcess with Logging {
 
 class DynamicComponentActivityBuilder () extends ActivityBuilder {
 
-  var startEvent: Log = null  //TODO: Fix null?
-  var endEvent: Log = null
+  var startEvent: Option[Log] = None
+  var endEvent: Option[Log] = None
 
   def addLogEvent(logevent: Log): Unit = {
      if(logevent.state == State.START){
-       startEvent = logevent
+       startEvent = Some(logevent)
      } else if(logevent.state >= 10) {
-       endEvent = logevent
+       endEvent = Some(logevent)
      }
   }
 
-  def isFinished(): Boolean = startEvent != null && endEvent != null
+  def isFinished(): Boolean = startEvent != None && endEvent != None
 
-  def createActivity() = {
-    if(startEvent != null && endEvent != null){
-      new Activity(endEvent.componentId, endEvent.correlationId, endEvent.state, startEvent.timestamp, endEvent.timestamp)
-    } else if(startEvent != null) {
-      new Activity(startEvent.componentId, startEvent.correlationId, State.TIMEOUT, startEvent.timestamp, 0L)
-    } else if(endEvent != null) {
-       throw new RuntimeException("DynamicComponentActivityBuilder was trying to create a activity with only an end log event. End event: " + endEvent)
-    } else  {
+  def createActivity() = (startEvent, endEvent) match {
+    case (Some(start: Log), Some(end: Log)) =>
+      new Activity(end.componentId, end.correlationId, end.state, start.timestamp, end.timestamp)
+    case (Some(start: Log), _) =>
+      new Activity(start.componentId, start.correlationId, State.TIMEOUT, start.timestamp, 0L)
+    case (_, end: Log) =>
+       throw new RuntimeException("DynamicComponentActivityBuilder was trying to create a activity with only an end log event. End event: " + end)
+    case (_, _) =>
        throw new RuntimeException("DynamicComponentActivityBuilder was trying to create a activity without either a start or an end log event.")
-    }
   }
 }

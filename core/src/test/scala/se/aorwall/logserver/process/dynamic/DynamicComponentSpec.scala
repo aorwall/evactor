@@ -8,7 +8,7 @@ import se.aorwall.logserver.model.{Log, State}
 class DynamicComponentSpec extends WordSpec with MustMatchers with Logging {
 
   val compId = "startComponent"
-  val process = new DynamicComponent
+  val process = new DynamicComponent(0L)
 
   "A DynamicComponent" must {
 
