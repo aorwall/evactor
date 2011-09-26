@@ -8,6 +8,7 @@ import grizzled.slf4j.Logging
 class Alerter (endpoint: String) extends Actor with Producer with Logging {
   def endpointUri = endpoint
   self.id = endpointUri
+  override def oneway = true
 
  /* override protected def receiveBeforeProduce = {
     case alert: Alert => {
@@ -21,12 +22,6 @@ class Alerter (endpoint: String) extends Actor with Producer with Logging {
       msg
     }
   }*/
-
-  override protected def receiveAfterProduce = {
-    // do not reply but forward result to target
-    case msg => info("receiveAfterProduce: " + msg)
-  }
-
 
   override def preStart = {
     trace("Starting alerter with endpoint " + endpointUri)

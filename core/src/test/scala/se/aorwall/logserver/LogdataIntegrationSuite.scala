@@ -28,7 +28,7 @@ class LogdataIntegrationSuite extends FunSuite with MustMatchers with TestKit wi
 
   test("Recieve a logdata objects and send an alert") {
 
-    val camelEndpoint = "direct:test"
+    val camelEndpoint = "seda:test"
     var result: Alert = null
 
     val alertReceiver = actorOf(new Actor with Consumer {
@@ -37,7 +37,7 @@ class LogdataIntegrationSuite extends FunSuite with MustMatchers with TestKit wi
       def endpointUri = camelEndpoint
 
       def receive = {
-        case msg: Message => info(msg.bodyAs[Alert])
+        case msg: Message => result = msg.bodyAs[Alert]
       }
     })
 
@@ -49,12 +49,12 @@ class LogdataIntegrationSuite extends FunSuite with MustMatchers with TestKit wi
     when(logStorage.readLogs("process:329380921309")).thenReturn(List())
     when(confStorage.readAllBusinessProcesses()).thenReturn(List())
     when(confStorage.readStatements(processId)).thenReturn(List())
-    val logReceiver = actorOf(new LogdataReceiver("direct:logreceiver"))
+    val logReceiver = actorOf(new LogdataReceiver("seda:logreceiver"))
 
     // Define the business process
     val startComp = new Component("startComponent", 1)
     val endComp = new Component("endComponent", 1)
-    val process = new SimpleProcess(processId, List(startComp, endComp), 0L)
+    val process = new SimpleProcess(processId, List(startComp, endComp), 1L)
     val latencyStmt = new Latency(processId, "statementId", camelEndpoint, 2000, Some(new LengthWindowConf(2)))
 
     val confService = TypedActor.newInstance(classOf[ConfigurationService], new ConfigurationServiceImpl(confStorage, logStorage))
@@ -71,17 +71,16 @@ class LogdataIntegrationSuite extends FunSuite with MustMatchers with TestKit wi
     } must be === true
 
 
-    Thread.sleep(200L)
+    Thread.sleep(500L)
 
     val currentTime = System.currentTimeMillis
 
-    logReceiver ! new Log("server", "startComponent", "329380921309", "client", currentTime, State.START, "hello")
-    logReceiver ! new Log("server", "startComponent", "329380921309", "client", currentTime+1000, State.SUCCESS, "") // success
-    logReceiver ! new Log("server", "endComponent", "329380921309", "startComponent", currentTime+2000, State.START, "")
-    logReceiver ! new Log("server", "endComponent", "329380921309", "startComponent", currentTime+3000, State.SUCCESS, "") // success
+    CamelContextManager.mandatoryTemplate.sendBody("seda:logreceiver",new Log("server", "startComponent", "329380921309", "client", currentTime, State.START, "hello"))
+    CamelContextManager.mandatoryTemplate.sendBody("seda:logreceiver",new Log("server", "startComponent", "329380921309", "client", currentTime+1000, State.SUCCESS, "")) // success
+    CamelContextManager.mandatoryTemplate.sendBody("seda:logreceiver",new Log("server", "endComponent", "329380921309", "startComponent", currentTime+2000, State.START, ""))
+    CamelContextManager.mandatoryTemplate.sendBody("seda:logreceiver",new Log("server", "endComponent", "329380921309", "startComponent", currentTime+3000, State.SUCCESS, "")) // success
 
-    Thread.sleep(200L)
-
+    Thread.sleep(2000L)
     // Stop actors
     TypedActor.stop(confService)
 
