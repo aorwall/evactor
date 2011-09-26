@@ -3,8 +3,8 @@ package se.aorwall.logserver.model.process.simple
 import collection.immutable.Map
 import grizzled.slf4j.Logging
 import se.aorwall.logserver.model.process.{ActivityBuilder, BusinessProcess}
-import collection.mutable.ListBuffer
 import se.aorwall.logserver.model.{Log, Activity, State}
+import se.aorwall.logserver.process.ActivityException
 
 class SimpleProcess(val processId: String, val components: List[Component], val timeout: Long) extends BusinessProcess with Logging {
 
@@ -63,8 +63,13 @@ class SimpleActivityBuilder(val processId: String, val components: List[Componen
     case (Some(start: Log), _) =>
       new Activity(processId, start.correlationId, State.TIMEOUT, start.timestamp, 0L)
     case (_, end: Log) =>
-       throw new RuntimeException("SimpleActivityBuilder was trying to create a activity with only an end log event. End event: " + end)
+       throw new ActivityException("SimpleActivityBuilder was trying to create a activity with only an end log event. End event: " + end)
     case (_, _) =>
-       throw new RuntimeException("SimpleActivityBuilder was trying to create a activity without either a start or an end log event.")
+       throw new ActivityException("SimpleActivityBuilder was trying to create a activity without either a start or an end log event.")
+  }
+
+  def clear() = {
+    startEvent = None
+    endEvent = None
   }
 }

@@ -3,6 +3,7 @@ package se.aorwall.logserver.process.dynamic
 import grizzled.slf4j.Logging
 import se.aorwall.logserver.model.process.{ActivityBuilder, BusinessProcess}
 import se.aorwall.logserver.model.{Log, Activity, State}
+import se.aorwall.logserver.process.ActivityException
 
 /**
  * Create a new process based on the componentId in the incoming log event
@@ -47,8 +48,14 @@ class DynamicComponentActivityBuilder () extends ActivityBuilder {
     case (Some(start: Log), _) =>
       new Activity(start.componentId, start.correlationId, State.TIMEOUT, start.timestamp, 0L)
     case (_, end: Log) =>
-       throw new RuntimeException("DynamicComponentActivityBuilder was trying to create a activity with only an end log event. End event: " + end)
+       throw new ActivityException("DynamicComponentActivityBuilder was trying to create a activity with only an end log event. End event: " + end)
     case (_, _) =>
-       throw new RuntimeException("DynamicComponentActivityBuilder was trying to create a activity without either a start or an end log event.")
+       throw new ActivityException("DynamicComponentActivityBuilder was trying to create a activity without either a start or an end log event.")
   }
+
+  def clear() = {
+    startEvent = None
+    endEvent = None
+  }
+
 }

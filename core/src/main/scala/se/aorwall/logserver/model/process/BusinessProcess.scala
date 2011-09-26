@@ -49,4 +49,9 @@ abstract class ActivityBuilder {
    * Create activity with current state
    */
   def createActivity(): Activity
+
+  /**
+   * Clear state of activity builder
+   */
+  def clear(): Unit
 }

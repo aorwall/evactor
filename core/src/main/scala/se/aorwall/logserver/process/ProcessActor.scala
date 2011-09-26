@@ -7,8 +7,10 @@ import Actor._
 import se.aorwall.logserver.model.process.BusinessProcess
 import se.aorwall.logserver.model.{Log}
 import se.aorwall.logserver.storage.LogStorage
+import akka.config.Supervision.OneForOneStrategy
 
 class ProcessActor(businessProcess: BusinessProcess, storage: LogStorage, analyserPool: ActorRef) extends Actor with Logging {
+  self.faultHandler = OneForOneStrategy(List(classOf[Throwable]), 3, 5000)
 
   val runningActivites = new HashMap[String, ActorRef]
 
@@ -31,18 +33,19 @@ class ProcessActor(businessProcess: BusinessProcess, storage: LogStorage, analys
       if (!businessProcess.startNewActivity(logevent) && storage.activityExists(businessProcess.processId, id)) {
         warn("A finished activity with id " + id + " already exists.")
       } else {
-        val actor = actorOf(new ActivityActor(businessProcess.getActivityBuilder(), storage, analyserPool, businessProcess.timeout))
+        val actor = actorOf(new ActivityActor(businessProcess.getActivityBuilder(), storage, analyserPool, businessProcess.timeout, self))
         actor.id = id
+        self.link(actor)
         actor.start
 
         // ...and finally send the new log if the actor is still alive
         if(actor.isRunning)
           actor ! logevent
+        else
+          warn("Couldn't send log event to: " + actor)
       }
-    } else if (actors.length > 0) {
+    } else  {
       actors(0) ! logevent
-    } else {
-      warn("Didn't handle: " + logevent)
     }
   }
 
