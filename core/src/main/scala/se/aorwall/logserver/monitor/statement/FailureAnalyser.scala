@@ -13,24 +13,27 @@ class FailureAnalyser (processId: String, alerter: ActorRef, states: List[Int], 
 
   var failedActivities = new TreeMap[Long, Int] ()
 
-  def analyse(activity: Activity) = if(states.contains(activity.state)){ // check if activity has a failure state  TODO: state in states?
+  def analyse(activity: Activity) {
 
-    // Add new
-    failedActivities += (activity.startTimestamp -> activity.state)  // TODO: Use endTimestamp instead of startTimestamp? And what if two activites have the same timestamp?
+    if(states.contains(activity.state)){ // check if activity has a failure state  TODO: state in states?
 
-    // Remove old
-    val inactiveActivites = getInactive(failedActivities)
+      // Add new
+      failedActivities += (activity.startTimestamp -> activity.state)  // TODO: Use endTimestamp instead of startTimestamp? And what if two activites have the same timestamp?
 
-    failedActivities = failedActivities.drop(inactiveActivites.size)
+      // Remove old
+      val inactiveActivites = getInactive(failedActivities)
 
-    trace(failedActivities)
-    debug("no of activities for process " + processId + " with state " + states + ": " + failedActivities.size)
+      failedActivities = failedActivities.drop(inactiveActivites.size)
 
-    if(failedActivities.size > maxOccurrences) {
-      alert(failedActivities.size + " failed activites in process " + processId + " with state " + states + " is more than allowed (" + maxOccurrences + ")")
-    } else {
-      backToNormal("back to normal!")
+      trace(failedActivities)
+      debug("no of activities for process " + processId + " with state " + states + ": " + failedActivities.size)
+
+      if(failedActivities.size > maxOccurrences) {
+        alert(failedActivities.size + " failed activites in process " + processId + " with state " + states + " is more than allowed (" + maxOccurrences + ")")
+      } else {
+        backToNormal("back to normal!")
+      }
+
     }
-
   }
 }

@@ -2,7 +2,7 @@ package se.aorwall.logserver.monitor.statement
 
 import se.aorwall.logserver.model.Activity
 import grizzled.slf4j.Logging
-import akka.actor.{ActorRef, Scheduler, Actor}
+import akka.actor.{ActorRef, Scheduler}
 import java.util.concurrent.{ScheduledFuture, TimeUnit}
 
 class AbsenceOfRequestsAnalyser (val processId: String, val alerter: ActorRef, val timeframe: Long)
@@ -10,8 +10,8 @@ class AbsenceOfRequestsAnalyser (val processId: String, val alerter: ActorRef, v
 
   var scheduledFuture: Option[ScheduledFuture[AnyRef]] = None
 
-  def analyse(activity: Activity) = {
-    info("Received: " + activity)
+  def analyse(activity: Activity) {
+    debug("Received: " + activity)
 
     if(activity.activityId == "")
       alert("No activities within the timeframe " + timeframe + "ms")
@@ -25,16 +25,16 @@ class AbsenceOfRequestsAnalyser (val processId: String, val alerter: ActorRef, v
     startScheduler()
   }
 
-  def startScheduler() = {
+  def startScheduler() {
     scheduledFuture = Some(Scheduler.schedule(self, new Activity(processId, "", 0, 0, 0), timeframe, timeframe, TimeUnit.MILLISECONDS))
   }
 
-  override def preStart() = {
+  override def preStart() {
     trace("Starting statement monitor with id " + self.id)
     startScheduler()
   }
 
-  override def postStop = {
+  override def postStop() {
     trace("Stopping statement monitor with id " + self.id)
     scheduledFuture match {
       case Some(s) => s.cancel(true)

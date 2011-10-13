@@ -9,8 +9,7 @@ import akka.camel.{Message, Consumer}
 
 /**
  * 1. Receive log data object
- * 2. Save in DB
- * 3. Send to process actors
+ * 2. Send to process actors
  */
 class LogdataReceiver(camelUri: String) extends Actor with Consumer with Logging {
 

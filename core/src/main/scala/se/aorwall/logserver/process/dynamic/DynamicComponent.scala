@@ -32,7 +32,7 @@ class DynamicComponentActivityBuilder () extends ActivityBuilder {
   var startEvent: Option[Log] = None
   var endEvent: Option[Log] = None
 
-  def addLogEvent(logevent: Log): Unit = {
+  def addLogEvent(logevent: Log) {
      if(logevent.state == State.START){
        startEvent = Some(logevent)
      } else if(logevent.state >= 10) {
@@ -53,7 +53,7 @@ class DynamicComponentActivityBuilder () extends ActivityBuilder {
        throw new ActivityException("DynamicComponentActivityBuilder was trying to create a activity without either a start or an end log event.")
   }
 
-  def clear() = {
+  def clear() {
     startEvent = None
     endEvent = None
   }

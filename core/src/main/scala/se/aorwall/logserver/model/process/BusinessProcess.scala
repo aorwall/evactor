@@ -1,6 +1,5 @@
 package se.aorwall.logserver.model.process
 
-import collection.immutable.Map
 import se.aorwall.logserver.model.{Log, Activity}
 
 /**
@@ -24,7 +23,7 @@ trait BusinessProcess {
   /**
    * Return a new instance of the Business Processes ActivityBuilder
    */
-  def getActivityBuilder(): ActivityBuilder
+  def getActivityBuilder: ActivityBuilder
 
   /**
    * Defines if a new activity should be started
@@ -43,7 +42,7 @@ abstract class ActivityBuilder {
   /**
    * Check if the activity is finished
    */
-  def isFinished(): Boolean
+  def isFinished: Boolean
 
   /**
    * Create activity with current state
@@ -53,5 +52,5 @@ abstract class ActivityBuilder {
   /**
    * Clear state of activity builder
    */
-  def clear(): Unit
+  def clear()
 }

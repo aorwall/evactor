@@ -12,7 +12,7 @@ trait LogStorage {
   /**
    * Store a log object to specified activity
    */
-  def storeLog(activityId: String, log: Log): Unit
+  def storeLog(activityId: String, log: Log)
 
   /**
    * Read all log objects for a specified activity
@@ -22,12 +22,12 @@ trait LogStorage {
   /**
    * Remove an activity and it's log objects
    */
-  def removeActivity(activityId: String): Unit
+  def removeActivity(activityId: String)
 
   /**
    * Store an activity object
    */
-  def storeActivity(activity: Activity): Unit
+  def storeActivity(activity: Activity)
 
   /**
    * Read activity objects

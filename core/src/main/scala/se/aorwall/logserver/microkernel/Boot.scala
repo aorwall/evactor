@@ -3,7 +3,6 @@ package se.aorwall.logserver.microkernel
 import se.aorwall.logserver.configuration.{ConfigurationServiceImpl, ConfigurationService}
 import akka.actor.Actor._
 import se.aorwall.logserver.receive.LogdataReceiver
-import se.aorwall.logserver.storage.invm.{InvmConfigurationStorage, InvmLogStorage}
 import akka.config.Supervision._
 import akka.actor.{Supervisor, TypedActor, SupervisorFactory}
 import akka.config.TypedActorConfigurator
@@ -23,8 +22,7 @@ class Boot {
  manager
    .addExternalGuiceModule(new AbstractModule() {
       def configure {
-        bind(classOf[LogStorage]).to(classOf[InvmLogStorage]).in(Scopes.SINGLETON);
-        bind(classOf[ConfigurationStorage]).to(classOf[InvmConfigurationStorage]).in(Scopes.SINGLETON);
+        //TODO
       }})
    .inject
    .configure(

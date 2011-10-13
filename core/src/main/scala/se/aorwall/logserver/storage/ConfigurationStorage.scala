@@ -7,12 +7,12 @@ trait ConfigurationStorage {
 
   def readAllBusinessProcesses(): List[BusinessProcess]
   def readBusinessProcess(processId: String): BusinessProcess
-  def storeBusinessProcess(process: BusinessProcess): Unit
-  def deleteBusinessProcess(processId: String): Unit
+  def storeBusinessProcess(process: BusinessProcess)
+  def deleteBusinessProcess(processId: String)
 
   def readStatements(processId: String): List[Statement]
   def readStatement(processId: String, statementId: String): Statement
-  def storeStatement(statement: Statement): Unit
-  def deleteStatement(processId: String, statementId: String): Unit
+  def storeStatement(statement: Statement)
+  def deleteStatement(processId: String, statementId: String)
 
 }

@@ -46,10 +46,10 @@ class SimpleProcessSpec extends WordSpec with MustMatchers with Logging {
       val activityBuilder = process.getActivityBuilder()
       activityBuilder.addLogEvent(new Log("server", startCompId, "corrId", "client", 0L, State.START, ""))
       activityBuilder.addLogEvent(new Log("server", startCompId, "corrId", "client", 0L, State.SUCCESS, ""))
-      activityBuilder.isFinished() must be === false
+      activityBuilder.isFinished must be === false
       activityBuilder.addLogEvent(new Log("server", endCompId, "corrId", "client", 0L, State.START, ""))
       activityBuilder.addLogEvent(new Log("server", endCompId, "corrId", "client", 0L, State.SUCCESS, ""))
-      activityBuilder.isFinished() must be === true
+      activityBuilder.isFinished must be === true
 
       val activity = activityBuilder.createActivity()
       activity.state must be(State.SUCCESS)
@@ -60,7 +60,7 @@ class SimpleProcessSpec extends WordSpec with MustMatchers with Logging {
       val activityBuilder = oneComponentProcess.getActivityBuilder()
       activityBuilder.addLogEvent(new Log("server", startCompId, "corrId", "client", 0L, State.START, ""))
       activityBuilder.addLogEvent(new Log("server", startCompId, "corrId", "client", 0L, State.SUCCESS, ""))
-      activityBuilder.isFinished() must be === true
+      activityBuilder.isFinished must be === true
     }
 
     "create an activity with state INTERNAL_FAILURE when flow with just one component receives a log event with the state INTERNAL_FAILURE" in {
@@ -68,7 +68,7 @@ class SimpleProcessSpec extends WordSpec with MustMatchers with Logging {
       val activityBuilder = oneComponentProcess.getActivityBuilder()
       activityBuilder.addLogEvent(new Log("server", startCompId, "corrId", "client", 0L, State.START, ""))
       activityBuilder.addLogEvent(new Log("server", startCompId, "corrId", "client", 0L, State.INTERNAL_FAILURE, ""))
-      activityBuilder.isFinished() must be === true
+      activityBuilder.isFinished must be === true
 
       val activity = activityBuilder.createActivity()
       activity.state must be(State.INTERNAL_FAILURE)
@@ -78,7 +78,7 @@ class SimpleProcessSpec extends WordSpec with MustMatchers with Logging {
       val activityBuilder = process.getActivityBuilder()
       activityBuilder.addLogEvent(new Log("server", startCompId, "corrId", "client", 0L, State.START, ""))
       activityBuilder.addLogEvent(new Log("server", startCompId, "corrId", "client", 0L, State.INTERNAL_FAILURE, ""))
-      activityBuilder.isFinished() must be === true
+      activityBuilder.isFinished must be === true
 
       val activity = activityBuilder.createActivity()
       activity.state must be(State.INTERNAL_FAILURE)
@@ -88,15 +88,15 @@ class SimpleProcessSpec extends WordSpec with MustMatchers with Logging {
       val activityBuilder = process.getActivityBuilder()
       activityBuilder.addLogEvent(new Log("server", startCompId, "corrId", "client", 0L, State.START, ""))
       activityBuilder.addLogEvent(new Log("server", startCompId, "corrId", "client", 0L, State.SUCCESS, ""))
-      activityBuilder.isFinished() must be === false
+      activityBuilder.isFinished must be === false
       activityBuilder.addLogEvent(new Log("server", endCompId, "corrId", "client", 0L, State.START, ""))
       activityBuilder.addLogEvent(new Log("server", endCompId, "corrId", "client", 0L, State.BACKEND_FAILURE, ""))
       activityBuilder.addLogEvent(new Log("server", endCompId, "corrId", "client", 0L, State.START, ""))
       activityBuilder.addLogEvent(new Log("server", endCompId, "corrId", "client", 0L, State.BACKEND_FAILURE, ""))
-      activityBuilder.isFinished() must be === false
+      activityBuilder.isFinished must be === false
       activityBuilder.addLogEvent(new Log("server", endCompId, "corrId", "client", 0L, State.START, ""))
       activityBuilder.addLogEvent(new Log("server", endCompId, "corrId", "client", 0L, State.BACKEND_FAILURE, ""))
-      activityBuilder.isFinished() must be === true
+      activityBuilder.isFinished must be === true
 
       val activity = activityBuilder.createActivity()
       activity.state must be(State.BACKEND_FAILURE)

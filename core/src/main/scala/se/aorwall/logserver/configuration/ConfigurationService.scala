@@ -4,12 +4,14 @@ import se.aorwall.logserver.model.process.BusinessProcess
 import se.aorwall.logserver.model.statement.Statement
 import se.aorwall.logserver.process.ProcessActor
 import se.aorwall.logserver.storage.{LogStorage, ConfigurationStorage}
-import akka.actor.{Actor, TypedActor, ActorRef}
+import akka.actor.{TypedActor, ActorRef}
 import akka.actor.Actor._
 import akka.stm._
 import se.aorwall.logserver.monitor.ActivityAnalyserPool
 import collection.immutable.HashMap
 import grizzled.slf4j.Logging
+import com.google.inject.Inject
+import akka.config.Supervision.OneForOneStrategy
 
 /**
  * Handling the configuration of business processes and monitored statements
@@ -17,31 +19,46 @@ import grizzled.slf4j.Logging
  * TODO: TypedActor!
  */
 trait ConfigurationService {
-  def addBusinessProcess(businessProcess: BusinessProcess): Unit
+  def addBusinessProcess(businessProcess: BusinessProcess)
 
-  def removeBusinessProcess(processId: String): Unit
+  def removeBusinessProcess(processId: String)
 
-  def addStatementToProcess(statement: Statement): Unit
+  def addStatementToProcess(statement: Statement)
 
   def removeStatementFromProcess(processId: String, statementId: String)
 }
 
-class ConfigurationServiceImpl(configurationStorage: ConfigurationStorage, logStorage: LogStorage) extends TypedActor with ConfigurationService with Logging {
+class ConfigurationServiceImpl() extends TypedActor with ConfigurationService with Logging {
+  self.faultHandler = OneForOneStrategy(List(classOf[Throwable]), 3, 5000)
 
-  val activeProcesses = TransactionalMap[String, ActorRef]
-  val activeStatementMonitors = TransactionalMap[String, Map[String, Statement]]
+  var configurationStorage: Option[ConfigurationStorage] = None
+  var logStorage: Option[LogStorage] = None
+
+  @Inject
+  def setConfigurationStorage(tConfigurationStorage: ConfigurationStorage) {
+    // Read and start all processes and statements from configuration storage when it gets injected
+    tConfigurationStorage.readAllBusinessProcesses().foreach(p => startBusinessProcess(p))
+    configurationStorage = Some(tConfigurationStorage)
+  }
+
+  @Inject
+  def setLogStorage(tLogStorage: LogStorage) {
+     info("setting log storage")
+     logStorage = Some(tLogStorage)
+  }
+
+  val activeProcesses = TransactionalMap[String, ActorRef]()
+  val activeStatementMonitors = TransactionalMap[String, Map[String, Statement]]()
 
   val analyserPool = actorOf(new ActivityAnalyserPool)
 
-  override def preStart = {
-    trace("Starting ConfigurationService")
-    // Read and start all processes and statements from configuration storage
-    configurationStorage.readAllBusinessProcesses().foreach(p => startBusinessProcess(p))
-    analyserPool.start()
+  override def preStart() {
+    debug("Starting ConfigurationService")
+    self.startLink(analyserPool)
   }
 
-  override def postStop = {
-    trace("Stopping ConfigurationService")
+  override def postStop() {
+    debug("Stopping ConfigurationService")
     val processesToStop = activeProcesses.map(_._1)
     trace("Will stop " + processesToStop.size + " active processes")
     processesToStop.foreach(p => stopBusinessProcess(p))
@@ -51,26 +68,32 @@ class ConfigurationServiceImpl(configurationStorage: ConfigurationStorage, logSt
   /**
    * Saves process configuration in storage and starts an process actor
    */
-  def addBusinessProcess(businessProcess: BusinessProcess): Unit = {
-    configurationStorage.storeBusinessProcess(businessProcess)
+  def addBusinessProcess(businessProcess: BusinessProcess) {
+    configurationStorage match {
+      case Some(c) => c.storeBusinessProcess(businessProcess)
+      case None =>
+    }
     startBusinessProcess(businessProcess)
   }
 
   /**
    * Remove process configuration in storage and stop the related process actor
    */
-  def removeBusinessProcess(processId: String): Unit = {
-    configurationStorage.deleteBusinessProcess(processId)
+  def removeBusinessProcess(processId: String) {
+    configurationStorage match {
+      case Some(c) => c.deleteBusinessProcess(processId)
+      case None =>
+    }
     stopBusinessProcess(processId)
   }
 
   /**
    * start process
    */
-  private def startBusinessProcess(businessProcess: BusinessProcess) = {
+  private def startBusinessProcess(businessProcess: BusinessProcess) {
     val processActor = actorOf(new ProcessActor(businessProcess, logStorage, analyserPool))
     atomic {
-      processActor.start()
+      self.startLink(processActor.start())
       activeProcesses += businessProcess.processId -> processActor
     }
 
@@ -79,14 +102,16 @@ class ConfigurationServiceImpl(configurationStorage: ConfigurationStorage, logSt
       activeStatementMonitors += businessProcess.processId -> HashMap[String, Statement]()
     }
 
-    configurationStorage.readStatements(businessProcess.processId).foreach(stmt => startStatement(stmt))
+    configurationStorage match {
+      case Some(c) => c.readStatements(businessProcess.processId).foreach(stmt => startStatement(stmt))
+      case None =>
+    }
   }
 
   /**
    * start statement monitor
    */
-  private def startStatement(statement: Statement) = {
-
+  private def startStatement(statement: Statement) {
     atomic {
       statement.startMonitor()
       activeStatementMonitors(statement.processId) += statement.statementId -> statement
@@ -97,9 +122,9 @@ class ConfigurationServiceImpl(configurationStorage: ConfigurationStorage, logSt
    * stop process
    */
   private def stopBusinessProcess(processId: String) = {
-
     atomic {
-      activeProcesses(processId).stop
+      self.unlink(activeProcesses(processId))
+      activeProcesses(processId).stop()
       activeProcesses -= processId
 
       // Check for active statement montitors and stop them to
@@ -110,13 +135,19 @@ class ConfigurationServiceImpl(configurationStorage: ConfigurationStorage, logSt
     }
   }
 
-  def addStatementToProcess(statement: Statement): Unit = {
-    configurationStorage.storeStatement(statement)
+  def addStatementToProcess(statement: Statement) {
+    configurationStorage match {
+      case Some(c) => c.storeStatement(statement)
+      case None =>
+    }
     startStatement(statement)
   }
 
-  def removeStatementFromProcess(processId: String, statementId: String): Unit = {
-    configurationStorage.deleteStatement(processId, statementId)
+  def removeStatementFromProcess(processId: String, statementId: String) {
+    configurationStorage match {
+      case Some(c) => c.deleteStatement(processId, statementId)
+      case None =>
+    }
     atomic {
        activeStatementMonitors(processId)(statementId).stopMonitor()
        activeStatementMonitors(processId) -= statementId

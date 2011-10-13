@@ -1,6 +1,6 @@
 package se.aorwall.logserver.model.statement
 
-import akka.actor.{Actor, ActorRef}
+import akka.actor.Actor
 import Actor._
 import window.{TimeWindowConf, LengthWindowConf, WindowConf}
 import se.aorwall.logserver.monitor.statement.LatencyAnalyser

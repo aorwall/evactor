@@ -12,14 +12,18 @@ import akka.config.Supervision.Permanent
 /**
  * One Activity Actor for each running activity
  */
-class ActivityActor(activityBuilder: ActivityBuilder, storage: LogStorage, analyser: ActorRef, timeout: Long, parent: ActorRef) extends Actor with Logging{
+class ActivityActor(activityBuilder: ActivityBuilder, storage: Option[LogStorage], analyser: ActorRef, timeout: Long) extends Actor with Logging{
   self.lifeCycle = Permanent
   var scheduledTimeout: Option[ScheduledFuture[AnyRef]] = None
 
-  override def preStart {
+  override def preStart() {
     trace("Starting ActivityActor with id " + self.id)
 
-    val storedLogs = storage.readLogs(self.id)
+    val storedLogs = storage match {
+      case Some(s) => s.readLogs(self.id)
+      case None => List[Log]()
+    }
+
     storedLogs.foreach(log => process(log))
 
     if(timeout > 0){
@@ -44,28 +48,31 @@ class ActivityActor(activityBuilder: ActivityBuilder, storage: LogStorage, analy
     case msg => info("Can't handle: " + msg)
   }
 
-  def process(logevent: Log): Unit = {
+  def process(logevent: Log) {
 
      debug("Received log event with state: " + logevent.state )
 
      activityBuilder.addLogEvent(logevent)
 
-     if(activityBuilder.isFinished()){
+     if(activityBuilder.isFinished){
        debug("Finished: " + logevent)
        sendActivity(activityBuilder.createActivity())
      }
   }
 
-  def sendActivity(activity: Activity): Unit = {
+  def sendActivity(activity: Activity) {
 
     debug("sending activity: " + activity)
 
     // Save activity in db and send to analyser
 
-    if(storage.activityExists(activity.processId, activity.activityId)){
+    if(activityExists(activity.processId, activity.activityId)){
       warn("An activity for process " + activity.processId + " with id " + activity.activityId + " already exists")
     } else {
-      storage.storeActivity(activity)
+      storage match {
+        case Some(s) => s.storeActivity(activity)
+        case None =>
+      }
       analyser ! activity
     }
 
@@ -74,7 +81,12 @@ class ActivityActor(activityBuilder: ActivityBuilder, storage: LogStorage, analy
     self.stop() // TODO: Is stop really needed?
   }
 
-  override def postStop = {
+  def activityExists(processId: String, activityId: String) = storage match {
+    case Some(s) => s.activityExists(processId, activityId)
+    case None => false // expect that no former activity exists if no storage is set
+  }
+
+  override def postStop() {
     trace("Stopping ActivityActor with id " + self.id)
     scheduledTimeout match {
       case Some(s) => s.cancel(true)

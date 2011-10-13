@@ -32,7 +32,7 @@ class DynamicComponentSpec extends WordSpec with MustMatchers with Logging {
       val activityBuilder = process.getActivityBuilder()
       activityBuilder.addLogEvent(new Log("server", compId, "corrId", "client", 0L, State.START, ""))
       activityBuilder.addLogEvent(new Log("server", compId, "corrId", "client", 0L, State.SUCCESS, ""))
-      activityBuilder.isFinished() must be === true
+      activityBuilder.isFinished must be === true
 
       val activity = activityBuilder.createActivity()
       activity.state must be(State.SUCCESS)
@@ -42,7 +42,7 @@ class DynamicComponentSpec extends WordSpec with MustMatchers with Logging {
       val activityBuilder = process.getActivityBuilder()
       activityBuilder.addLogEvent(new Log("server", compId, "corrId", "client", 0L, State.START, ""))
       activityBuilder.addLogEvent(new Log("server", compId, "corrId", "client", 0L, State.INTERNAL_FAILURE, ""))
-      activityBuilder.isFinished() must be === true
+      activityBuilder.isFinished must be === true
 
       val activity = activityBuilder.createActivity()
       activity.state must be(State.INTERNAL_FAILURE)

@@ -3,15 +3,19 @@ package se.aorwall.logserver.monitor.statement
 import window.LengthWindow
 import akka.actor.Actor._
 import akka.util.duration._
-import org.scalatest.{WordSpec}
 import org.scalatest.matchers.MustMatchers
 import se.aorwall.logserver.model.{Alert, Activity}
 import akka.testkit.{CallingThreadDispatcher, TestKit}
+import org.scalatest.{BeforeAndAfterAll, WordSpec}
 
-class LatencyAnalyserSpec extends WordSpec with MustMatchers with TestKit {
+class LatencyAnalyserSpec extends WordSpec with BeforeAndAfterAll with MustMatchers with TestKit {
 
   val process = "process"
   val correlationid = "correlationid"
+
+  override protected def afterAll(): scala.Unit = {
+    stopTestActor
+  }
 
   "A LatencyAnalyser" must {
 

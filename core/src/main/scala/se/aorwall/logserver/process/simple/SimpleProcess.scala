@@ -8,7 +8,7 @@ import se.aorwall.logserver.process.ActivityException
 
 class SimpleProcess(val processId: String, val components: List[Component], val timeout: Long) extends BusinessProcess with Logging {
 
-  val componentMap = components map { comp: Component => comp.componentId } toSet
+  val componentMap = components.map{ comp: Component => comp.componentId }.toSet
 
   def contains(componentId: String) = {
      componentMap.contains(componentId)
@@ -26,7 +26,7 @@ class SimpleProcess(val processId: String, val components: List[Component], val 
   def startNewActivity(logevent: Log) =
     components.head.componentId == logevent.componentId && logevent.state == State.START
 
-  override def toString() = "SimpleProcess ( id: " + processId + ", components: " + components + ")"
+  override def toString = "SimpleProcess ( id: " + processId + ", components: " + components + ")"
 
 }
 
@@ -38,7 +38,7 @@ class SimpleActivityBuilder(val processId: String, val components: List[Componen
   val failureStates = Set(State.INTERNAL_FAILURE, State.CLIENT_FAILURE, State.UNKNOWN_FAILURE)
   val endComponent = components.last
 
-  def addLogEvent(logevent: Log): Unit = {
+  def addLogEvent(logevent: Log) {
 
     if(components.head.componentId == logevent.componentId && logevent.state == State.START)
        startEvent = Some(logevent)
@@ -68,7 +68,7 @@ class SimpleActivityBuilder(val processId: String, val components: List[Componen
        throw new ActivityException("SimpleActivityBuilder was trying to create a activity without either a start or an end log event.")
   }
 
-  def clear() = {
+  def clear() {
     startEvent = None
     endEvent = None
   }

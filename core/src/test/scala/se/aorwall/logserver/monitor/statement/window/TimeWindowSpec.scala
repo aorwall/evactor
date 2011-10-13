@@ -10,7 +10,7 @@ class TimeWindowSpec extends WordSpec with MustMatchers with Logging {
   val currentTime = System.currentTimeMillis
   val activities = TreeMap(currentTime - 10000000L -> 11, currentTime - 1000000L -> 22, currentTime - 1000L -> 33, currentTime - 2000L -> 44, currentTime - 3000L -> 55)
 
-  "A TimehWindow" must {
+  "A TimeWindow" must {
 
     "return timed out activities" in {
 

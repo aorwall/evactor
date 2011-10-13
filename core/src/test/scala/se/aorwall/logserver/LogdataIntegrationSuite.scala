@@ -57,7 +57,7 @@ class LogdataIntegrationSuite extends FunSuite with MustMatchers with TestKit wi
     val process = new SimpleProcess(processId, List(startComp, endComp), 1L)
     val latencyStmt = new Latency(processId, "statementId", camelEndpoint, 2000, Some(new LengthWindowConf(2)))
 
-    val confService = TypedActor.newInstance(classOf[ConfigurationService], new ConfigurationServiceImpl(confStorage, logStorage))
+    val confService = TypedActor.newInstance(classOf[ConfigurationService], new ConfigurationServiceImpl())//confStorage, logStorage))
     confService.addBusinessProcess(process)
     confService.addStatementToProcess(latencyStmt)
 
