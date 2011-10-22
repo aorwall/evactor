@@ -6,8 +6,8 @@ import me.prettyprint.hector.api.Keyspace
 import me.prettyprint.cassandra.serializers.{StringSerializer, ObjectSerializer, UUIDSerializer, LongSerializer}
 import grizzled.slf4j.Logging
 import scala.collection.JavaConversions._
-import org.joda.time._
 import se.aorwall.logserver.model.{State, Statistics, Activity, Log}
+import org.joda.time._
 
 class CassandraStorage(keyspace: Keyspace) extends LogStorage with Logging {
 
@@ -57,7 +57,7 @@ class CassandraStorage(keyspace: Keyspace) extends LogStorage with Logging {
     // row key: process id
     // column key: end timestamp?
     // value: activity object
-    // TODO: Add expiration time if found in business process configuration
+    // TODO: Add expiration time if one exists in business process configuration
     mutator.insert(activity.processId, ACTIVITY_TIMELINE_CF, HFactory.createColumn(timeuuid, activity, UUIDSerializer.get, ObjectSerializer.get))
 
     // column family: Activity
@@ -99,7 +99,7 @@ class CassandraStorage(keyspace: Keyspace) extends LogStorage with Logging {
     }
 
     HFactory.createSliceQuery(keyspace, StringSerializer.get, UUIDSerializer.get, ObjectSerializer.get)
-            .setColumnFamily(ACTIVITY_CF)
+            .setColumnFamily(ACTIVITY_TIMELINE_CF)
             .setKey(processId)
             .setRange(fromTimeuuid, toTimeuuid, false, count)
             .execute()
@@ -132,26 +132,31 @@ class CassandraStorage(keyspace: Keyspace) extends LogStorage with Logging {
 
   def readStatisticsFromInterval(processId: String, from: DateTime, to: DateTime): Statistics = {
 
+    debug("Reading statistics for process with id " + processId + " from " + from + " to " + to)
+
+    // skipping seconds and millis for now...
+    val t = to.plusMillis(1000-to.get(DateTimeFieldType.millisOfSecond)).plusSeconds(59-to.get(DateTimeFieldType.secondOfMinute))
+    info(t)
+
     lazy val readStat: (DateTime => Statistics) = f => {
 
       val readFromDb = readStatisticsFromDb(processId, toMillis(f)) _
 
-      val period = new Period(f, to)
-
+      val period = new Period(f, t)
+      val duration = new Duration(f, t)
       // TODO: Read year if to >= current time and from < current year
 
       // TODO: Check seconds
-
       if(toMillis(from) == 0 && toMillis(to) == 0){
         readFromDb(Some(YEAR), System.currentTimeMillis) // read all
       } else if(f.get(DateTimeFieldType.minuteOfHour()) > 0 && period.getMinutes > 0){
-        val nextFrom = f.plusMinutes(60-f.get(DateTimeFieldType.minuteOfHour()))
+        val nextFrom = f.plusMinutes(period.getMinutes)
         readFromDb(None, toMillis(nextFrom)) + readStat(nextFrom)
       } else if(f.get(DateTimeFieldType.hourOfDay()) > 0 && period.getHours > 0){
         val nextFrom = f.plusHours(period.getHours)
         readFromDb(Some(HOUR), toMillis(nextFrom)) + readStat(nextFrom)
-      } else if (f.get(DateTimeFieldType.dayOfMonth()) > 1 && new Duration(f, to).getStandardDays > 0) {
-        val nextFrom = f.plusHours(new Duration(f, to).getStandardDays.toInt)
+      } else if (f.get(DateTimeFieldType.dayOfMonth()) > 1 && duration.getStandardDays > 0) {
+        val nextFrom = f.plusHours(duration.getStandardDays.toInt)
         readFromDb(Some(DAY), toMillis(nextFrom)) + readStat(nextFrom)
       } else if (f.get(DateTimeFieldType.monthOfYear()) > 1 && period.getMonths > 0) {
         val nextFrom = f.plusMonths(period.getMonths)
@@ -168,8 +173,10 @@ class CassandraStorage(keyspace: Keyspace) extends LogStorage with Logging {
       } else if (period.getHours > 0) {
         val nextFrom = f.plusHours(period.getHours)
         readFromDb(Some(HOUR), toMillis(nextFrom)) + readStat(nextFrom)
+      } else if (duration.getStandardSeconds > 0) {
+        readFromDb(None, toMillis(t))
       } else {
-        readFromDb(None, toMillis(to))
+        new Statistics(0L,0L,0L,0L,0L, 0.0)
       }
     }
 
@@ -179,6 +186,7 @@ class CassandraStorage(keyspace: Keyspace) extends LogStorage with Logging {
   def toMillis(date: DateTime) = date.toDate.getTime
 
   def readStatisticsFromDb(processId: String, from: Long)(dateProperty: Option[String], to: Long) = {
+    info(new DateTime(from) + " vs " + new DateTime(to))
     new Statistics(
             readStatisticsCountFromDb(processId, State.SUCCESS, dateProperty, from, to),
             readStatisticsCountFromDb(processId, State.INTERNAL_FAILURE, dateProperty, from, to),
@@ -203,14 +211,12 @@ class CassandraStorage(keyspace: Keyspace) extends LogStorage with Logging {
             case _ => 0L
           }}.sum
       case None => {
-        HFactory.createSliceQuery(keyspace, StringSerializer.get, UUIDSerializer.get, LongSerializer.get)
+        HFactory.createCountQuery(keyspace, StringSerializer.get, UUIDSerializer.get)
           .setColumnFamily(ACTIVITY_STATE_CF)
           .setKey(processId + ":" + state)
-          .setRange(TimeUUIDUtils.getTimeUUID(from), TimeUUIDUtils.getTimeUUID(to), false, 1000)
+          .setRange(TimeUUIDUtils.getTimeUUID(from), TimeUUIDUtils.getTimeUUID(to), 100000000) // how set to unlimited?
           .execute()
-          .get
-          .getColumns
-          .size
+          .get.toLong
       }
     }
   }
