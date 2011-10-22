@@ -132,61 +132,41 @@ class CassandraStorage(keyspace: Keyspace) extends LogStorage with Logging {
 
   def readStatisticsFromInterval(processId: String, from: DateTime, to: DateTime): Statistics = {
 
+    if(from.compareTo(to) >= 0) throw new IllegalArgumentException("to is older than from")
+
     debug("Reading statistics for process with id " + processId + " from " + from + " to " + to)
 
-    // skipping seconds and millis for now...
-    val t = to.plusMillis(1000-to.get(DateTimeFieldType.millisOfSecond)).plusSeconds(59-to.get(DateTimeFieldType.secondOfMinute))
-    info(t)
+    val readFromDb = readStatisticsFromDb(processId, toMillis(from)) _
 
-    lazy val readStat: (DateTime => Statistics) = f => {
-
-      val readFromDb = readStatisticsFromDb(processId, toMillis(f)) _
-
-      val period = new Period(f, t)
-      val duration = new Duration(f, t)
-      // TODO: Read year if to >= current time and from < current year
-
-      // TODO: Check seconds
-      if(toMillis(from) == 0 && toMillis(to) == 0){
+    if(toMillis(from) == 0 && toMillis(to) == 0){
+      info("al")
         readFromDb(Some(YEAR), System.currentTimeMillis) // read all
-      } else if(f.get(DateTimeFieldType.minuteOfHour()) > 0 && period.getMinutes > 0){
-        val nextFrom = f.plusMinutes(period.getMinutes)
-        readFromDb(None, toMillis(nextFrom)) + readStat(nextFrom)
-      } else if(f.get(DateTimeFieldType.hourOfDay()) > 0 && period.getHours > 0){
-        val nextFrom = f.plusHours(period.getHours)
-        readFromDb(Some(HOUR), toMillis(nextFrom)) + readStat(nextFrom)
-      } else if (f.get(DateTimeFieldType.dayOfMonth()) > 1 && duration.getStandardDays > 0) {
-        val nextFrom = f.plusHours(duration.getStandardDays.toInt)
-        readFromDb(Some(DAY), toMillis(nextFrom)) + readStat(nextFrom)
-      } else if (f.get(DateTimeFieldType.monthOfYear()) > 1 && period.getMonths > 0) {
-        val nextFrom = f.plusMonths(period.getMonths)
-        readFromDb(Some(MONTH), toMillis(nextFrom)) + readStat(nextFrom)
-      } else if (period.getYears > 0) {
-        val nextFrom = f.plusYears(period.getYears)
-        readFromDb(Some(YEAR), toMillis(nextFrom)) + readStat(nextFrom)
-      } else if (period.getMonths > 0) {
-        val nextFrom = f.plusMonths(period.getMonths)
-        readFromDb(Some(MONTH), toMillis(nextFrom)) + readStat(nextFrom)
-      } else if (period.getDays > 0) {
-        val nextFrom = f.plusDays(period.getDays)
-        readFromDb(Some(DAY), toMillis(nextFrom)) + readStat(nextFrom)
-      } else if (period.getHours > 0) {
-        val nextFrom = f.plusHours(period.getHours)
-        readFromDb(Some(HOUR), toMillis(nextFrom)) + readStat(nextFrom)
-      } else if (duration.getStandardSeconds > 0) {
-        readFromDb(None, toMillis(t))
-      } else {
-        new Statistics(0L,0L,0L,0L,0L, 0.0)
-      }
+    } else if(from.getMinuteOfHour > 0 ||
+              from.getSecondOfMinute > 0 ||
+              from.getMillisOfSecond > 0 ||
+              to.getMinuteOfHour > 0 ||
+              to.getSecondOfMinute > 0 ||
+              to.getMillisOfSecond > 0){
+       info("s")
+       readFromDb(None, toMillis(to))
+    } else if (from.getHourOfDay > 0 || to.getHourOfDay > 0){
+      info(HOUR)
+      readFromDb(Some(HOUR), toMillis(to))
+    } else if (from.getDayOfMonth > 1 || to.getDayOfMonth > 1){
+      info(DAY)
+      readFromDb(Some(DAY), toMillis(to))
+    } else if (from.getMonthOfYear > 1 || to.getMonthOfYear > 1){
+      info(MONTH)
+      readFromDb(Some(MONTH), toMillis(to))
+    } else {
+      info(YEAR)
+      readFromDb(Some(YEAR), toMillis(to))
     }
-
-    readStat(from.minusMillis(from.get(DateTimeFieldType.millisOfSecond)).minusSeconds(from.get(DateTimeFieldType.secondOfMinute)))
   }
 
   def toMillis(date: DateTime) = date.toDate.getTime
 
   def readStatisticsFromDb(processId: String, from: Long)(dateProperty: Option[String], to: Long) = {
-    info(new DateTime(from) + " vs " + new DateTime(to))
     new Statistics(
             readStatisticsCountFromDb(processId, State.SUCCESS, dateProperty, from, to),
             readStatisticsCountFromDb(processId, State.INTERNAL_FAILURE, dateProperty, from, to),
