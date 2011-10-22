@@ -119,7 +119,7 @@ class CassandraStorage(keyspace: Keyspace) extends LogStorage with Logging {
    */
   def readStatistics(processId: String, fromTimestamp: Option[Long], toTimestamp: Option[Long]): Statistics =
     (fromTimestamp, toTimestamp) match {
-      case (None, None) => readStatisticsFromInterval(processId, new DateTime(0), new DateTime(System.currentTimeMillis))
+      case (None, None) => readStatisticsFromInterval(processId, new DateTime(0), new DateTime(0))
       case (Some(from), None) => readStatisticsFromInterval(processId, new DateTime(from), new DateTime(System.currentTimeMillis))
       case (None, Some(to)) => throw new IllegalArgumentException("Reading statistics with just a toTimestamp provided isn't implemented yet") //TODO
       case (Some(from), Some(to)) => readStatisticsFromInterval(processId, new DateTime(from), new DateTime(to))
@@ -136,7 +136,10 @@ class CassandraStorage(keyspace: Keyspace) extends LogStorage with Logging {
       // TODO: Read year if to >= current time and from < current year
 
       // TODO: Check seconds
-      if(f.get(DateTimeFieldType.minuteOfHour()) > 0 && period.getMinutes > 0){
+
+      if(toMillis(from) == 0 && toMillis(to) == 0){
+        readFromDb(Some(YEAR), System.currentTimeMillis) // read all
+      } else if(f.get(DateTimeFieldType.minuteOfHour()) > 0 && period.getMinutes > 0){
         val nextFrom = f.plusMinutes(60-f.get(DateTimeFieldType.minuteOfHour()))
         readFromDb(None, toMillis(nextFrom)) + readStat(nextFrom)
       } else if(f.get(DateTimeFieldType.hourOfDay()) > 0 && period.getHours > 0){
@@ -170,7 +173,7 @@ class CassandraStorage(keyspace: Keyspace) extends LogStorage with Logging {
 
   def toMillis(date: DateTime) = date.toDate.getTime
 
-  def readStatisticsFromDb(processId: String, from: Long)(dateProperty: Option[String], to: Long) =
+  def readStatisticsFromDb(processId: String, from: Long)(dateProperty: Option[String], to: Long) = {
     new Statistics(
             readStatisticsCountFromDb(processId, State.SUCCESS, dateProperty, from, to),
             readStatisticsCountFromDb(processId, State.INTERNAL_FAILURE, dateProperty, from, to),
@@ -178,26 +181,34 @@ class CassandraStorage(keyspace: Keyspace) extends LogStorage with Logging {
             readStatisticsCountFromDb(processId, State.CLIENT_FAILURE, dateProperty, from, to),
             readStatisticsCountFromDb(processId, State.TIMEOUT, dateProperty, from, to),
             0.0) //TODO: Fix average latency
+  }
 
-  def readStatisticsCountFromDb(processId: String, state: Int, dateProperty: Option[String], from: Long, to: Long): Long =
+  def readStatisticsCountFromDb(processId: String, state: Int, dateProperty: Option[String], from: Long, to: Long): Long = {
     dateProperty match {
-      case Some(prop) => HFactory.createSliceQuery(keyspace, StringSerializer.get, LongSerializer.get, LongSerializer.get)
-              .setColumnFamily(ACTIVITY_COUNT_CF)
-              .setKey(processId + ":" + state + ":" + prop)
-              .setRange(from, to, true, 1000)
-              .execute()
-              .get
-              .getColumns
-              .map{_.getValue match {
-                  case l: java.lang.Long => l.longValue
-                  case _ => 0L
-              }}.sum
-      case None =>  HFactory.createSliceQuery(keyspace, StringSerializer.get, LongSerializer.get, LongSerializer.get)
-              .setColumnFamily(ACTIVITY_STATE_CF)
-              .setKey(processId + ":" + state)
-              .setRange(from, to, true, 1000)
-              .execute()
-              .get
-              .getColumns.size
+      case Some(prop) => {
+        val result = HFactory.createCounterSliceQuery(keyspace, StringSerializer.get, LongSerializer.get)
+          .setColumnFamily(ACTIVITY_COUNT_CF)
+          .setKey(processId + ":" + state + ":" + prop)
+          .setRange(from, to, false, 1000)
+          .execute()
+
+        if(result != null) result.get
+                            .getColumns
+                            .map{_.getValue match {
+                              case l: java.lang.Long => l.longValue
+                              case _ => 0L
+                            }}.sum
+        else 0
+      }
+      case None => {
+        val result = HFactory.createSliceQuery(keyspace, StringSerializer.get, UUIDSerializer.get, LongSerializer.get)
+          .setColumnFamily(ACTIVITY_STATE_CF)
+          .setKey(processId + ":" + state)
+          .setRange(TimeUUIDUtils.getTimeUUID(from), TimeUUIDUtils.getTimeUUID(to), false, 1000)
+          .execute()
+        if(result != null) result.get.getColumns.size
+        else 0
+      }
+    }
   }
 }
