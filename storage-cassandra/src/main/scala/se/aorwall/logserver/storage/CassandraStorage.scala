@@ -127,8 +127,6 @@ class CassandraStorage(keyspace: Keyspace) extends LogStorage with Logging {
 
   def readStatisticsFromInterval(processId: String, from: DateTime, to: DateTime): Statistics = {
 
-    // nollställ millisekunder och sekunder
-
     lazy val readStat: (DateTime => Statistics) = f => {
 
       val readFromDb = readStatisticsFromDb(processId, toMillis(f)) _
@@ -167,7 +165,7 @@ class CassandraStorage(keyspace: Keyspace) extends LogStorage with Logging {
       }
     }
 
-    readStat(from)
+    readStat(from.minusMillis(from.get(DateTimeFieldType.millisOfSecond)).minusSeconds(from.get(DateTimeFieldType.secondOfMinute)))
   }
 
   def toMillis(date: DateTime) = date.toDate.getTime
