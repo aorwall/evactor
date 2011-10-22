@@ -1,6 +1,6 @@
 package se.aorwall.logserver.storage
 
-import se.aorwall.logserver.model.{Activity, Log}
+import se.aorwall.logserver.model.{Statistics, Activity, Log}
 
 /**
  * Interface for log storage
@@ -38,5 +38,10 @@ trait LogStorage {
    * Check if an activity exists
    */
   def activityExists(processId: String, activityId: String): Boolean
+
+  /**
+   * Read statistics for a process
+   */
+  def readStatistics(processId: String, fromTimestamp: Option[Long], toTimestamp: Option[Long]): Statistics
 
 }
