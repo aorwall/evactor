@@ -33,8 +33,12 @@ subprojects {
         compile group: 'se.scalablesolutions.akka', name:'akka-typed-actor', version:'1.2-RC5'
         compile group: 'se.scalablesolutions.akka', name:'akka-camel', version:'1.2-RC5'
         compile group: 'se.scalablesolutions.akka', name:'akka-stm', version:'1.2-RC5'
+
         compile group: 'org.multiverse', name:'multiverse-core', version: '0.6'
         compile group: 'org.multiverse', name:'multiverse-alpha-unborn', version: '0.6'
+
+        compile group: 'com.google.inject', name: 'guice', version: '3.0'
+        compile group: 'javax.inject', name: 'javax.inject', version:'1'
 
         compile group: 'se.scalablesolutions.akka', name:'akka-remote', version:'1.2-RC5'
         compile group: 'se.scalablesolutions.akka', name:'akka-testkit', version:'1.2-RC5'
@@ -59,7 +63,7 @@ subprojects {
     }
 
     task test (overwrite: true, dependsOn: testClasses) << {
-        ant.taskdef(
+       ant.taskdef(
             name: 'scalatest',
             classname: 'org.scalatest.tools.ScalaTestAntTask',
             classpath: configurations.testCompile.asPath + ':' + compileScala.destinationDir

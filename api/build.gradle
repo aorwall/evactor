@@ -1,0 +1,26 @@
+apply plugin: 'scala'
+
+ideaModule {
+    beforeConfigured { module ->
+        module.dependencies.clear()
+    }
+    whenConfigured { module ->
+        module.dependencies*.exported = true
+    }
+}
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+
+dependencies {
+    compile project(':core')
+    compile project(':storage-cassandra')
+
+    compile group: 'se.scalablesolutions.akka', name:'akka-http', version:'1.2-RC5'
+    compile group: 'org.eclipse.jetty', name:'jetty-webapp', version:'8.0.0.M2'
+    compile group: 'org.mortbay.jetty', name:'servlet-api', version:'3.0.20100224'
+
+}
