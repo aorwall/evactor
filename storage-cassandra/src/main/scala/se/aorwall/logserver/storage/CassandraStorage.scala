@@ -22,7 +22,7 @@ class CassandraStorage(keyspace: Keyspace) extends LogStorage with Logging {
   val MONTH = "month"
   val YEAR = "year"
 
-  def storeLog(activityId: String, log: Log): Unit = {
+  def storeLog(activityId: String, log: Log) {
      val mutator = HFactory.createMutator(keyspace, StringSerializer.get);
      val logUuid = TimeUUIDUtils.getTimeUUID(log.timestamp)
 
@@ -37,19 +37,19 @@ class CassandraStorage(keyspace: Keyspace) extends LogStorage with Logging {
     HFactory.createSliceQuery(keyspace, StringSerializer.get, UUIDSerializer.get, ObjectSerializer.get)
             .setColumnFamily(LOG_CF).setKey(activityId).setRange(null, null, false, 100) //TODO: What if an activity has more than 100 logs?
             .execute()
-            .get()
-            .getColumns()
+            .get
+            .getColumns
             .map { _.getValue match {
                     case l:Log => l
-                 }} toList
+                 }}.toList
   }
 
-  def removeActivity(activityId: String): Unit = {
+  def removeActivity(activityId: String) {
     val mutator = HFactory.createMutator(keyspace, StringSerializer.get)
     mutator.delete(activityId, LOG_CF, null, StringSerializer.get) // does this really delete the row key?
   }
 
-  def storeActivity(activity: Activity): Unit = {
+  def storeActivity(activity: Activity) {
     val mutator = HFactory.createMutator(keyspace, StringSerializer.get)
     val timeuuid = TimeUUIDUtils.getTimeUUID(activity.endTimestamp)
 
@@ -87,22 +87,27 @@ class CassandraStorage(keyspace: Keyspace) extends LogStorage with Logging {
     mutator.incrementCounter(activity.processId + ":" + activity.state + ":" + HOUR, ACTIVITY_COUNT_CF, hour, count)
   }
 
-  def readActivities(processId: String, fromTimestamp: Option[Long], count: Int ): List[Activity] = {
-    val timeuuid = fromTimestamp match {
+  // TODO: Implement paging
+  def readActivities(processId: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], count: Int, start: Int): List[Activity] = {
+    val fromTimeuuid = fromTimestamp match {
       case Some(from) => TimeUUIDUtils.getTimeUUID(from)
+      case None => null
+    }
+    val toTimeuuid = toTimestamp match {
+      case Some(to) => TimeUUIDUtils.getTimeUUID(to)
       case None => null
     }
 
     HFactory.createSliceQuery(keyspace, StringSerializer.get, UUIDSerializer.get, ObjectSerializer.get)
             .setColumnFamily(ACTIVITY_CF)
             .setKey(processId)
-            .setRange(null, timeuuid, true, count)
+            .setRange(fromTimeuuid, toTimeuuid, false, count)
             .execute()
-            .get()
-            .getColumns()
+            .get
+            .getColumns
             .map { _.getValue match {
                     case a:Activity => a
-                 }} toList
+                 }}.toList
   }
 
   def activityExists(processId: String, activityId: String): Boolean = {
@@ -185,29 +190,27 @@ class CassandraStorage(keyspace: Keyspace) extends LogStorage with Logging {
 
   def readStatisticsCountFromDb(processId: String, state: Int, dateProperty: Option[String], from: Long, to: Long): Long = {
     dateProperty match {
-      case Some(prop) => {
-        val result = HFactory.createCounterSliceQuery(keyspace, StringSerializer.get, LongSerializer.get)
+      case Some(prop) =>
+        HFactory.createCounterSliceQuery(keyspace, StringSerializer.get, LongSerializer.get)
           .setColumnFamily(ACTIVITY_COUNT_CF)
           .setKey(processId + ":" + state + ":" + prop)
           .setRange(from, to, false, 1000)
           .execute()
-
-        if(result != null) result.get
-                            .getColumns
-                            .map{_.getValue match {
-                              case l: java.lang.Long => l.longValue
-                              case _ => 0L
-                            }}.sum
-        else 0
-      }
+          .get
+          .getColumns
+          .map{_.getValue match {
+            case l: java.lang.Long => l.longValue
+            case _ => 0L
+          }}.sum
       case None => {
-        val result = HFactory.createSliceQuery(keyspace, StringSerializer.get, UUIDSerializer.get, LongSerializer.get)
+        HFactory.createSliceQuery(keyspace, StringSerializer.get, UUIDSerializer.get, LongSerializer.get)
           .setColumnFamily(ACTIVITY_STATE_CF)
           .setKey(processId + ":" + state)
           .setRange(TimeUUIDUtils.getTimeUUID(from), TimeUUIDUtils.getTimeUUID(to), false, 1000)
           .execute()
-        if(result != null) result.get.getColumns.size
-        else 0
+          .get
+          .getColumns
+          .size
       }
     }
   }

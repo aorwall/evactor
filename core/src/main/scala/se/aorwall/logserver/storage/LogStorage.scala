@@ -32,7 +32,7 @@ trait LogStorage {
   /**
    * Read activity objects
    */
-  def readActivities(processId: String, fromTimestamp: Option[Long], count: Int ): List[Activity]
+  def readActivities(processId: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], count: Int, start: Int): List[Activity]
 
   /**
    * Check if an activity exists
