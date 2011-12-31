@@ -1,26 +1,18 @@
-package se.aorwall.logserver.monitor.statement
+package se.aorwall.logserver.analyse.statement
 
 import scala.Predef._
 import grizzled.slf4j.Logging
 import akka.actor.{Actor, ActorRef}
 import se.aorwall.logserver.model.{Alert, Activity}
-import akka.stm._
 
-abstract class StatementAnalyser(processId: String, alerter: ActorRef) extends Actor with Logging {
+abstract class StatementAnalyser(processId: String) extends Actor with Logging {
 
-  self.id = processId
-  private val triggeredRef = Ref(false)
-
-  def triggered = atomic {
-    triggeredRef.get
-  }
-
-  def triggered(trig: Boolean) = atomic {
-    triggeredRef.set(trig)
-  }
+  var triggered = false //TODO: use FSM for this
+  var testAlerter: Option[ActorRef] = None
 
   def receive = {
     case activity: Activity => analyse(activity)
+    case testActor: ActorRef => testAlerter = Some(testActor)
   }
 
   /**
@@ -34,7 +26,7 @@ abstract class StatementAnalyser(processId: String, alerter: ActorRef) extends A
     if (!triggered) {
       warn("Alert: " + message)
 
-      triggered(true)
+      triggered = true
       sendAlert(message)
     }
   }
@@ -43,21 +35,28 @@ abstract class StatementAnalyser(processId: String, alerter: ActorRef) extends A
     if (triggered) {
       info("Back to normal: " + message)
 
-      triggered(false)
+      triggered = false
       sendAlert(message)
     }
   }
 
   def sendAlert(message: String) {
     val alert = new Alert(processId, message, triggered)
-    alerter ! alert
+
+    context.actorSelection("../../alerter/" + processId)  ! alert //TODO: The alerter isn't implemented yet
+
+    // If a test actor exists
+    testAlerter match {
+      case Some(testActor) => testActor ! alert
+      case _ =>
+    }
   }
 
   override def preStart() {
-    trace("Starting statement monitor with id " + self.id)
+    trace("Starting statement analyser["+context.self+"]  for process " + processId)
   }
 
   override def postStop() {
-    trace("Stopping statement monitor with id " + self.id)
+    trace("Stopping statement analyser["+context.self+"] for process " + processId)
   }
 }

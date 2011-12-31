@@ -51,7 +51,7 @@ class SimpleActivityBuilder(val processId: String, val components: List[Componen
       if(remainingRetries <= 0)
          endEvent = Some(logevent)
       else
-         retries =  retries + (endComponent.componentId -> (remainingRetries-1)) //TODO
+         retries = retries + (endComponent.componentId -> (remainingRetries-1)) //TODO
     }
   }
 

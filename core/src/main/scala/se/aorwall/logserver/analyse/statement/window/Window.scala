@@ -1,4 +1,4 @@
-package se.aorwall.logserver.monitor.statement.window
+package se.aorwall.logserver.analyse.statement.window
 
 /**
  * Specifies a window with activities, returns activities outside the window

@@ -1,98 +1,70 @@
 package se.aorwall.logserver
 
+import analyse.{AnalyserHandlerImpl, AnalyserHandler}
 import configuration.{ConfigurationServiceImpl, ConfigurationService}
 import model.statement.Latency
 import model.statement.window.LengthWindowConf
 import model.{Alert, State, Log}
 import model.process.simple.{SimpleProcess, Component}
-import org.scalatest.FunSuite
 import org.mockito.Mockito._
-import receive.LogdataReceiver
-import akka.testkit.{CallingThreadDispatcher, TestKit}
-import akka.actor.{TypedActor, Actor}
-import Actor._
-import storage.{ConfigurationStorage, LogStorage}
-import akka.event.EventHandler
-import akka.camel.CamelServiceManager
+import collect.Collector
 import grizzled.slf4j.Logging
-import akka.camel.{Message, Consumer, CamelContextManager}
 import org.scalatest.matchers.MustMatchers
-import akka.config.Supervision.OneForOneStrategy
+import akka.actor.{Props, TypedActor, Actor, ActorSystem}
+import process.{ProcessorHandlerImpl, ProcessorHandler}
+import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import akka.testkit.{CallingThreadDispatcher, TestKit}
 
 /**
  * Testing the whole log data flow.
  *
  * FIXME: This test doesn't shut down properly
  */
-class LogdataIntegrationSuite extends FunSuite with MustMatchers with TestKit with Logging {
+class LogdataIntegrationSuite(_system: ActorSystem) extends TestKit(_system) with FunSuite with MustMatchers with BeforeAndAfterAll with Logging {
+
+  def this() = this(ActorSystem("LogdataIntegrationSuite"))
+
+  override protected def afterAll(): scala.Unit = {
+    _system.shutdown()
+  }
 
   test("Recieve a logdata objects and send an alert") {
 
-    val camelEndpoint = "seda:test"
     var result: Alert = null
-
-    val alertReceiver = actorOf(new Actor with Consumer {
-      self.faultHandler = OneForOneStrategy(List(classOf[Throwable]), 5, 5000)
-
-      def endpointUri = camelEndpoint
-
-      def receive = {
-        case msg: Message => result = msg.bodyAs[Alert]
-      }
-    })
-
-    val service = CamelServiceManager.startCamelService
-
     val processId = "process"
-    val logStorage = mock(classOf[LogStorage])
-    val confStorage = mock(classOf[ConfigurationStorage])
-    when(logStorage.readLogs("process:329380921309")).thenReturn(List())
-    when(confStorage.readAllBusinessProcesses()).thenReturn(List())
-    when(confStorage.readStatements(processId)).thenReturn(List())
-    val logReceiver = actorOf(new LogdataReceiver("seda:logreceiver"))
+    val camelEndpoint = "hej"
 
-    // Define the business process
+    // Start up the modules
+    val system = ActorSystem("LogServerTest")
+    val collector = system.actorOf(Props[Collector].withDispatcher(CallingThreadDispatcher.Id), name = "collect")
+    val processor = TypedActor(system).typedActorOf(classOf[ProcessorHandler], new ProcessorHandlerImpl, Props().withDispatcher(CallingThreadDispatcher.Id), "process")
+    val analyser = TypedActor(system).typedActorOf(classOf[AnalyserHandler], new AnalyserHandlerImpl, Props().withDispatcher(CallingThreadDispatcher.Id), "analyse")
+
+    // Define and set up the business process
     val startComp = new Component("startComponent", 1)
     val endComp = new Component("endComponent", 1)
     val process = new SimpleProcess(processId, List(startComp, endComp), 1L)
     val latencyStmt = new Latency(processId, "statementId", camelEndpoint, 2000, Some(new LengthWindowConf(2)))
 
-    val confService = TypedActor.newInstance(classOf[ConfigurationService], new ConfigurationServiceImpl())//confStorage, logStorage))
-    confService.addBusinessProcess(process)
-    confService.addStatementToProcess(latencyStmt)
+    processor.setProcess(process)
+    analyser.addStatementToProcess(latencyStmt)
 
-    // Set CallingThreadDispatcher.global
-    logReceiver.dispatcher = CallingThreadDispatcher.global
-
-    // Start actors
-    service.awaitEndpointActivation(2) {
-      logReceiver.start()
-      alertReceiver.start()
-    } must be === true
-
-
-    Thread.sleep(500L)
-
+    // Collect logs
     val currentTime = System.currentTimeMillis
 
-    CamelContextManager.mandatoryTemplate.sendBody("seda:logreceiver",new Log("server", "startComponent", "329380921309", "client", currentTime, State.START, "hello"))
-    CamelContextManager.mandatoryTemplate.sendBody("seda:logreceiver",new Log("server", "startComponent", "329380921309", "client", currentTime+1000, State.SUCCESS, "")) // success
-    CamelContextManager.mandatoryTemplate.sendBody("seda:logreceiver",new Log("server", "endComponent", "329380921309", "startComponent", currentTime+2000, State.START, ""))
-    CamelContextManager.mandatoryTemplate.sendBody("seda:logreceiver",new Log("server", "endComponent", "329380921309", "startComponent", currentTime+3000, State.SUCCESS, "")) // success
+    Thread.sleep(200)
 
-    Thread.sleep(2000L)
-    // Stop actors
-    TypedActor.stop(confService)
+    debug("send logs to collector")
+    collector ! new Log("server", "startComponent", "329380921309", "client", currentTime, State.START, "hello")
+    collector ! new Log("server", "startComponent", "329380921309", "client", currentTime+1000, State.SUCCESS, "") // success
+    collector ! new Log("server", "endComponent", "329380921309", "startComponent", currentTime+2000, State.START, "")
+    collector ! new Log("server", "endComponent", "329380921309", "startComponent", currentTime+3000, State.SUCCESS, "") // success
 
-    service.awaitEndpointDeactivation(2) {
-      alertReceiver.stop()
-      logReceiver.stop()
-    } must be === true
-    service.stop
+    Thread.sleep(200)
 
-    Actor.registry.shutdownAll()
-    EventHandler.shutdown()
+    //result must be === new Alert(processId, "Average latency 3000ms is higher than the maximum allowed latency 2000ms", true) // the latency alert
 
-    result must be === new Alert(processId, "Average latency 3000ms is higher than the maximum allowed latency 2000ms", true) // the latency alert
+    TypedActor(system).stop(processor)
+    TypedActor(system).stop(analyser)
   }
 }

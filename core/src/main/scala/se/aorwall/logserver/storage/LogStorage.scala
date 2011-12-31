@@ -10,24 +10,29 @@ import se.aorwall.logserver.model.{Statistics, Activity, Log}
 trait LogStorage {
 
   /**
-   * Store a log object to specified activity
+   * Store a log object
    */
-  def storeLog(activityId: String, log: Log)
+  def storeLog(correlationId: String, log: Log)
 
   /**
-   * Read all log objects for a specified activity
+   * Read all log objects for a specified correlation id
    */
-  def readLogs(activityId: String): List[Log]
+  def readLogs(correlationId: String): List[Log]
 
   /**
-   * Remove an activity and it's log objects
+   * Start new active activity
    */
-  def removeActivity(activityId: String)
+  def startActivity(activity: Activity)
 
   /**
-   * Store an activity object
+   * Finish the activity
    */
-  def storeActivity(activity: Activity)
+  def finishActivity(activity: Activity)
+
+  /**
+   * Read unfinished activites
+   */
+  def readUnfinishedActivities(processId: String)
 
   /**
    * Read activity objects

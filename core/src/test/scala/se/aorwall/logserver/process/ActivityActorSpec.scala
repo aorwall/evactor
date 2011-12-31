@@ -7,14 +7,17 @@ import se.aorwall.logserver.model.process.simple.{SimpleActivityBuilder}
 import se.aorwall.logserver.model.{Log, Activity, State}
 import se.aorwall.logserver.storage.LogStorage
 import akka.util.duration._
-import akka.testkit.{CallingThreadDispatcher, TestKit, TestActorRef}
-import akka.actor.{Supervisor, ActorRef}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfter, WordSpec}
+import se.aorwall.logserver.model.process.BusinessProcess
+import akka.actor.{Props, ActorSystem}
+import akka.testkit.{TestProbe, CallingThreadDispatcher, TestKit, TestActorRef}
 
-class ActivityActorSpec extends WordSpec with BeforeAndAfterAll with MustMatchers with TestKit with BeforeAndAfter{
+class ActivityActorSpec(_system: ActorSystem) extends TestKit(_system) with WordSpec with BeforeAndAfterAll with MustMatchers with BeforeAndAfter{
+
+  def this() = this(ActorSystem("ActivityActorSpec"))
 
   override protected def afterAll(): scala.Unit = {
-    stopTestActor
+     _system.shutdown()
   }
 
   "A ActivityActor" must {
@@ -22,10 +25,10 @@ class ActivityActorSpec extends WordSpec with BeforeAndAfterAll with MustMatcher
     "add incoming log events to request list " in {
 
       val activityBuilder = mock(classOf[SimpleActivityBuilder])
-      val storage = mock(classOf[LogStorage])
-      val activityActorRef = TestActorRef(new ActivityActor(activityBuilder, Some(storage), testActor, 0L))
-      when(storage.readLogs(activityActorRef.id)).thenReturn(List())
-      activityActorRef.start
+      val businesProcess = mock(classOf[BusinessProcess])
+      when(businesProcess.getActivityBuilder).thenReturn(activityBuilder)
+      val activityActorRef = TestActorRef(new ActivityActor("329380921309", businesProcess))
+
       val logEvent = new Log("server", "startComponent", "329380921309", "client", 0L, State.START, "hello")
 
       when(activityBuilder.isFinished()).thenReturn(false)
@@ -37,10 +40,14 @@ class ActivityActorSpec extends WordSpec with BeforeAndAfterAll with MustMatcher
 
     "send the activity to analyser when it's finished " in {
       val activityBuilder = mock(classOf[SimpleActivityBuilder])
-      val storage = mock(classOf[LogStorage])
-      val activityActorRef = TestActorRef(new ActivityActor(activityBuilder, Some(storage), testActor, 0L))
-      when(storage.readLogs(activityActorRef.id)).thenReturn(List())
-      activityActorRef.start
+      val businesProcess = mock(classOf[BusinessProcess])
+
+      when(businesProcess.getActivityBuilder).thenReturn(activityBuilder)
+      val activityActorRef = TestActorRef(new ActivityActor("correlationId", businesProcess))
+
+      val activityPrope = TestProbe()
+      activityActorRef ! activityPrope.ref
+
       val logEvent = new Log("server", "startComponent", "329380921309", "client", 0L, State.SUCCESS, "hello")
       val activity = new Activity("processId", "correlationId", State.SUCCESS, 0L, 10L)
 
@@ -50,34 +57,26 @@ class ActivityActorSpec extends WordSpec with BeforeAndAfterAll with MustMatcher
       activityActorRef ! logEvent
       verify(activityBuilder).addLogEvent(logEvent)
 
-      within (1 seconds) {
-        expectMsg(activity) // The activity returned by activityBuilder should be sent to testActor
-      }
-
+      activityPrope.expectMsg(1 seconds, activity) // The activity returned by activityBuilder should be sent to activityPrope
       activityActorRef.stop
     }
 
     "send an activity with status TIMEOUT to analyser when timed out" in {
       val timedoutActivity = new Activity("startComponent", "329380921309", State.TIMEOUT, 0L, 0L)
 
-      val process = new DynamicComponent(0L)
-      val timeoutStorage = mock(classOf[LogStorage])
+      val process = new DynamicComponent(1L)
 
-      val timeoutActivityActor = TestActorRef(new ActivityActor(process.getActivityBuilder(), Some(timeoutStorage), testActor, 1L))
-      timeoutActivityActor.dispatcher = CallingThreadDispatcher.global
-      when(timeoutStorage.readLogs(timeoutActivityActor.id)).thenReturn(List())
-      timeoutActivityActor.start
+      val timeoutActivityActor = TestActorRef(new ActivityActor("329380921309", process))
+      val activityPrope = TestProbe()
+      timeoutActivityActor ! activityPrope.ref
 
       val logEvent = new Log("server", "startComponent", "329380921309", "client", 0L, State.START, "hello")
 
       timeoutActivityActor ! logEvent
 
-      within (2 seconds) {
-        expectMsg(timedoutActivity) // The activity returned by activityBuilder should be sent to testActor
-      }
+      activityPrope.expectMsg(2 seconds, timedoutActivity)
 
       timeoutActivityActor.stop
     }
   }
-
 }

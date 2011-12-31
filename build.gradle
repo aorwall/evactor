@@ -29,10 +29,10 @@ subprojects {
         scalaTools 'org.scala-lang:scala-compiler:2.9.1'
         scalaTools 'org.scala-lang:scala-library:2.9.1'
 
-        compile group: 'se.scalablesolutions.akka', name:'akka-actor', version:'1.2-RC5'
-        compile group: 'se.scalablesolutions.akka', name:'akka-typed-actor', version:'1.2-RC5'
-        compile group: 'se.scalablesolutions.akka', name:'akka-camel', version:'1.2-RC5'
-        compile group: 'se.scalablesolutions.akka', name:'akka-stm', version:'1.2-RC5'
+        compile group: 'com.typesafe.akka', name:'akka-actor', version:'2.0-M2'
+//        compile group: 'com.typesafe.akka', name:'akka-typed-actor', version:'2.0-M1'
+//        compile group: 'com.typesafe.akka', name:'akka-camel', version:'2.0-M1'
+//        compile group: 'com.typesafe.akka', name:'akka-stm', version:'2.0-M1'
 
         compile group: 'org.multiverse', name:'multiverse-core', version: '0.6'
         compile group: 'org.multiverse', name:'multiverse-alpha-unborn', version: '0.6'
@@ -40,8 +40,8 @@ subprojects {
         compile group: 'com.google.inject', name: 'guice', version: '3.0'
         compile group: 'javax.inject', name: 'javax.inject', version:'1'
 
-        compile group: 'se.scalablesolutions.akka', name:'akka-remote', version:'1.2-RC5'
-        compile group: 'se.scalablesolutions.akka', name:'akka-testkit', version:'1.2-RC5'
+        compile group: 'com.typesafe.akka', name:'akka-remote', version:'2.0-M2'
+        compile group: 'com.typesafe.akka', name:'akka-testkit', version:'2.0-M2'
 
         compile group: 'org.codehaus.aspectwerkz', name: 'aspectwerkz', version: '2.2.3'
 

@@ -1,4 +1,4 @@
-package se.aorwall.logserver.monitor.statement
+package se.aorwall.logserver.analyse.statement
 
 import se.aorwall.logserver.model.Activity
 import grizzled.slf4j.Logging
@@ -6,8 +6,8 @@ import akka.actor.{ActorRef}
 import collection.immutable.TreeMap
 import window.Window
 
-class FailureAnalyser (processId: String, alerter: ActorRef, states: List[Int], maxOccurrences: Long)
-  extends StatementAnalyser (processId, alerter) with Window with Logging {
+class FailureAnalyser (processId: String, states: List[Int], maxOccurrences: Long)
+  extends StatementAnalyser (processId) with Window with Logging {
 
   type T = Int
 

@@ -1,4 +1,4 @@
-package se.aorwall.logserver.monitor.statement.window
+package se.aorwall.logserver.analyse.statement.window
 
 import grizzled.slf4j.Logging
 

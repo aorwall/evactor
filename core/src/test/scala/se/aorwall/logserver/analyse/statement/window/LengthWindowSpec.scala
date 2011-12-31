@@ -1,4 +1,4 @@
-package se.aorwall.logserver.monitor.statement.window
+package se.aorwall.logserver.analyse.statement.window
 
 import collection.immutable.TreeMap
 import org.scalatest.WordSpec

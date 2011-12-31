@@ -26,7 +26,7 @@ class HttpService extends Actor with Endpoint {
   def receive = handleHttpRequest
 
   // TODO: Provide an actor pool instead
-  // TODO: Hard coded depdendency to test api against cassandra
+  // TODO: Remove the hard coded depdendency
   val cassandraStorage = new CassandraStorage(CassandraUtil.getKeyspace("TestCluster", "localhost", 9160, "LogserverTest"))
 
   lazy val statistics = actorOf(new GetStatistics(cassandraStorage)).start()

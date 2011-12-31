@@ -3,9 +3,9 @@ package se.aorwall.logserver.process
 import org.scalatest.WordSpec
 import org.scalatest.matchers.MustMatchers
 
-class ProcessActorSpec extends WordSpec with MustMatchers {
+class ProcessorSpec extends WordSpec with MustMatchers {
 
-  "A ProcessActor" must {
+  "A Processor" must {
 
     "send log event to already running activity" in {
        (pending)

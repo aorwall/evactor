@@ -1,43 +1,50 @@
 package se.aorwall.logserver.process
 
 import grizzled.slf4j.Logging
-import se.aorwall.logserver.model.process.{ActivityBuilder}
 import se.aorwall.logserver.model.{Log, Activity}
 import se.aorwall.logserver.storage.{LogStorage}
 import java.util.concurrent.{TimeUnit, ScheduledFuture}
 import akka.actor._
-import akka.actor.ActorRef
-import akka.config.Supervision.Permanent
+import akka.util.duration._
+import se.aorwall.logserver.model.process.BusinessProcess
 
 /**
  * One Activity Actor for each running activity
  */
-class ActivityActor(activityBuilder: ActivityBuilder, storage: Option[LogStorage], analyser: ActorRef, timeout: Long) extends Actor with Logging{
-  self.lifeCycle = Permanent
-  var scheduledTimeout: Option[ScheduledFuture[AnyRef]] = None
+class ActivityActor(id: String, businessProcess: BusinessProcess) extends Actor with Logging{
+  var scheduledTimeout: Option[Cancellable] = None
+
+  val activityBuilder = businessProcess.getActivityBuilder
+
+  var storage: Option[LogStorage] = None//TODO FIX
+
+  var testAnalyser: Option[ActorRef] = None // Used for test
 
   override def preStart() {
-    trace("Starting ActivityActor with id " + self.id)
+    trace("Starting " + context.self)
 
     val storedLogs = storage match {
-      case Some(s) => s.readLogs(self.id)
+      case Some(s) => s.readLogs(id)
       case None => List[Log]()
     }
 
-    storedLogs.foreach(log => process(log))
+    storedLogs.foreach(log => activityBuilder.addLogEvent(log))
+    //TODO: Save activity in runningActivitesCF
 
-    if(timeout > 0){
+    if(activityBuilder.isFinished){
+       sendActivity(activityBuilder.createActivity())
+    } else if (businessProcess.timeout > 0){
 
       // set timeout to (timeout - the time since the first element)
-      val timeoutSinceStart = if(storedLogs.size > 0) timeout - (System.currentTimeMillis - storedLogs.map(_.timestamp).min)
-                              else timeout
+      val timeoutSinceStart = if(storedLogs.size > 0) businessProcess.timeout - (System.currentTimeMillis - storedLogs.map(_.timestamp).min)
+                              else businessProcess.timeout
 
-      if(timeoutSinceStart > 0)
-        scheduledTimeout = Some(Scheduler.schedule(self, new Timeout, timeout, timeout, TimeUnit.SECONDS))
-      else {
+      if(timeoutSinceStart > 0) {
+        debug("Activity actor with id " + id + " will timeout in " + timeoutSinceStart + " seconds")
+        scheduledTimeout = Some(context.system.scheduler.scheduleOnce(timeoutSinceStart seconds, self, new Timeout))
+      } else {
         warn("Activity has already timed out!")
-        if (self.supervisor.isDefined) self.supervisor.get ! Unlink(self)
-        self.stop() // TODO: Is stop really needed?
+        sendActivity(activityBuilder.createActivity())
       }
     }
   }
@@ -45,6 +52,7 @@ class ActivityActor(activityBuilder: ActivityBuilder, storage: Option[LogStorage
   def receive = {
     case logevent: Log => process(logevent)
     case Timeout() => sendActivity(activityBuilder.createActivity())
+    case actor: ActorRef => testAnalyser = Some(actor)
     case msg => info("Can't handle: " + msg)
   }
 
@@ -64,21 +72,29 @@ class ActivityActor(activityBuilder: ActivityBuilder, storage: Option[LogStorage
 
     debug("sending activity: " + activity)
 
-    // Save activity in db and send to analyser
-
     if(activityExists(activity.processId, activity.activityId)){
       warn("An activity for process " + activity.processId + " with id " + activity.activityId + " already exists")
     } else {
       storage match {
-        case Some(s) => s.storeActivity(activity)
+        case Some(s) => s.finishActivity(activity)
         case None =>
       }
-      analyser ! activity
+
+      val statementAnalysers = context.actorSelection("../../analyser/" + activity.processId)
+      statementAnalysers ! activity
+
+      // If a test actor exists
+      testAnalyser match {
+        case Some(testActor) => testActor ! activity
+        case _ =>
+      }
     }
 
-    // stop actor
-    if (self.supervisor.isDefined) self.supervisor.get ! Unlink(self)
-    self.stop() // TODO: Is stop really needed?
+    context.become {
+        case _ => info("Sent a message to an inactive actvity actor with processid " + businessProcess.processId + " with correlation id " + id)
+    }
+
+    context.parent ! activity
   }
 
   def activityExists(processId: String, activityId: String) = storage match {
@@ -87,14 +103,15 @@ class ActivityActor(activityBuilder: ActivityBuilder, storage: Option[LogStorage
   }
 
   override def postStop() {
-    trace("Stopping ActivityActor with id " + self.id)
+    trace("Stopping " + context.self)
     scheduledTimeout match {
-      case Some(s) => s.cancel(true)
-      case None => debug("No scheduled timeout to stop in ActivityActor with id: " + self.id)
+      case Some(s) => s.cancel()
+      case None => debug("No scheduled timeout to stop in ActivityActor with id: " + id)
     }
+    activityBuilder.clear()
   }
 
-  override def preRestart(reason: Throwable) {
+  def preRestart(reason: Throwable) {  //TODO ???
     warn("Activiy actor will be restarted because of an exception", reason)
     activityBuilder.clear()
     preStart()

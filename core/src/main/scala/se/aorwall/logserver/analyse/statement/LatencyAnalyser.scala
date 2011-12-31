@@ -1,4 +1,4 @@
-package se.aorwall.logserver.monitor.statement
+package se.aorwall.logserver.analyse.statement
 
 import window.Window
 import collection.immutable.TreeMap
@@ -6,8 +6,8 @@ import se.aorwall.logserver.model.Activity
 import grizzled.slf4j.Logging
 import akka.actor.ActorRef
 
-class LatencyAnalyser(processId: String, alerter: ActorRef, maxLatency: Long)
-  extends StatementAnalyser(processId, alerter) with Window with Logging {
+class LatencyAnalyser(processId: String, maxLatency: Long)
+  extends StatementAnalyser(processId) with Window with Logging {
 
   type T = Long
 
