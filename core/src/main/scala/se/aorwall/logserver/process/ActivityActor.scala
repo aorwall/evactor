@@ -21,7 +21,7 @@ class ActivityActor(id: String, businessProcess: BusinessProcess) extends Actor 
   var testAnalyser: Option[ActorRef] = None // Used for test
 
   override def preStart() {
-    trace("Starting " + context.self)
+    trace(context.self + " starting...")
 
     val storedLogs = storage match {
       case Some(s) => s.readLogs(id)
@@ -40,10 +40,10 @@ class ActivityActor(id: String, businessProcess: BusinessProcess) extends Actor 
                               else businessProcess.timeout
 
       if(timeoutSinceStart > 0) {
-        debug("Activity actor with id " + id + " will timeout in " + timeoutSinceStart + " seconds")
+        debug(context.self + " will timeout in " + timeoutSinceStart + " seconds")
         scheduledTimeout = Some(context.system.scheduler.scheduleOnce(timeoutSinceStart seconds, self, new Timeout))
       } else {
-        warn("Activity has already timed out!")
+        warn(context.self +  " has already timed out!")
         sendActivity(activityBuilder.createActivity())
       }
     }
@@ -53,12 +53,12 @@ class ActivityActor(id: String, businessProcess: BusinessProcess) extends Actor 
     case logevent: Log => process(logevent)
     case Timeout() => sendActivity(activityBuilder.createActivity())
     case actor: ActorRef => testAnalyser = Some(actor)
-    case msg => info("Can't handle: " + msg)
+    case msg => info(context.self + " can't handle: " + msg)
   }
 
   def process(logevent: Log) {
 
-     debug("Received log event with state: " + logevent.state )
+     debug(context.self + " received log event with state: " + logevent.state )
 
      activityBuilder.addLogEvent(logevent)
 
@@ -70,18 +70,17 @@ class ActivityActor(id: String, businessProcess: BusinessProcess) extends Actor 
 
   def sendActivity(activity: Activity) {
 
-    debug("sending activity: " + activity)
-
     if(activityExists(activity.processId, activity.activityId)){
-      warn("An activity for process " + activity.processId + " with id " + activity.activityId + " already exists")
+      warn(context.self + " an activity already exists")
     } else {
       storage match {
         case Some(s) => s.finishActivity(activity)
         case None =>
       }
 
-      val statementAnalysers = context.actorSelection("../../analyser/" + activity.processId)
-      statementAnalysers ! activity
+      val processAnalyser = context.actorFor("/user/analyse/" + activity.processId)
+      debug(context.self + " sending " + activity + " to /user/analyse/" + activity.processId )
+      processAnalyser ! activity
 
       // If a test actor exists
       testAnalyser match {
@@ -90,11 +89,7 @@ class ActivityActor(id: String, businessProcess: BusinessProcess) extends Actor 
       }
     }
 
-    context.become {
-        case _ => info("Sent a message to an inactive actvity actor with processid " + businessProcess.processId + " with correlation id " + id)
-    }
-
-    context.parent ! activity
+    context.stop(self)
   }
 
   def activityExists(processId: String, activityId: String) = storage match {
@@ -103,16 +98,16 @@ class ActivityActor(id: String, businessProcess: BusinessProcess) extends Actor 
   }
 
   override def postStop() {
-    trace("Stopping " + context.self)
+    trace(context.self + " stopping...")
     scheduledTimeout match {
       case Some(s) => s.cancel()
-      case None => debug("No scheduled timeout to stop in ActivityActor with id: " + id)
+      case None => debug(context.self + " no scheduled timeout to stop")
     }
     activityBuilder.clear()
   }
 
   def preRestart(reason: Throwable) {  //TODO ???
-    warn("Activiy actor will be restarted because of an exception", reason)
+    warn(context.self + " will be restarted because of an exception", reason)
     activityBuilder.clear()
     preStart()
   }

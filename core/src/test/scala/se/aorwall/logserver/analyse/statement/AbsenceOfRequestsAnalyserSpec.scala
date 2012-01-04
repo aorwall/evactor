@@ -43,7 +43,7 @@ class AbsenceOfRequestsAnalyserSpec(_system: ActorSystem) extends TestKit(_syste
 
       actor ! new Activity(process, correlationid, 11, 0, 4)
 
-      probe.expectMsg(250 millis, new Alert(process, "No activities within the timeframe 200ms", true))
+      probe.expectMsg(500 millis, new Alert(process, "No activities within the timeframe 200ms", true))
       actor.stop()
     }
 

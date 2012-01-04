@@ -4,29 +4,27 @@ import collection.mutable.HashMap
 import grizzled.slf4j.Logging
 import se.aorwall.logserver.model.process.BusinessProcess
 import se.aorwall.logserver.storage.LogStorage
-import akka.actor.{Props, ActorRef, Actor}
 import se.aorwall.logserver.model.{Activity, Log}
+import akka.actor.{EmptyLocalActorRef, Props, ActorRef, Actor}
 
 class Processor(businessProcess: BusinessProcess) extends Actor with Logging {
-
-  val runningActivities = new HashMap[String, ActorRef] // TODO: Get rid of this
 
   var storage: Option[LogStorage] = None//TODO FIX
 
   def receive = {
     case logEvent: Log if(businessProcess.contains(logEvent.componentId)) => sendToRunningActivity(logEvent)
-    case finishedActivity: Activity => stopActivity(finishedActivity.activityId)
     case _ =>
   }
 
   def sendToRunningActivity(logevent: Log) {
-    debug("About to process logEvent object: " + logevent)
+    debug(context.self + " about to process logEvent object: " + logevent)
 
-    val runningActivity = runningActivities.get(logevent.correlationId)
+    val runningActivity = context.actorFor(logevent.correlationId)
 
     runningActivity match {
-      case Some(actor) => actor ! logevent
-      case None => startActivity(logevent)
+      case empty: EmptyLocalActorRef => startActivity(logevent)
+      case actor: ActorRef => actor ! logevent
+      case _ => warn(context.self + " couldn't look up " + logevent.correlationId)
     }
   }
 
@@ -38,30 +36,20 @@ class Processor(businessProcess: BusinessProcess) extends Actor with Logging {
   def startActivity(logevent: Log) {
      if (businessProcess.startNewActivity(logevent)){
        val actor = context.actorOf(Props(new ActivityActor(logevent.correlationId, businessProcess)), name = logevent.correlationId)
-       runningActivities.put(logevent.correlationId, actor)
+       actor ! logevent
     } else if(activityExists(businessProcess.processId, logevent.correlationId)) {
-       warn("A finished activity with id " + logevent.correlationId + " already exists.")
-    }
-  }
-
-  def stopActivity(id: String) {
-    val removedActivity = runningActivities.remove(id)
-    removedActivity match {
-      case Some(actor) => context.stop(actor)
-      case _ => warn("No activity actor with id " + id + " found.")
+       warn(context.self + " a finished activity with id " + logevent.correlationId + " already exists.")
     }
   }
 
   override def preStart = {
-    trace("Starting processor["+context.self+"] for " + businessProcess.processId)
-
+    trace(context.self+ " starting...")
 
     // TODO: Load started activities
 
   }
 
   override def postStop = {
-    trace("Stopping processor["+context.self+"] for " + businessProcess.processId)
-
+    trace(context.self+ " stopping...")
   }
 }

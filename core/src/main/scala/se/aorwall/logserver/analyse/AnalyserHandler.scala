@@ -4,40 +4,48 @@ import grizzled.slf4j.Logging
 import se.aorwall.logserver.model.statement.Statement
 import collection.mutable.HashMap
 import collection.mutable.Map
-import akka.actor.{Props, TypedActor, ActorRef}
 import akka.actor.TypedActor.{PostStop, PreStart}
+import akka.actor.Props._
+import se.aorwall.logserver.process.ActivityActor
+import se.aorwall.logserver.model.process.BusinessProcess
+import akka.actor.{ActorRef, EmptyLocalActorRef, Props, TypedActor}
 
+/**
+ * The reason to have both the AnalyserHandler and the ProcessAnalyser class is
+ * to get the path analyse/processId/statementId. TODO: Find a better solution
+ */
 trait AnalyserHandler {
+  def createProcessAnalyser(process: BusinessProcess) // TODO: Return ActorRef?
+  def removeProcessAnalyser(processId: String)
   def addStatementToProcess(statement: Statement)
   def removeStatementFromProcess(processId: String, statementId: String)
 }
 
 class AnalyserHandlerImpl(val name: String) extends AnalyserHandler with PreStart with PostStop with Logging {
 
-  def this() = this("processor")
+  def this() = this("analyse")
 
-  val activeStatementMonitors = HashMap[String, Map[String, ActorRef]]()
+  def createProcessAnalyser(process: BusinessProcess) {
+     TypedActor.context.actorOf(Props[ProcessAnalyser], name = process.processId)
+  }
+
+  def removeProcessAnalyser(processId: String) {
+    val processAnalyser = TypedActor.context.actorFor(processId)
+    TypedActor.context.stop(processAnalyser)
+  }
 
   def addStatementToProcess(statement: Statement) {
-    val statements = activeStatementMonitors.getOrElseUpdate(statement.processId, new HashMap[String, ActorRef])
-    val currentStatementAnalyser = statements.get(statement.statementId)
-    stopStatementAnalyser(currentStatementAnalyser)
-
-    debug("Starting statement  " +statement.statementId + " for process: " + statement.processId + " in context " + TypedActor.context.self)
-    val newStatementAnalyser = TypedActor.context.actorOf(Props(statement.getStatementAnalyser), name = statement.processId)
-    statements.put(statement.statementId, newStatementAnalyser)
+    debug(TypedActor.context.self + " adding statement " + statement)
+    val processAnalyser = TypedActor.context.actorFor(statement.processId) match {
+      case empty: EmptyLocalActorRef => TypedActor.context.actorOf(Props[ProcessAnalyser], name = statement.processId)
+      case actor: ActorRef => actor
+    }
+    processAnalyser ! statement
   }
 
   def removeStatementFromProcess(processId: String, statementId: String) {
-    val currentAnalyser = activeStatementMonitors(processId).remove(statementId)
-    stopStatementAnalyser(currentAnalyser)
-  }
-
-  def stopStatementAnalyser(process: Option[ActorRef]) {
-    process match {
-      case Some(actor) => TypedActor.context.stop(actor)
-      case None => debug("No statement analyser to stop")
-    }
+    val processAnalyser = TypedActor.context.actorFor(processId)
+    processAnalyser ! statementId
   }
 
   override def preStart(): Unit = {
@@ -48,4 +56,5 @@ class AnalyserHandlerImpl(val name: String) extends AnalyserHandler with PreStar
     debug("Stopping analyser handler")
 //    TypedActor.context.children.foreach { child => TypedActor.context.stop(child) }
   }
+
 }

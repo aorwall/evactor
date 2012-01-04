@@ -7,7 +7,6 @@ import akka.actor.{Props, ActorRef, TypedActor}
 import akka.actor.TypedActor.{PreStart, PostStop}
 
 trait ProcessorHandler {
-
   def setProcess(process: BusinessProcess): Unit
   def removeProcess(processId: String): Unit
 }

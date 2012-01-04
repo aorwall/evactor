@@ -15,6 +15,9 @@ class LatencyAnalyser(processId: String, maxLatency: Long)
   var sum = 0L
 
   def analyse(activity: Activity) {
+
+    trace(context.self + " received: " + activity)
+
     if (activity.state == 10) {
       // check if activity has state SUCCESS (10)
 
@@ -38,7 +41,7 @@ class LatencyAnalyser(processId: String, maxLatency: Long)
       }
 
       trace(activities)
-      debug("sum: " + sum + ", no of activities: " + activities.size + ", avgLatency: " + avgLatency)
+      debug(context.self + " sum: " + sum + ", no of activities: " + activities.size + ", avgLatency: " + avgLatency)
 
       if (avgLatency > maxLatency) {
         alert("Average latency " + avgLatency + "ms is higher than the maximum allowed latency " + maxLatency + "ms")

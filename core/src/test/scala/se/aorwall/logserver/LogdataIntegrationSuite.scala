@@ -31,7 +31,7 @@ class LogdataIntegrationSuite(_system: ActorSystem) extends TestKit(_system) wit
   test("Recieve a logdata objects and send an alert") {
 
     var result: Alert = null
-    val processId = "process"
+    val processId = "processId"
     val camelEndpoint = "hej"
 
     // Start up the modules
@@ -47,18 +47,18 @@ class LogdataIntegrationSuite(_system: ActorSystem) extends TestKit(_system) wit
     val latencyStmt = new Latency(processId, "statementId", camelEndpoint, 2000, Some(new LengthWindowConf(2)))
 
     processor.setProcess(process)
+    analyser.createProcessAnalyser(process)
     analyser.addStatementToProcess(latencyStmt)
 
     // Collect logs
     val currentTime = System.currentTimeMillis
 
-    Thread.sleep(200)
+    Thread.sleep(400)
 
-    debug("send logs to collector")
     collector ! new Log("server", "startComponent", "329380921309", "client", currentTime, State.START, "hello")
     collector ! new Log("server", "startComponent", "329380921309", "client", currentTime+1000, State.SUCCESS, "") // success
-    collector ! new Log("server", "endComponent", "329380921309", "startComponent", currentTime+2000, State.START, "")
-    collector ! new Log("server", "endComponent", "329380921309", "startComponent", currentTime+3000, State.SUCCESS, "") // success
+    collector ! new Log("server", "endComponent", "329380921309", "client", currentTime+2000, State.START, "")
+    collector ! new Log("server", "endComponent", "329380921309", "client", currentTime+3000, State.SUCCESS, "") // success
 
     Thread.sleep(200)
 
