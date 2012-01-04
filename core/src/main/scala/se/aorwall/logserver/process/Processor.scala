@@ -9,8 +9,6 @@ import akka.actor.{EmptyLocalActorRef, Props, ActorRef, Actor}
 
 class Processor(businessProcess: BusinessProcess) extends Actor with Logging {
 
-  var storage: Option[LogStorage] = None//TODO FIX
-
   def receive = {
     case logEvent: Log if(businessProcess.contains(logEvent.componentId)) => sendToRunningActivity(logEvent)
     case _ =>
@@ -28,17 +26,10 @@ class Processor(businessProcess: BusinessProcess) extends Actor with Logging {
     }
   }
 
-  def activityExists(processId: String, activityId: String) = storage match {
-    case Some(s) => s.activityExists(processId, activityId)
-    case None => false // expect that no former activity exists if no storage is set
-  }
-
   def startActivity(logevent: Log) {
      if (businessProcess.startNewActivity(logevent)){
        val actor = context.actorOf(Props(new ActivityActor(logevent.correlationId, businessProcess)), name = logevent.correlationId)
        actor ! logevent
-    } else if(activityExists(businessProcess.processId, logevent.correlationId)) {
-       warn(context.self + " a finished activity with id " + logevent.correlationId + " already exists.")
     }
   }
 

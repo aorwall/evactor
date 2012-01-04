@@ -21,30 +21,36 @@ class ActivityActor(id: String, businessProcess: BusinessProcess) extends Actor 
   var testAnalyser: Option[ActorRef] = None // Used for test
 
   override def preStart() {
-    trace(context.self + " starting...")
 
-    val storedLogs = storage match {
-      case Some(s) => s.readLogs(id)
-      case None => List[Log]()
-    }
+    if (activityExists(businessProcess.processId, id)){
+      info(context.self + " an activity already exists, aborting...")
+      context.stop(self)
+    } else {
+      trace(context.self + " starting...")
 
-    storedLogs.foreach(log => activityBuilder.addLogEvent(log))
-    //TODO: Save activity in runningActivitesCF
+      val storedLogs = storage match {
+        case Some(s) => s.readLogs(id)
+        case None => List[Log]()
+      }
 
-    if(activityBuilder.isFinished){
-       sendActivity(activityBuilder.createActivity())
-    } else if (businessProcess.timeout > 0){
+      storedLogs.foreach(log => activityBuilder.addLogEvent(log))
+      //TODO: Save activity in runningActivitesCF
 
-      // set timeout to (timeout - the time since the first element)
-      val timeoutSinceStart = if(storedLogs.size > 0) businessProcess.timeout - (System.currentTimeMillis - storedLogs.map(_.timestamp).min)
-                              else businessProcess.timeout
+      if(activityBuilder.isFinished){
+         sendActivity(activityBuilder.createActivity())
+      } else if (businessProcess.timeout > 0){
 
-      if(timeoutSinceStart > 0) {
-        debug(context.self + " will timeout in " + timeoutSinceStart + " seconds")
-        scheduledTimeout = Some(context.system.scheduler.scheduleOnce(timeoutSinceStart seconds, self, new Timeout))
-      } else {
-        warn(context.self +  " has already timed out!")
-        sendActivity(activityBuilder.createActivity())
+        // set timeout to (timeout - the time since the first element)
+        val timeoutSinceStart = if(storedLogs.size > 0) businessProcess.timeout - (System.currentTimeMillis - storedLogs.map(_.timestamp).min)
+                                else businessProcess.timeout
+
+        if(timeoutSinceStart > 0) {
+          debug(context.self + " will timeout in " + timeoutSinceStart + " seconds")
+          scheduledTimeout = Some(context.system.scheduler.scheduleOnce(timeoutSinceStart seconds, self, new Timeout))
+        } else {
+          warn(context.self +  " has already timed out!")
+          sendActivity(activityBuilder.createActivity())
+        }
       }
     }
   }
@@ -70,23 +76,19 @@ class ActivityActor(id: String, businessProcess: BusinessProcess) extends Actor 
 
   def sendActivity(activity: Activity) {
 
-    if(activityExists(activity.processId, activity.activityId)){
-      warn(context.self + " an activity already exists")
-    } else {
-      storage match {
-        case Some(s) => s.finishActivity(activity)
-        case None =>
-      }
+    storage match {
+      case Some(s) => s.finishActivity(activity)
+      case None =>
+    }
 
-      val processAnalyser = context.actorFor("/user/analyse/" + activity.processId)
-      debug(context.self + " sending " + activity + " to /user/analyse/" + activity.processId )
-      processAnalyser ! activity
+    val processAnalyser = context.actorFor("/user/analyse/" + activity.processId)
+    debug(context.self + " sending " + activity + " to /user/analyse/" + activity.processId )
+    processAnalyser ! activity
 
-      // If a test actor exists
-      testAnalyser match {
-        case Some(testActor) => testActor ! activity
-        case _ =>
-      }
+    // If a test actor exists
+    testAnalyser match {
+      case Some(testActor) => testActor ! activity
+      case _ =>
     }
 
     context.stop(self)
