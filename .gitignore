@@ -1,6 +1,11 @@
 *.iml
 *.ipr
+.classpath
+.project
+.scala_dependencies
+.settings
 .gradle/
 .idea/
 out/
 build/
+bin/
