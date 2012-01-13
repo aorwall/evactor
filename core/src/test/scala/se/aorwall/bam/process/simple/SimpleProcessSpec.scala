@@ -20,25 +20,14 @@ class SimpleProcessSpec extends WordSpec with MustMatchers with Logging {
   "A SimpleProcess" must {
 
     "return true when it contains a component" in {
-      process.contains(startCompId) must be === true
-      process.contains(endCompId) must be === true
+      process.handlesEvent(new Log("server", startCompId, "corrId", "client", 0L, State.START, "")) must be === true
+      process.handlesEvent(new Log("server", endCompId, "corrId", "client", 0L, State.START, "")) must be === true
     }
 
     "return false when doesn't contain a component" in {
-      process.contains("anotherComponent") must be === false
+      process.handlesEvent(new Log("server", "anotherComponent", "corrId", "client", 0L, State.START, "")) must be === false
     }
 
-    "return true if a request to the start component with state START is provided" in {
-      process.startNewActivity(new Log("server", startCompId, "corrId", "client", 0L, State.START, "")) must be === true
-    }
-
-    "return false if a request to the start component with another state is provided" in {
-      process.startNewActivity(new Log("server", startCompId, "corrId", "client", 0L, State.SUCCESS, "")) must be === false
-    }
-
-    "return false if a request to another component with state START is provided" in {
-      process.startNewActivity(new Log("server", endCompId, "corrId", "client", 0L, State.START, "")) must be === false
-    }
 
   }
 

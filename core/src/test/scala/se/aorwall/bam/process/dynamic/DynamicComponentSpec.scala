@@ -16,16 +16,8 @@ class DynamicComponentSpec extends WordSpec with MustMatchers with Logging {
 
   "A DynamicComponent" must {
 
-    "should always return true when contains is called " in {
-      process.contains(compId) must be === true
-    }
-
-    "return true if a request to the start component with state START is provided" in {
-      process.startNewActivity(new Log("server", compId, "corrId", "client", 0L, State.START, "")) must be === true
-    }
-
-    "return false if a request to the start component with another state is provided" in {
-      process.startNewActivity(new Log("server", compId, "corrId", "client", 0L, State.SUCCESS, "")) must be === false
+    "should always return true when handlesEvent is called " in {
+      process.handlesEvent(new Log("server", compId, "corrId", "client", 0L, State.START, "")) must be === true
     }
 
   }

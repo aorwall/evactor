@@ -63,7 +63,7 @@ class LogdataIntegrationSuite(_system: ActorSystem) extends TestKit(_system) wit
     collector ! new Log("server", "endComponent", "329380921309", "client", currentTime+2000, State.START, "")
     collector ! new Log("server", "endComponent", "329380921309", "client", currentTime+3000, State.SUCCESS, "") // success
 
-    Thread.sleep(3000)
+    Thread.sleep(1000)
 
     //result must be === new Alert(processId, "Average latency 3000ms is higher than the maximum allowed latency 2000ms", true) // the latency alert
 
