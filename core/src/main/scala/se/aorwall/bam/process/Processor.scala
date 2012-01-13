@@ -1,36 +1,47 @@
 package se.aorwall.bam.process
 
-import collection.mutable.HashMap
-import grizzled.slf4j.Logging
-import se.aorwall.bam.model.process.BusinessProcess
-import se.aorwall.bam.storage.LogStorage
-import se.aorwall.bam.model.{Activity, Log}
-import akka.actor.{EmptyLocalActorRef, Props, ActorRef, Actor}
+import akka.actor.FaultHandlingStrategy._
+import akka.actor.Actor
+import akka.actor.ActorRef
 import akka.actor.DeadLetterActorRef
+import akka.actor.EmptyLocalActorRef
 import akka.actor.InternalActorRef
+import akka.actor.OneForOneStrategy
+import akka.actor.Props
+import grizzled.slf4j.Logging
+import se.aorwall.bam.model.events.Event
 
-class Processor(businessProcess: BusinessProcess) extends Actor with Logging {
+abstract class Processor extends Actor with Logging {
+  type T <: Event
+  
+  val strategy = OneForOneStrategy({
+	  case _: EventCreationException  => Stop
+	  case _: Exception          => Restart
+  }: Decider, maxNrOfRetries = Some(10), withinTimeRange = Some(60000))
 
+  val processorId: String
+  
   def receive = {
-    case logEvent: Log if(businessProcess.handlesEvent(logEvent)) => sendToRunningActivity(logEvent)
-    case _ => 
+    case event: T => sendToRunningProcessor(event)
+    case _ => // skip
   }
 
-  def sendToRunningActivity(logevent: Log) {
-    debug(context.self + " about to process logEvent object: " + logevent)
+  def sendToRunningProcessor(event: T) {
+    debug(context.self + " about to process event: " + event)
 
-    val activityId = businessProcess.getActivityId(logevent)    
-    debug(context.self + " looking for active actor with id: " + activityId)
-    val runningActivity = getActivity(activityId)
+    val eventId = getEventId(event)    
+    debug(context.self + " looking for active event processor with id: " + eventId)
+    val runningActivity = getProcessorActor(eventId)
     
-    runningActivity ! logevent    
+    runningActivity ! event    
   }
 
-  def getActivity(id: String): ActorRef = context.actorFor(id) match {
-    case empty: EmptyLocalActorRef => {
-      trace(context.self + " found " + empty + " starting actor with id: " + id)
-      context.actorOf(Props(new ActivityActor(id, businessProcess)), name = id)
-    }
+  def getEventId(event: T): String
+  
+  def createProcessorActor(id: String): ProcessorActor
+  
+  def getProcessorActor(eventId: String): ActorRef = context.actorFor(eventId) match {
+    case empty: EmptyLocalActorRef => context.actorOf(Props(createProcessorActor(eventId)), eventId)
     case actor: ActorRef => {
      trace(context.self + " found: " + actor)
      actor

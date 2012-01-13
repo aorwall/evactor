@@ -3,7 +3,8 @@ package se.aorwall.bam.analyse.statement
 import scala.Predef._
 import grizzled.slf4j.Logging
 import akka.actor.{Actor, ActorRef}
-import se.aorwall.bam.model.{Alert, Activity}
+import se.aorwall.bam.model.events.Event
+import se.aorwall.bam.model.Alert
 
 abstract class StatementAnalyser(processId: String) extends Actor with Logging {
 
@@ -11,7 +12,7 @@ abstract class StatementAnalyser(processId: String) extends Actor with Logging {
   var testAlerter: Option[ActorRef] = None
 
   def receive = {
-    case activity: Activity => analyse(activity)
+    case event: Event => analyse(event)
     case testActor: ActorRef => testAlerter = Some(testActor)
   }
 
@@ -20,7 +21,7 @@ abstract class StatementAnalyser(processId: String) extends Actor with Logging {
    */
   //def init(): Unit
 
-  def analyse(activity: Activity)
+  def analyse(event: Event)
 
   def alert(message: String) {
     if (!triggered) {

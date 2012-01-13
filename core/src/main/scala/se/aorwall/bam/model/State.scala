@@ -8,9 +8,7 @@ object State {
   val RETRY = 2
 
   val SUCCESS = 10
-  val INTERNAL_FAILURE = 11
-  val BACKEND_FAILURE = 12
-  val CLIENT_FAILURE = 13
-  val UNKNOWN_FAILURE = 14
+  val FAILURE = 11
+  val CANCELLATION = 12
 
 }

@@ -3,10 +3,10 @@ package se.aorwall.bam.analyse
 import se.aorwall.bam.model.statement.Statement
 import collection.mutable.HashMap
 import grizzled.slf4j.Logging
-import se.aorwall.bam.model.{Log, Activity}
 import se.aorwall.bam.process.Timeout
 import akka.actor._
 import akka.actor.Props._
+import se.aorwall.bam.model.events.Event
 
 /**
  * The reason to have both the AnalyserHandler and the ProcessAnalyser class is
@@ -17,15 +17,15 @@ class ProcessAnalyser extends Actor with Logging {
   val activeStatements = HashMap[String, Statement]()
 
   def receive = {
-    case activity: Activity => sendToAnalysers(activity)
+    case event: Event => sendToAnalysers(event)
     case statement: Statement => addStatement(statement)
     case statementId: String => removeStatement(statementId)
     case msg => info(context.self + " can't handle: " + msg)
   }
 
-  def sendToAnalysers(activity: Activity) {
+  def sendToAnalysers(event: Event) {
     debug(context.self + " sending activity to " + context.children.size + " statement analysers")
-    context.children.foreach(analyser => analyser ! activity)
+    context.children.foreach(analyser => analyser ! event)
   }
 
   def addStatement(statement: Statement) {

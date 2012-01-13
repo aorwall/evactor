@@ -1,10 +1,11 @@
 package se.aorwall.bam.analyse.statement
 
-import se.aorwall.bam.model.Activity
 import grizzled.slf4j.Logging
 import akka.actor.{ActorRef}
 import collection.immutable.TreeMap
 import window.Window
+import se.aorwall.bam.model.attributes.HasState
+import se.aorwall.bam.model.events.Event
 
 class FailureAnalyser (processId: String, states: List[Int], maxOccurrences: Long)
   extends StatementAnalyser (processId) with Window with Logging {
@@ -13,9 +14,9 @@ class FailureAnalyser (processId: String, states: List[Int], maxOccurrences: Lon
 
   var failedActivities = new TreeMap[Long, Int] ()
 
-  def analyse(activity: Activity) {
+  def analyse(event: Event) {
 
-    if(states.contains(activity.state)){ // check if activity has a failure state  TODO: state in states?
+  /*  if(states.contains(event.state)){ // check if activity has a failure state  TODO: state in states?
 
       // Add new
       failedActivities += (activity.startTimestamp -> activity.state)  // TODO: Use endTimestamp instead of startTimestamp? And what if two activites have the same timestamp?
@@ -34,6 +35,6 @@ class FailureAnalyser (processId: String, states: List[Int], maxOccurrences: Lon
         backToNormal("back to normal!")
       }
 
-    }
+    }*/
   }
 }

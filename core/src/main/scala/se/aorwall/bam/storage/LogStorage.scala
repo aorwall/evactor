@@ -1,33 +1,32 @@
 package se.aorwall.bam.storage
-
-import se.aorwall.bam.model.{Statistics, Activity, Log}
+import scala.tools.nsc.util.Statistics
+import se.aorwall.bam.model.events.Event
 
 /**
  * Interface for log storage
  *
  */
-
 trait LogStorage {
 
   /**
-   * Store a log object
+   * Store an event
    */
-  def storeLog(correlationId: String, log: Log)
+  def storeEvent(event: Event)
 
   /**
-   * Read all log objects for a specified correlation id
+   * Read an event
    */
-  def readLogs(correlationId: String): List[Log]
+  def readEvent(id: String): Event
 
   /**
    * Start new active activity
    */
-  def startActivity(activity: Activity)
+  def startActivity(event: Event)
 
   /**
    * Finish the activity
    */
-  def finishActivity(activity: Activity)
+  def finishEvent(event: Event)
 
   /**
    * Read unfinished activites
@@ -37,16 +36,16 @@ trait LogStorage {
   /**
    * Read activity objects
    */
-  def readActivities(processId: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], count: Int, start: Int): List[Activity]
+  def readEvents(name: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], count: Int, start: Int): List[Event]
 
   /**
    * Check if an activity exists
    */
-  def activityExists(processId: String, activityId: String): Boolean
+  def eventExists(processId: String, activityId: String): Boolean
 
   /**
    * Read statistics for a process
    */
-  def readStatistics(processId: String, fromTimestamp: Option[Long], toTimestamp: Option[Long]): Statistics
+  def readStatistics(processId: String, fromTimestamp: Option[Long], toTimestamp: Option[Long]): Map[String, Long]
 
 }

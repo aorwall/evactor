@@ -3,31 +3,32 @@ package se.aorwall.bam.collect
 import akka.actor.{Actor}
 import grizzled.slf4j.Logging
 import se.aorwall.bam.process.Processor
-import se.aorwall.bam.model.{Log}
+import se.aorwall.bam.model.events.Event
 
 /**
- * 1. Receive log data object
- * 2. Send to process actors
+ * Collects events
  */
 class Collector extends Actor with Logging {
 
   def receive = {
-    case log: Log => processLogdata(log)
+    case event: Event => collect(event)
   }
 
-  def processLogdata(logevent: Log) = {
-    // TODO: store log event
-    debug("Collecting: " + logevent)
+  def collect(event: Event) = {
+   
+    debug(context.self + " collecting: " + event)
 
-    // send logevent object to all process actors
-    context.actorSelection("../process/*") ! logevent
+    // send event to processor
+    context.actorFor("../process") ! event
+    
+    // TODO: Send to analyser
   }
 
   override def preStart = {
-    trace("Starting collector")
+    trace(context.self + " starting...")
   }
 
   override def postStop = {
-    trace("Stopping collector")
+    trace(context.self + " stopping...")
   }
 }

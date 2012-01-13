@@ -1,20 +1,20 @@
 package se.aorwall.bam.analyse.statement
 
-import se.aorwall.bam.model.Activity
 import grizzled.slf4j.Logging
 import akka.actor.{Cancellable}
 import akka.util.duration._
+import se.aorwall.bam.model.events.Event
 
 class AbsenceOfRequestsAnalyser (val processId: String, val timeframe: Long)
   extends StatementAnalyser (processId) with Logging {
 
   var scheduledFuture: Option[Cancellable] = None
 
-  def analyse(activity: Activity) {
-    debug("Received: " + activity)
+  def analyse(event: Event) {
+    debug("Received: " + event)
 
-    if(activity.activityId == "")
-      alert("No activities within the timeframe " + timeframe + "ms")
+    if(event.id == "")
+      alert("No events within the timeframe " + timeframe + "ms")
     else
       backToNormal("Back to normal")
 
@@ -26,9 +26,8 @@ class AbsenceOfRequestsAnalyser (val processId: String, val timeframe: Long)
   }
 
   def startScheduler() {
-    scheduledFuture = Some(context.system.scheduler.scheduleOnce(timeframe milliseconds, self, new Activity(processId, "", 0, 0, 0)))
+  //  scheduledFuture = Some(context.system.scheduler.scheduleOnce(timeframe milliseconds, self, new Activity(processId, "", 0, 0, 0)))
   }
-
   override def preStart() {
     trace("Starting statement analyse")
     startScheduler()

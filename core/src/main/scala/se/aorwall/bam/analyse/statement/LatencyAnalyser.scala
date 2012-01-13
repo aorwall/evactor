@@ -2,9 +2,9 @@ package se.aorwall.bam.analyse.statement
 
 import window.Window
 import collection.immutable.TreeMap
-import se.aorwall.bam.model.Activity
 import grizzled.slf4j.Logging
 import akka.actor.ActorRef
+import se.aorwall.bam.model.events.Event
 
 class LatencyAnalyser(processId: String, maxLatency: Long)
   extends StatementAnalyser(processId) with Window with Logging {
@@ -14,8 +14,8 @@ class LatencyAnalyser(processId: String, maxLatency: Long)
   var activities = new TreeMap[Long, Long]()
   var sum = 0L
 
-  def analyse(activity: Activity) {
-
+  def analyse(activity: Event) {
+	  /*
     trace(context.self + " received: " + activity)
 
     if (activity.state == 10) {
@@ -49,6 +49,6 @@ class LatencyAnalyser(processId: String, maxLatency: Long)
         backToNormal("back to normal!")
       }
 
-    }
+    } */
   }
 }
