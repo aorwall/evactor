@@ -4,6 +4,9 @@ import org.scalatest.matchers.MustMatchers
 import org.scalatest.WordSpec
 import org.joda.time.DateTime
 
+import se.aorwall.bam.storage.CassandraStorage;
+import se.aorwall.bam.storage.cassandraStorage;
+
 class CassandraStorageSpec extends WordSpec with MustMatchers  {
 
   //TODO: Integration test with Cassandra
