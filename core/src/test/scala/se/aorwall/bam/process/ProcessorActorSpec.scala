@@ -50,24 +50,25 @@ class ProcessorActorSpec(_system: ActorSystem) extends TestKit(_system) with Wor
       when(eventBuilder.isFinished).thenReturn(true)
       when(eventBuilder.createEvent).thenReturn(activity)
 
-      actor ! logEvent
+      actor ! logEvent	
       verify(eventBuilder).addEvent(logEvent)
 
       activityPrope.expectMsg(1 seconds, activity) // The activity returned by activityBuilder should be sent to activityPrope
       actor.stop
     }
 
-    /*
     "send an activity with status TIMEOUT to analyser when timed out" in {
+      val eventBuilder = mock(classOf[EventBuilder])
       val timedoutActivity = new RequestEvent("startComponent", "329380921309", 0L, None, None, State.TIMEOUT, 0L)
 
-      val process = new DynamicComponent(1L)
+      val timeoutActivityActor = TestActorRef(new ProcessorActor("329380921309", eventBuilder)  with Timed { _timeout = Some(1L)})
 
-      val timeoutActivityActor = TestActorRef(new ActivityActor("329380921309", process))
+      when(eventBuilder.createEvent).thenReturn(timedoutActivity)
+      
       val activityPrope = TestProbe()
       timeoutActivityActor ! activityPrope.ref
 
-      val logEvent = new Log("server", "startComponent", "329380921309", "client", 0L, State.START, "hello")
+      val logEvent = new LogEvent("startComponent", "329380921309", 0L, "329380921309", "client", "server", State.START, "hello")
 
       timeoutActivityActor ! logEvent
 
@@ -75,6 +76,5 @@ class ProcessorActorSpec(_system: ActorSystem) extends TestKit(_system) with Wor
 
       timeoutActivityActor.stop
     }
-    */
   }
 }

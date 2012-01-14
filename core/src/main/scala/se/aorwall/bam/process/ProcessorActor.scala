@@ -9,21 +9,15 @@ import se.aorwall.bam.model.events.Event
 import se.aorwall.bam.process.Timeout
 
 /**
- * One Activity Actor for each running activity
+ * One Processor Actor for each running event processor
  */
 class ProcessorActor(id: String, eventBuilder: EventBuilder) extends Actor with Logging {
-
-  var storage: Option[LogStorage] = None//TODO FIX
-
+  
+  val collector = context.actorFor("/user/collect")
   var testAnalyser: Option[ActorRef] = None // Used for test
 
   override def preStart() {
-//    if (isEventAlreadyFinished(id)){
-//      info(context.self + " an activity already exists, aborting...")
-//      context.stop(self)
-//    } else { 
       trace(context.self + " starting...")
- //   }
   }
   
   override def postRestart(reason: Throwable) {
@@ -59,11 +53,8 @@ class ProcessorActor(id: String, eventBuilder: EventBuilder) extends Actor with 
 
   def sendEvent(event: Event) {
 
-	// TODO: Save event to DB
-    
     // send the created event back to collector
-    val processor = context.actorFor("/user/collect")
-    processor ! event
+    collector ! event
 
     // If a test actor exists
     testAnalyser match {

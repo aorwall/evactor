@@ -6,17 +6,21 @@ import akka.actor.Actor
 
 trait Timed extends Actor  {
   
-  var scheduledTimeout: Cancellable
-  
-  val timeout: Integer 
-  
-  /*
+  var scheduledTimeout:Option[Cancellable] = None 
+  var _timeout: Option[Long] = None
+    
   override def preStart() {
-    scheduledTimeout = Some(context.system.scheduler.scheduleOnce(timeout seconds, self, new Timeout))
+    scheduledTimeout = _timeout match {
+      case Some(timeout) => Some(context.system.scheduler.scheduleOnce(timeout seconds, self, new Timeout))
+      case _ => None
+    }
   }
-  */
+  
   override def postStop() {
-    scheduledTimeout.cancel()
+	 scheduledTimeout match {
+	    case Some(s) => s.cancel()
+	    case _ =>
+	 }
   }
   
 }

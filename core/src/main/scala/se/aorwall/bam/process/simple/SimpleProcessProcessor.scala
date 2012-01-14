@@ -9,6 +9,7 @@ import se.aorwall.bam.process.Processor
 import se.aorwall.bam.model.State
 import se.aorwall.bam.model.events.SimpleProcessEvent
 import se.aorwall.bam.model.events.Event
+import se.aorwall.bam.process.Timed
 
 /**
  * Processes simple processes with a defined list of components requested. The process will complete when the first and the 
@@ -32,7 +33,7 @@ class SimpleProcessProcessor(val processorId: String, val components: List[Strin
   def getEventId(logevent: RequestEvent) = logevent.id
 
   def createProcessorActor(id: String): ProcessorActor = {
-    new ProcessorActor(id, new SimpleProcessEventBuilder(processorId, components) )
+    new ProcessorActor(id, new SimpleProcessEventBuilder(processorId, components) ) with Timed { _timeout = Some(timeout) }
   } 
 
   override def toString = "SimpleProcess ( id: " + processorId + ", components: " + components + ")"

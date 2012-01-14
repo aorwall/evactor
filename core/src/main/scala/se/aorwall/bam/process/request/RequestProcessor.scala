@@ -1,14 +1,15 @@
 package se.aorwall.bam.process.request
 
 import grizzled.slf4j.Logging
+import se.aorwall.bam.model.events.Event
 import se.aorwall.bam.model.events.LogEvent
+import se.aorwall.bam.model.events.RequestEvent
 import se.aorwall.bam.model.State
+import se.aorwall.bam.process.ProcessorActor
 import se.aorwall.bam.process.EventBuilder
 import se.aorwall.bam.process.EventCreationException
 import se.aorwall.bam.process.Processor
-import se.aorwall.bam.process.ProcessorActor
-import se.aorwall.bam.model.events.RequestEvent
-import se.aorwall.bam.model.events.Event
+import se.aorwall.bam.process.Timed
 
 /**
  * Handles LogEvent objects and creates a RequestEvent object. 
@@ -32,7 +33,7 @@ class RequestProcessor (val processorId: String, val timeout: Long) extends Proc
   def getEventId(logevent: LogEvent) = logevent.name + "_" + logevent.correlationId
 
   def createProcessorActor(id: String): ProcessorActor = {
-    new ProcessorActor(id, new RequestEventBuilder() )
+    new ProcessorActor(id, new RequestEventBuilder() ) with Timed { _timeout = Some(timeout) }
   } 
   
 }
