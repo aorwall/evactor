@@ -1,5 +1,5 @@
 package se.aorwall.bam.storage
-import scala.tools.nsc.util.Statistics
+
 import se.aorwall.bam.model.events.Event
 
 /**

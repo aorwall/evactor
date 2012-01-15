@@ -8,7 +8,7 @@ trait TimeWindow extends Window with Logging{
 
   val timeframe: Long
 
-  override def getInactive(activities: Map[Long, T]): Map[Long, T] = {
+  override def getInactive(activities: Map[Long, S]): Map[Long, S] = {
      activities.takeWhile( _._1 < System.currentTimeMillis - timeframe )
   }
 

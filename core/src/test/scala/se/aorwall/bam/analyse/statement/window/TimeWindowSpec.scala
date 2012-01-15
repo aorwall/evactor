@@ -5,7 +5,6 @@ import grizzled.slf4j.Logging
 import org.scalatest.{WordSpec, FunSuite}
 import org.scalatest.matchers.MustMatchers
 
-import se.aorwall.bam.analyse.statement.window.TimeWindow;
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
@@ -13,37 +12,37 @@ import org.scalatest.junit.JUnitRunner
 class TimeWindowSpec extends WordSpec with MustMatchers with Logging {
 
   val currentTime = System.currentTimeMillis
-  val activities = TreeMap(currentTime - 10000000L -> 11, currentTime - 1000000L -> 22, currentTime - 1000L -> 33, currentTime - 2000L -> 44, currentTime - 3000L -> 55)
+  val events = TreeMap(currentTime - 10000000L -> 11, currentTime - 1000000L -> 22, currentTime - 1000L -> 33, currentTime - 2000L -> 44, currentTime - 3000L -> 55)
 
   "A TimeWindow" must {
 
-    "return timed out activities" in {
+    "return timed out events" in {
 
       new {
-        type T = Int
+        type S = Int
         val timeframe = 10000L
       } with TimeWindow {
-        assert(getInactive(activities) == Map(currentTime - 10000000L -> 11, currentTime - 1000000L -> 22))
+        assert(getInactive(events) == Map(currentTime - 10000000L -> 11, currentTime - 1000000L -> 22))
       }
     }
 
-    "don't return any activities when the timeframe is set to current time" in {
+    "don't return any events when the timeframe is set to current time" in {
 
       new {
-        type T = Int
+        type S = Int
         val timeframe = System.currentTimeMillis
       } with TimeWindow {
-        assert(getInactive(activities).size == 0)
+        assert(getInactive(events).size == 0)
       }
     }
 
-    "return all activities when the timelimit is set to 0" in {
+    "return all events when the timelimit is set to 0" in {
 
       new {
-        type T = Int
+        type S = Int
         val timeframe = 0L
       } with TimeWindow {
-        assert(getInactive(activities).size == 5)
+        assert(getInactive(events).size == 5)
       }
     }
   }

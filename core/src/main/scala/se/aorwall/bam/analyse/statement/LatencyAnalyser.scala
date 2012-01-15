@@ -5,50 +5,47 @@ import collection.immutable.TreeMap
 import grizzled.slf4j.Logging
 import akka.actor.ActorRef
 import se.aorwall.bam.model.events.Event
+import se.aorwall.bam.model.attributes.HasLatency
 
-class LatencyAnalyser(processId: String, maxLatency: Long)
-  extends StatementAnalyser(processId) with Window with Logging {
+class LatencyAnalyser(val eventName: String, maxLatency: Long)
+  extends StatementAnalyser with Window with Logging {
 
-  type T = Long
+  type T = Event with HasLatency
+  type S = Long
 
-  var activities = new TreeMap[Long, Long]()
+  var events = new TreeMap[Long, Long]()
   var sum = 0L
 
-  def analyse(activity: Event) {
-	  /*
-    trace(context.self + " received: " + activity)
+  def analyse(event: T) {
 
-    if (activity.state == 10) {
-      // check if activity has state SUCCESS (10)
-
-      // Add new
-      val latency = activity.endTimestamp - activity.startTimestamp
-      activities += (activity.startTimestamp -> latency) // TODO: Use endTimestamp instead of startTimestamp?
-      sum += latency
-
-      // Remove old
-      val inactiveActivites = getInactive(activities)
-      activities = activities.drop(inactiveActivites.size)
-      sum += inactiveActivites.foldLeft(0L) {
-        case (a, (k, v)) => a - v
-      }
-
-      // Count average latency
-      val avgLatency = if (sum > 0) {
-        sum / activities.size
-      } else {
-        0
-      }
-
-      trace(activities)
-      debug(context.self + " sum: " + sum + ", no of activities: " + activities.size + ", avgLatency: " + avgLatency)
-
-      if (avgLatency > maxLatency) {
-        alert("Average latency " + avgLatency + "ms is higher than the maximum allowed latency " + maxLatency + "ms")
-      } else {
-        backToNormal("back to normal!")
-      }
-
-    } */
+    trace(context.self + " received: " + event)
+	
+	// Add new
+	val latency = event.latency
+	events += (event.timestamp -> latency)
+	sum += latency
+	
+	// Remove old
+	val inactiveEvents = getInactive(events)
+	events = events.drop(inactiveEvents.size)
+	sum += inactiveEvents.foldLeft(0L) {
+	  case (a, (k, v)) => a - v
+	}
+	
+	// Count average latency
+	val avgLatency = if (sum > 0) {
+	  sum / events.size
+	} else {
+	  0
+	}
+	
+	trace(events)
+	debug(context.self + " sum: " + sum + ", no of events: " + events.size + ", avgLatency: " + avgLatency)
+	
+	if (avgLatency > maxLatency) {
+	  alert("Average latency " + avgLatency + "ms is higher than the maximum allowed latency " + maxLatency + "ms")
+	} else {
+	  backToNormal("back to normal!")
+	}    
   }
 }

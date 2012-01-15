@@ -8,11 +8,7 @@ import akka.actor._
 import akka.actor.Props._
 import se.aorwall.bam.model.events.Event
 
-/**
- * The reason to have both the AnalyserHandler and the ProcessAnalyser class is
- * to get the path analyse/processId/statementId. TODO: Find a better solution
- */
-class ProcessAnalyser extends Actor with Logging {
+class Analyser extends Actor with Logging {
 
   val activeStatements = HashMap[String, Statement]()
 
@@ -24,7 +20,7 @@ class ProcessAnalyser extends Actor with Logging {
   }
 
   def sendToAnalysers(event: Event) {
-    debug(context.self + " sending activity to " + context.children.size + " statement analysers")
+    debug(context.self + " sending event to " + context.children.size + " analysers")
     context.children.foreach(analyser => analyser ! event)
   }
 
@@ -32,7 +28,7 @@ class ProcessAnalyser extends Actor with Logging {
     val currentAnalyser = context.actorFor(statement.statementId)
     stopStatementAnalyser(currentAnalyser)
 
-    debug(context.self + " starting statement  " + statement.statementId + " for process: " + statement.processId + " in context " + context.self)
+    debug(context.self + " starting statement  " + statement.statementId + " for event with name " + statement.eventName + " in context " + context.self)
     context.actorOf(Props(statement.getStatementAnalyser), name = statement.statementId)
 
     activeStatements.put(statement.statementId, statement)

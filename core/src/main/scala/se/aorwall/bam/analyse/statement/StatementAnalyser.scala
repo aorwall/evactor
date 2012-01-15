@@ -6,14 +6,19 @@ import akka.actor.{Actor, ActorRef}
 import se.aorwall.bam.model.events.Event
 import se.aorwall.bam.model.Alert
 
-abstract class StatementAnalyser(processId: String) extends Actor with Logging {
+abstract class StatementAnalyser extends Actor with Logging {
 
+  val eventName: String
+  
+  type T <: Event
+  
   var triggered = false //TODO: use FSM for this
   var testAlerter: Option[ActorRef] = None
 
   def receive = {
-    case event: Event => analyse(event)
+    case event: T if(event.name == eventName) => analyse(event)
     case testActor: ActorRef => testAlerter = Some(testActor)
+    case _ => 
   }
 
   /**
@@ -21,11 +26,11 @@ abstract class StatementAnalyser(processId: String) extends Actor with Logging {
    */
   //def init(): Unit
 
-  def analyse(event: Event)
+  def analyse(event: T)
 
   def alert(message: String) {
     if (!triggered) {
-      warn("Alert: " + message)
+      warn(context.self + " Alert: " + message)
 
       triggered = true
       sendAlert(message)
@@ -34,7 +39,7 @@ abstract class StatementAnalyser(processId: String) extends Actor with Logging {
 
   def backToNormal(message: String) {
     if (triggered) {
-      info("Back to normal: " + message)
+      info(context.self + " Back to normal: " + message)
 
       triggered = false
       sendAlert(message)
@@ -42,9 +47,9 @@ abstract class StatementAnalyser(processId: String) extends Actor with Logging {
   }
 
   def sendAlert(message: String) {
-    val alert = new Alert(processId, message, triggered)
+    val alert = new Alert(eventName, message, triggered)
 
-    context.actorSelection("../../alerter/" + processId)  ! alert //TODO: The alerter isn't implemented yet
+    context.actorSelection("../../alerter/" + eventName)  ! alert //TODO: The alerter isn't implemented yet
 
     // If a test actor exists
     testAlerter match {
@@ -54,10 +59,10 @@ abstract class StatementAnalyser(processId: String) extends Actor with Logging {
   }
 
   override def preStart() {
-    trace("Starting statement analyser["+context.self+"]  for process " + processId)
+    trace(context.self + " Starting analyser for events with name: " + eventName)
   }
 
   override def postStop() {
-    trace("Stopping statement analyser["+context.self+"] for process " + processId)
+    trace(context.self + " Stopping analyser for events with name: " + eventName)
   }
 }

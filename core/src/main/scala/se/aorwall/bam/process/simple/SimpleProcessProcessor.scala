@@ -75,7 +75,7 @@ class SimpleProcessEventBuilder(val processId: String, val components: List[Stri
 
   def createEvent(): SimpleProcessEvent = (startEvent, endEvent) match {
     case (Some(start: RequestEvent), Some(end: RequestEvent)) =>
-      new SimpleProcessEvent(processId, end.id, end.timestamp, requests, end.state, end.timestamp - start.timestamp )
+      new SimpleProcessEvent(processId, end.id, end.timestamp, requests, end.state, end.timestamp - start.timestamp + start.latency )
     case (Some(start: RequestEvent), _) => 
       new SimpleProcessEvent(processId, start.id, System.currentTimeMillis, requests, getState(start), 0L)
     case (_, end: RequestEvent) =>
@@ -84,7 +84,7 @@ class SimpleProcessEventBuilder(val processId: String, val components: List[Stri
        throw new EventCreationException("SimpleProcessEventBuilder was trying to create an event without either a start or an end event.")
   }
 
-  protected def getState(reqEvent: RequestEvent): Integer = 
+  protected def getState(reqEvent: RequestEvent): Int = 
   	if(endStates.contains(reqEvent.state)) reqEvent.state
   	else State.TIMEOUT
   

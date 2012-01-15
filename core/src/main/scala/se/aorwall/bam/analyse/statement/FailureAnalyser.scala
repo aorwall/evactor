@@ -6,35 +6,37 @@ import collection.immutable.TreeMap
 import window.Window
 import se.aorwall.bam.model.attributes.HasState
 import se.aorwall.bam.model.events.Event
+import se.aorwall.bam.model.State
 
-class FailureAnalyser (processId: String, states: List[Int], maxOccurrences: Long)
-  extends StatementAnalyser (processId) with Window with Logging {
+class FailureAnalyser (val eventName: String, maxOccurrences: Long)
+  extends StatementAnalyser with Window with Logging {
 
-  type T = Int
+  type T = Event with HasState
+  type S = Int
 
-  var failedActivities = new TreeMap[Long, Int] ()
+  var failedEvents = new TreeMap[Long, Int] ()
 
-  def analyse(event: Event) {
+  def analyse(event: T) {
 
-  /*  if(states.contains(event.state)){ // check if activity has a failure state  TODO: state in states?
+    if(event.state == State.FAILURE){ // check if event has state FAILURE
 
       // Add new
-      failedActivities += (activity.startTimestamp -> activity.state)  // TODO: Use endTimestamp instead of startTimestamp? And what if two activites have the same timestamp?
+      failedEvents += (event.timestamp -> event.state)  // TODO: What if two activites have the same timestamp?
 
       // Remove old
-      val inactiveActivites = getInactive(failedActivities)
+      val inactiveEvents = getInactive(failedEvents)
 
-      failedActivities = failedActivities.drop(inactiveActivites.size)
+      failedEvents = failedEvents.drop(inactiveEvents.size)
 
-      trace(failedActivities)
-      debug("no of activities for process " + processId + " with state " + states + ": " + failedActivities.size)
+      trace(context.self + " failedEvents: " + failedEvents)
+      debug(context.self + " no of failed events with name " + eventName + ": " + failedEvents.size)
 
-      if(failedActivities.size > maxOccurrences) {
-        alert(failedActivities.size + " failed activites in process " + processId + " with state " + states + " is more than allowed (" + maxOccurrences + ")")
+      if(failedEvents.size > maxOccurrences) {
+        alert(failedEvents.size + " failed events with name " + eventName + " is more than allowed (" + maxOccurrences + ")")
       } else {
-        backToNormal("back to normal!")
+        backToNormal("Back to normal!")
       }
 
-    }*/
+    }
   }
 }

@@ -9,7 +9,7 @@ trait LengthWindow extends Window with Logging {
 
   val noOfRequests: Int
 
-  override def getInactive(activities: Map[Long, T]): Map[Long, T] = {
+  override def getInactive(activities: Map[Long, S]): Map[Long, S] = {
 
     val noOfInactive = activities.size - noOfRequests
 

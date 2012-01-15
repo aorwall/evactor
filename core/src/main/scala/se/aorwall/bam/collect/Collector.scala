@@ -6,7 +6,7 @@ import se.aorwall.bam.process.Processor
 import se.aorwall.bam.model.events.Event
 
 /**
- * Collects events
+ * Collecting events
  */
 class Collector extends Actor with Logging {
 
@@ -18,10 +18,13 @@ class Collector extends Actor with Logging {
    
     debug(context.self + " collecting: " + event)
 
+    // TODO: save event and check for duplicates
+    
     // send event to processor
     context.actorFor("../process") ! event
     
-    // TODO: Send to analyser
+    // send event to analyser
+    context.actorFor("../analyse") ! event
   }
 
   override def preStart = {

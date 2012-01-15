@@ -14,7 +14,7 @@ case class LogEvent(
     val correlationId: String,
     val client: String,
     val server: String,
-    val state: Integer,
+    val state: Int,
     val message: String) extends Event(name, id, timestamp) with HasMessage with HasState {
 
 }

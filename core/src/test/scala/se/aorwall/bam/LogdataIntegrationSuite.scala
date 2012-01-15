@@ -1,25 +1,31 @@
 package se.aorwall.bam
 
-import configuration.{ConfigurationServiceImpl, ConfigurationService}
-import model.statement.Latency
-import model.statement.window.LengthWindowConf
-import org.mockito.Mockito._
-import collect.Collector
-import grizzled.slf4j.Logging
-import org.scalatest.matchers.MustMatchers
-import akka.actor.{Props, TypedActor, Actor, ActorSystem}
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
-import akka.testkit.{CallingThreadDispatcher, TestKit}
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
-import se.aorwall.bam.process.simple.SimpleProcessProcessor
-import se.aorwall.bam.process.request.RequestProcessor
+import org.scalatest.matchers.MustMatchers
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.FunSuite
+
+import akka.actor.ActorSystem
+import akka.actor.Props
+import akka.actor.TypedActor
+import akka.testkit.CallingThreadDispatcher
+import akka.testkit.TestKit
+import akka.testkit.TestProbe
+import collect.Collector
+import configuration.ConfigurationService
+import configuration.ConfigurationServiceImpl
+import grizzled.slf4j.Logging
+import model.statement.window.LengthWindowConf
+import model.statement.Latency
+import se.aorwall.bam.analyse.Analyser
 import se.aorwall.bam.model.events.LogEvent
 import se.aorwall.bam.model.Alert
 import se.aorwall.bam.model.State
-import se.aorwall.bam.process.ProcessorHandler
 import se.aorwall.bam.process.request.Request
+import se.aorwall.bam.process.request.RequestProcessor
 import se.aorwall.bam.process.simple.SimpleProcess
+import se.aorwall.bam.process.ProcessorHandler
 
 /**
  * Testing the whole log data flow.
@@ -45,16 +51,13 @@ class LogdataIntegrationSuite(_system: ActorSystem) extends TestKit(_system) wit
     val system = ActorSystem("LogServerTest")
     val collector = system.actorOf(Props[Collector].withDispatcher(CallingThreadDispatcher.Id), name = "collect")
     val processor = system.actorOf(Props[ProcessorHandler].withDispatcher(CallingThreadDispatcher.Id), name = "process")
-//    val analyser = TypedActor(system).typedActorOf(classOf[AnalyserHandler], new AnalyserHandlerImpl, Props().withDispatcher(CallingThreadDispatcher.Id), "analyse")
-
+    val analyser = system.actorOf(Props[Analyser].withDispatcher(CallingThreadDispatcher.Id), "analyse")
+      
     // start the processors
     processor ! new Request("requestProcessor", 120000L)
-    processor ! new SimpleProcess(processId, List("startComponent", "endComponent"), 120000l)
-            
-    val latencyStmt = new Latency(processId, "statementId", camelEndpoint, 2000, Some(new LengthWindowConf(2)))
-
-    //analyser.createProcessAnalyser(process)
-    //analyser.addStatementToProcess(latencyStmt)
+    processor ! new SimpleProcess(processId, List("startComponent", "endComponent"), 120000l)  
+    
+    analyser ! new Latency(processId, "statementId", camelEndpoint, 2000, Some(new LengthWindowConf(2)))
 
     // Collect logs
     val currentTime = System.currentTimeMillis
@@ -66,9 +69,9 @@ class LogdataIntegrationSuite(_system: ActorSystem) extends TestKit(_system) wit
     collector ! new LogEvent("endComponent", "329380921309", currentTime+2000, "329380921309", "client", "server", State.START, "")
     collector ! new LogEvent("endComponent", "329380921309",  currentTime+3000, "329380921309", "client", "server", State.SUCCESS, "") // success
 
-    Thread.sleep(1000)
-
-    //result must be === new Alert(processId, "Average latency 3000ms is higher than the maximum allowed latency 2000ms", true) // the latency alert
+    Thread.sleep(400)
+    
+  	//expectMsg(1 seconds, new Alert(processId, "Average latency 3000ms is higher than the maximum allowed latency 2000ms", true)) // the latency alert
 
     TypedActor(system).stop(processor)
     //TypedActor(system).stop(analyser)

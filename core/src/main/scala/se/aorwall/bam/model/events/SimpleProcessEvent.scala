@@ -7,7 +7,7 @@ class SimpleProcessEvent(
     override val id: String, 
     override val timestamp: Long,
     val requests: List[RequestEvent],
-    val state: Integer,    
+    val state: Int,    
     val latency: Long) extends Event(name, id, timestamp) with HasLatency with HasState  {
 
 }

@@ -7,8 +7,6 @@ import org.scalatest.WordSpec
 import grizzled.slf4j.Logging
 import se.aorwall.bam.model.events.LogEvent
 import se.aorwall.bam.model.State
-import se.aorwall.bam.process.request.RequestEventBuilder
-import se.aorwall.bam.process.request.RequestProcessor
 import se.aorwall.bam.model.events.RequestEvent
 import akka.testkit.TestKit
 import akka.actor.ActorSystem
