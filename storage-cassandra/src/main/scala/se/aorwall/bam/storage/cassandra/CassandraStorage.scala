@@ -1,94 +1,82 @@
-package se.aorwall.bam.storage
+package se.aorwall.bam.storage.cassandra
 
-import me.prettyprint.hector.api.factory.HFactory
-import me.prettyprint.cassandra.utils.TimeUUIDUtils
-import me.prettyprint.hector.api.Keyspace
-import me.prettyprint.cassandra.serializers.{StringSerializer, ObjectSerializer, UUIDSerializer, LongSerializer}
+import scala.collection.JavaConversions.asScalaBuffer
+
+import org.joda.time.DateTime
+
 import grizzled.slf4j.Logging
-import scala.collection.JavaConversions._
-import se.aorwall.bam.model.{State, Statistics, Activity, Log}
-import org.joda.time._
+import me.prettyprint.cassandra.serializers.ObjectSerializer
+import me.prettyprint.cassandra.serializers.StringSerializer
+import me.prettyprint.cassandra.serializers.UUIDSerializer
+import me.prettyprint.cassandra.utils.TimeUUIDUtils
+import me.prettyprint.hector.api.factory.HFactory
+import me.prettyprint.hector.api.Keyspace
+import se.aorwall.bam.model.attributes.HasState
+import se.aorwall.bam.model.events.Event
 
-class CassandraStorage(keyspace: Keyspace) extends LogStorage with Logging {
-
-  val LOG_CF = "Log"
-  val ACTIVITY_TIMELINE_CF = "ActivityTimeline"
-  val ACTIVITY_CF = "Activity"
-  val ACTIVITY_STATE_CF = "ActivityState"
-  val ACTIVITY_COUNT_CF = "ActivityCount"
+abstract class CassandraStorage(keyspace: Keyspace, cfPrefix: String) extends Logging {
+  type T <: Event
+  
+  val TIMELINE_CF = "Timeline"
+  val EVENT_CF = ""
+  val STATE_CF = "State"
+  val COUNT_CF = "Count"
 
   val HOUR = "hour"
   val DAY = "day"
   val MONTH = "month"
   val YEAR = "year"
 
-  def storeLog(activityId: String, log: Log) {
-     val mutator = HFactory.createMutator(keyspace, StringSerializer.get);
-     val logUuid = TimeUUIDUtils.getTimeUUID(log.timestamp)
-
-     // column family: log
-     // row key: activity id
-     // column key: log timestamp
-     // column value: log object
-     mutator.insert(activityId, LOG_CF, HFactory.createColumn(logUuid, log, UUIDSerializer.get, ObjectSerializer.get))
-  }
-
-  def readLogs(activityId: String): List[Log] = {
-    HFactory.createSliceQuery(keyspace, StringSerializer.get, UUIDSerializer.get, ObjectSerializer.get)
-            .setColumnFamily(LOG_CF).setKey(activityId).setRange(null, null, false, 100) //TODO: What if an activity has more than 100 logs?
-            .execute()
-            .get
-            .getColumns
-            .map { _.getValue match {
-                    case l:Log => l
-                 }}.toList
-  }
-
-  def removeActivity(activityId: String) {
+  // TODO: Consistency level should be set to ONE for all writes
+  def storeEvent(event: T) {
     val mutator = HFactory.createMutator(keyspace, StringSerializer.get)
-    mutator.delete(activityId, LOG_CF, null, StringSerializer.get) // does this really delete the row key?
-  }
+    val timeuuid = TimeUUIDUtils.getTimeUUID(event.timestamp)
 
-  def storeActivity(activity: Activity) {
-    val mutator = HFactory.createMutator(keyspace, StringSerializer.get)
-    val timeuuid = TimeUUIDUtils.getTimeUUID(activity.endTimestamp)
+    // column family: EventTimeline
+    // row key: event name
+    // column key: event timestamp
+    // value: event
+    // TODO: Add expiration time?
+    mutator.insert(event.name, cfPrefix + TIMELINE_CF, HFactory.createColumn(timeuuid, event, UUIDSerializer.get, ObjectSerializer.get))
 
-    // column family: ActivityTimeline
-    // row key: process id
-    // column key: end timestamp?
-    // value: activity object
-    // TODO: Add expiration time if one exists in business process configuration
-    mutator.insert(activity.processId, ACTIVITY_TIMELINE_CF, HFactory.createColumn(timeuuid, activity, UUIDSerializer.get, ObjectSerializer.get))
+    // column family: Event
+    // row key: event name
+    // column key: event id, ttl: 24 hours
+    mutator.insert(event.name, cfPrefix + EVENT_CF, HFactory.createColumn(event.id, "", 3600*24, StringSerializer.get, StringSerializer.get))
 
-    // column family: Activity
-    // row key: process id
-    // column key: activityId, ttl: 24 hours
-    mutator.insert(activity.processId, ACTIVITY_CF, HFactory.createColumn(activity.activityId, "", 3600*24, StringSerializer.get, StringSerializer.get))
-
-    // column family: ActivityState
-    // row key: process id + state
-    // column key: end timestamp
-    // value: activity id
-    mutator.insert(activity.processId + ":" + activity.state, ACTIVITY_STATE_CF, HFactory.createColumn(timeuuid, activity.activityId, UUIDSerializer.get, StringSerializer.get))
-
-    // column family: ActivityCount
-    // row key: process id + state + ["year";"month":"day":"hour"]
+    // column family: EventState
+    // row key: event name + state
+    // column key: event timestamp
+    // value: event id
+    event match {
+      case hasState: HasState => mutator.insert(event.name + ":" + hasState.state, cfPrefix + STATE_CF, HFactory.createColumn(timeuuid, "", UUIDSerializer.get, StringSerializer.get))
+      case _ =>
+    }
+    
+    // column family: EventCount
+    // row key: event name + state + ["year";"month":"day":"hour"]
     // column key: timestamp
     // value: counter
-    val time = new DateTime(activity.endTimestamp)
+    val time = new DateTime(event.timestamp)
     val count = new java.lang.Long(1L)
     val year = new java.lang.Long(new DateTime(time.getYear, 1, 1, 0, 0).toDate.getTime)
     val month = new java.lang.Long(new DateTime(time.getYear, time.getMonthOfYear, 1, 0, 0).toDate.getTime)
     val day = new java.lang.Long(new DateTime(time.getYear, time.getMonthOfYear, time.getDayOfMonth, 0, 0).toDate.getTime)
     val hour = new java.lang.Long(new DateTime(time.getYear, time.getMonthOfYear, time.getDayOfMonth, time.getHourOfDay, 0).toDate.getTime)
-    mutator.incrementCounter(activity.processId + ":" + activity.state + ":" + YEAR, ACTIVITY_COUNT_CF, year, count)
-    mutator.incrementCounter(activity.processId + ":" + activity.state + ":" + MONTH, ACTIVITY_COUNT_CF, month, count)
-    mutator.incrementCounter(activity.processId + ":" + activity.state + ":" + DAY, ACTIVITY_COUNT_CF, day, count)
-    mutator.incrementCounter(activity.processId + ":" + activity.state + ":" + HOUR, ACTIVITY_COUNT_CF, hour, count)
+    
+    val name = event match {
+      case hasState: HasState => event.name + ":" + hasState.state
+      case _ => event.name
+    }
+    
+    mutator.incrementCounter(name + ":" + YEAR, cfPrefix + COUNT_CF, year, count)
+    mutator.incrementCounter(name + ":" + MONTH, cfPrefix + COUNT_CF, month, count)
+    mutator.incrementCounter(name + ":" + DAY, cfPrefix + COUNT_CF, day, count)
+    mutator.incrementCounter(name + ":" + HOUR, cfPrefix + COUNT_CF, hour, count)
   }
 
   // TODO: Implement paging
-  def readActivities(processId: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], count: Int, start: Int): List[Activity] = {
+  def readActivities(eventName: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], count: Int, start: Int): List[T] = {
     val fromTimeuuid = fromTimestamp match {
       case Some(from) => TimeUUIDUtils.getTimeUUID(from)
       case None => null
@@ -99,29 +87,28 @@ class CassandraStorage(keyspace: Keyspace) extends LogStorage with Logging {
     }
 
     HFactory.createSliceQuery(keyspace, StringSerializer.get, UUIDSerializer.get, ObjectSerializer.get)
-            .setColumnFamily(ACTIVITY_TIMELINE_CF)
-            .setKey(processId)
+            .setColumnFamily(cfPrefix + TIMELINE_CF)
+            .setKey(eventName)
             .setRange(fromTimeuuid, toTimeuuid, false, count)
             .execute()
             .get
             .getColumns
             .map { _.getValue match {
-                    case a:Activity => a
+                    case event:T => event
                  }}.toList
   }
 
-  def activityExists(processId: String, activityId: String): Boolean = {
+  def eventExists(eventName: String, eventId: String): Boolean = {
      HFactory.createColumnQuery(keyspace, StringSerializer.get, StringSerializer.get, ObjectSerializer.get)
-            .setColumnFamily(ACTIVITY_CF)
-            .setKey(processId)
-            .setName(activityId)
+            .setColumnFamily(cfPrefix + EVENT_CF)
+            .setKey(eventName)
+            .setName(eventId)
             .execute()
             .get() != null
   }
 
   /**
    * Read statistics within a time span from fromTimestamp to toTimestamp
-   */
   def readStatistics(processId: String, fromTimestamp: Option[Long], toTimestamp: Option[Long]): Statistics =
     (fromTimestamp, toTimestamp) match {
       case (None, None) => readStatisticsFromInterval(processId, new DateTime(0), new DateTime(0))
@@ -200,4 +187,5 @@ class CassandraStorage(keyspace: Keyspace) extends LogStorage with Logging {
       }
     }
   }
+  */
 }

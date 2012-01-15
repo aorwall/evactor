@@ -1,7 +1,6 @@
 package se.aorwall.bam.process
 
 import grizzled.slf4j.Logging
-import se.aorwall.bam.storage.{LogStorage}
 import java.util.concurrent.{TimeUnit, ScheduledFuture}
 import akka.actor._
 import akka.util.duration._
