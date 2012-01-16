@@ -5,7 +5,7 @@ import java.util.concurrent.{TimeUnit, ScheduledFuture}
 import akka.actor._
 import akka.util.duration._
 import se.aorwall.bam.model.events.Event
-import se.aorwall.bam.process.Timeout
+import se.aorwall.bam.model.Timeout
 
 /**
  * One Processor Actor for each running event processor
@@ -31,7 +31,7 @@ class ProcessorActor(id: String, eventBuilder: EventBuilder) extends Actor with 
 
   def receive = {
     case event: Event => process(event)
-    case Timeout() => sendEvent(eventBuilder.createEvent())
+    case Timeout => sendEvent(eventBuilder.createEvent())
     case actor: ActorRef => testAnalyser = Some(actor)
     case msg => info(context.self + " can't handle: " + msg)
   }

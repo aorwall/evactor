@@ -4,11 +4,14 @@ import grizzled.slf4j.Logging
 import se.aorwall.bam.model.events.Event
 import se.aorwall.bam.model.events.LogEvent
 import se.aorwall.bam.model.events.RequestEvent
-import se.aorwall.bam.model.State
-import se.aorwall.bam.process.ProcessorActor
+import se.aorwall.bam.model.Failure
+import se.aorwall.bam.model.Start
+import se.aorwall.bam.model.Success
+import se.aorwall.bam.model.Timeout
 import se.aorwall.bam.process.EventBuilder
 import se.aorwall.bam.process.EventCreationException
 import se.aorwall.bam.process.Processor
+import se.aorwall.bam.process.ProcessorActor
 import se.aorwall.bam.process.Timed
 
 /**
@@ -49,11 +52,12 @@ class RequestEventBuilder extends EventBuilder {
   }
 
   def addLogEvent(logevent: LogEvent) {
-     if(logevent.state == State.START){
-       startEvent = Some(logevent)
-     } else if(logevent.state >= 10) {
-       endEvent = Some(logevent)
-     }
+	 logevent.state match {
+	   case Start => startEvent = Some(logevent)
+	   case Success => endEvent = Some(logevent)
+	   case Failure => endEvent = Some(logevent)
+	   case _ =>
+	 }
   }
 
   def isFinished(): Boolean = startEvent != None && endEvent != None
@@ -62,7 +66,7 @@ class RequestEventBuilder extends EventBuilder {
     case (Some(start: LogEvent), Some(end: LogEvent)) =>
       new RequestEvent(end.name, end.correlationId, end.timestamp, Some(start), Some(end), end.state, end.timestamp - start.timestamp )
     case (Some(start: LogEvent), _) =>
-      new RequestEvent(start.name, start.correlationId, System.currentTimeMillis, Some(start), None, State.TIMEOUT, 0L)
+      new RequestEvent(start.name, start.correlationId, System.currentTimeMillis, Some(start), None, Timeout, 0L)
     case (_, end: LogEvent) =>
        throw new EventCreationException("RequestProcessor was trying to create an event with only an end log event. End event: " + end)
     case (_, _) =>

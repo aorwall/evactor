@@ -11,19 +11,16 @@ import akka.actor.Props
 import akka.actor.TypedActor
 import akka.testkit.CallingThreadDispatcher
 import akka.testkit.TestKit
-import akka.testkit.TestProbe
 import collect.Collector
-import configuration.ConfigurationService
-import configuration.ConfigurationServiceImpl
 import grizzled.slf4j.Logging
 import model.statement.window.LengthWindowConf
 import model.statement.Latency
 import se.aorwall.bam.analyse.Analyser
 import se.aorwall.bam.model.events.LogEvent
 import se.aorwall.bam.model.Alert
-import se.aorwall.bam.model.State
+import se.aorwall.bam.model.Success
+import se.aorwall.bam.model.Start
 import se.aorwall.bam.process.request.Request
-import se.aorwall.bam.process.request.RequestProcessor
 import se.aorwall.bam.process.simple.SimpleProcess
 import se.aorwall.bam.process.ProcessorHandler
 
@@ -64,10 +61,10 @@ class LogdataIntegrationSuite(_system: ActorSystem) extends TestKit(_system) wit
 
     Thread.sleep(400)
 
-    collector ! new LogEvent("startComponent", "329380921309", currentTime, "329380921309", "client", "server", State.START, "hello")
-    collector ! new LogEvent("startComponent", "329380921309", currentTime+1000, "329380921309", "client", "server" , State.SUCCESS, "") // success
-    collector ! new LogEvent("endComponent", "329380921309", currentTime+2000, "329380921309", "client", "server", State.START, "")
-    collector ! new LogEvent("endComponent", "329380921309",  currentTime+3000, "329380921309", "client", "server", State.SUCCESS, "") // success
+    collector ! new LogEvent("startComponent", "329380921309", currentTime, "329380921309", "client", "server", Start, "hello")
+    collector ! new LogEvent("startComponent", "329380921309", currentTime+1000, "329380921309", "client", "server" , Success, "") // success
+    collector ! new LogEvent("endComponent", "329380921309", currentTime+2000, "329380921309", "client", "server", Start, "")
+    collector ! new LogEvent("endComponent", "329380921309",  currentTime+3000, "329380921309", "client", "server", Success, "") // success
 
     Thread.sleep(400)
     

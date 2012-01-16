@@ -1,14 +1,15 @@
 package se.aorwall.bam.model
 
-object State {
+sealed trait State { def name: String }
 
-  val TIMEOUT = 0
+case object Start extends State { val name = "START" } 
 
-  val START = 1
-  val RETRY = 2
+case object Retry extends State { val name = "RETRY" }
 
-  val SUCCESS = 10
-  val FAILURE = 11
-  val CANCELLATION = 12
+case object Success extends State { val name = "SUCCESS" }
 
-}
+case object Failure extends State { val name = "FAILURE" }
+
+case object Cancellation extends State { val name = "CANCELLATION" }
+
+case object Timeout extends State { val name = "TIMEOUT" }

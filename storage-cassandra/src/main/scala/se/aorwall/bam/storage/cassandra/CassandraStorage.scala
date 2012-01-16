@@ -65,7 +65,7 @@ abstract class CassandraStorage(keyspace: Keyspace, cfPrefix: String) extends Lo
 	    // column key: event timestamp
 	    // value: event id
 	    event match {
-	      case hasState: HasState => mutator.insert(event.name + ":" + hasState.state, cfPrefix + STATE_CF, HFactory.createColumn(timeuuid, "", UUIDSerializer.get, StringSerializer.get))
+	      case hasState: HasState => mutator.insert(event.name + ":" + hasState.state.name, cfPrefix + STATE_CF, HFactory.createColumn(timeuuid, "", UUIDSerializer.get, StringSerializer.get))
 	      case _ =>
 	    }
 	    
@@ -81,7 +81,7 @@ abstract class CassandraStorage(keyspace: Keyspace, cfPrefix: String) extends Lo
 	    val hour = new java.lang.Long(new DateTime(time.getYear, time.getMonthOfYear, time.getDayOfMonth, time.getHourOfDay, 0).toDate.getTime)
 	    
 	    val name = event match {
-	      case hasState: HasState => event.name + ":" + hasState.state
+	      case hasState: HasState => event.name + ":" + hasState.state.name
 	      case _ => event.name
 	    }
 	    

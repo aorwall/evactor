@@ -3,7 +3,6 @@ package se.aorwall.bam.analyse
 import se.aorwall.bam.model.statement.Statement
 import collection.mutable.HashMap
 import grizzled.slf4j.Logging
-import se.aorwall.bam.process.Timeout
 import akka.actor._
 import akka.actor.Props._
 import se.aorwall.bam.model.events.Event

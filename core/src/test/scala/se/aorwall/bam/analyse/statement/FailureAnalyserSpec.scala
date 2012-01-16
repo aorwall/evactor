@@ -1,6 +1,9 @@
 package se.aorwall.bam.analyse.statement
 
 import org.junit.runner.RunWith
+import se.aorwall.bam.model.Failure
+import se.aorwall.bam.model.Success
+import org.scalatest.junit.JUnitRunner
 import org.scalatest.matchers.MustMatchers
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.WordSpec
@@ -10,11 +13,9 @@ import akka.testkit.TestKit
 import akka.testkit.TestProbe
 import akka.util.duration.intToDurationInt
 import akka.util.duration.longToDurationLong
-import se.aorwall.bam.analyse.statement.window.TimeWindow
 import se.aorwall.bam.model.events.LogEvent
 import se.aorwall.bam.model.Alert
-import se.aorwall.bam.model.State
-import org.scalatest.junit.JUnitRunner
+import se.aorwall.bam.analyse.statement.window.TimeWindow
 
 @RunWith(classOf[JUnitRunner])
 class FailureAnalyserSpec(_system: ActorSystem) extends TestKit(_system) with WordSpec with BeforeAndAfterAll with MustMatchers {
@@ -36,11 +37,11 @@ class FailureAnalyserSpec(_system: ActorSystem) extends TestKit(_system) with Wo
      val probe = TestProbe()
      failureActor ! probe.ref
 
-     failureActor ! new LogEvent(eventName, correlationid, 0L, "329380921309", "client", "server", State.SUCCESS, "hello") 
-     failureActor ! new LogEvent(eventName, correlationid, 1L, "329380921309", "client", "server", State.FAILURE, "hello")
-     failureActor ! new LogEvent(eventName, correlationid, 2L, "329380921309", "client", "server", State.FAILURE, "hello")
+     failureActor ! new LogEvent(eventName, correlationid, 0L, "329380921309", "client", "server", Success, "hello") 
+     failureActor ! new LogEvent(eventName, correlationid, 1L, "329380921309", "client", "server", Failure, "hello")
+     failureActor ! new LogEvent(eventName, correlationid, 2L, "329380921309", "client", "server", Failure, "hello")
      probe.expectNoMsg // nothing happens
-     failureActor ! new LogEvent(eventName, correlationid, 3L, "329380921309", "client", "server", State.FAILURE, "hello") //  trig alert!
+     failureActor ! new LogEvent(eventName, correlationid, 3L, "329380921309", "client", "server", Failure, "hello") //  trig alert!
 
      probe.expectMsg(100 millis, new Alert(eventName, "3 failed events with name " + eventName + " is more than allowed (2)", true))
      failureActor.stop()
@@ -55,10 +56,10 @@ class FailureAnalyserSpec(_system: ActorSystem) extends TestKit(_system) with Wo
      val probe = TestProbe()
      failureActor ! probe.ref
 
-     failureActor ! new LogEvent(eventName, correlationid, currentTime-50, "329380921309", "client", "server", State.FAILURE, "hello")
-     failureActor ! new LogEvent(eventName, correlationid, currentTime-40, "329380921309", "client", "server", State.FAILURE, "hello")
-     failureActor ! new LogEvent(eventName, correlationid, currentTime-1000, "329380921309", "client", "server", State.FAILURE, "hello") // to old, nothing happens
-     failureActor ! new LogEvent(eventName, correlationid, currentTime-30, "329380921309", "client", "server", State.FAILURE, "hello")
+     failureActor ! new LogEvent(eventName, correlationid, currentTime-50, "329380921309", "client", "server", Failure, "hello")
+     failureActor ! new LogEvent(eventName, correlationid, currentTime-40, "329380921309", "client", "server", Failure, "hello")
+     failureActor ! new LogEvent(eventName, correlationid, currentTime-1000, "329380921309", "client", "server", Failure, "hello") // to old, nothing happens
+     failureActor ! new LogEvent(eventName, correlationid, currentTime-30, "329380921309", "client", "server", Failure, "hello")
      probe.expectMsg(time*2 millis, new Alert(eventName, "3 failed events with name " + eventName + " is more than allowed (2)", true))
 
      failureActor.stop

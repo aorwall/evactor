@@ -10,6 +10,10 @@ import se.aorwall.bam.model.State
 import se.aorwall.bam.model.events.SimpleProcessEvent
 import se.aorwall.bam.model.events.Event
 import se.aorwall.bam.process.Timed
+import se.aorwall.bam.model.Cancellation
+import se.aorwall.bam.model.State
+import se.aorwall.bam.model.Timeout
+import se.aorwall.bam.model.Failure
 
 /**
  * Processes simple processes with a defined list of components requested. The process will complete when the first and the 
@@ -48,8 +52,6 @@ class SimpleProcessEventBuilder(val processId: String, val components: List[Stri
   
   val endComponent = components.last
   
-  val endStates = Set(State.FAILURE, State.CANCELLATION, State.TIMEOUT)
-
   def addEvent(event: Event) = event match {
     case reqEvent: RequestEvent => addRequestEvent(reqEvent)  
     case _ =>    
@@ -62,14 +64,28 @@ class SimpleProcessEventBuilder(val processId: String, val components: List[Stri
        startEvent = Some(event)
     else if(endComponent == event.name)
        endEvent = Some(event)    
-    else if(endStates.contains(event.state) ){
-       endEvent = Some(event)
+    else {
+       event.state match {
+         case Timeout => endEvent = Some(event)
+         case Cancellation => endEvent = Some(event)
+         case Failure => endEvent = Some(event)
+         case _ =>
+       }
+      
+       
     }
   }
     
   def isFinished(): Boolean = (startEvent, endEvent) match {
      case (Some(start: RequestEvent), Some(end: RequestEvent)) => true
-     case (Some(start: RequestEvent), _) if (endStates.contains(start.state))=> true 
+     case (Some(start: RequestEvent), _) => {
+       start.state match {
+         case Timeout => true
+         case Cancellation => true
+         case Failure => true
+         case _ => false
+       }
+     } 
      case msg => false
   }
 
@@ -84,9 +100,11 @@ class SimpleProcessEventBuilder(val processId: String, val components: List[Stri
        throw new EventCreationException("SimpleProcessEventBuilder was trying to create an event without either a start or an end event.")
   }
 
-  protected def getState(reqEvent: RequestEvent): Int = 
-  	if(endStates.contains(reqEvent.state)) reqEvent.state
-  	else State.TIMEOUT
+  protected def getState(reqEvent: RequestEvent) = reqEvent.state match {
+     case Cancellation => Cancellation
+     case Failure => Failure
+     case _ => Timeout
+  }
   
   def clear() {
     startEvent = None
