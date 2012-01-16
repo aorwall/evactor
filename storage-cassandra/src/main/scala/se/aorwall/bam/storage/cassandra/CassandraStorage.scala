@@ -13,6 +13,7 @@ import me.prettyprint.hector.api.factory.HFactory
 import me.prettyprint.hector.api.Keyspace
 import se.aorwall.bam.model.attributes.HasState
 import se.aorwall.bam.model.events.Event
+import scala.collection.JavaConversions._
 
 abstract class CassandraStorage(keyspace: Keyspace, cfPrefix: String) extends Logging {
   type T <: Event
@@ -28,55 +29,72 @@ abstract class CassandraStorage(keyspace: Keyspace, cfPrefix: String) extends Lo
   val YEAR = "year"
 
   // TODO: Consistency level should be set to ONE for all writes
-  def storeEvent(event: T) {
+  def storeEvent(event: T): Boolean = {
     val mutator = HFactory.createMutator(keyspace, StringSerializer.get)
-    val timeuuid = TimeUUIDUtils.getTimeUUID(event.timestamp)
+    
+    val existingEvent = HFactory.createColumnQuery(keyspace, StringSerializer.get, StringSerializer.get, ObjectSerializer.get)
+            .setColumnFamily(cfPrefix + EVENT_CF)
+            .setKey(event.name + event.id)
+            .setName("event")
+            .execute()
+            .get()
 
-    // column family: EventTimeline
-    // row key: event name
-    // column key: event timestamp
-    // value: event
-    // TODO: Add expiration time?
-    mutator.insert(event.name, cfPrefix + TIMELINE_CF, HFactory.createColumn(timeuuid, event, UUIDSerializer.get, ObjectSerializer.get))
-
-    // column family: Event
-    // row key: event name
-    // column key: event id, ttl: 24 hours
-    mutator.insert(event.name, cfPrefix + EVENT_CF, HFactory.createColumn(event.id, "", 3600*24, StringSerializer.get, StringSerializer.get))
-
-    // column family: EventState
-    // row key: event name + state
-    // column key: event timestamp
-    // value: event id
-    event match {
-      case hasState: HasState => mutator.insert(event.name + ":" + hasState.state, cfPrefix + STATE_CF, HFactory.createColumn(timeuuid, "", UUIDSerializer.get, StringSerializer.get))
-      case _ =>
+    if (existingEvent != null){
+      warn("An event with name " + event.name + " and id " + event.id + " already exists");
+      false
+    } else {
+    	// TODO: will need some kind of rollback if one of the inserts fails
+      
+	    val timeuuid = TimeUUIDUtils.getTimeUUID(event.timestamp)
+	
+	    // column family: EventTimeline
+	    // row key: event name
+	    // column key: event timestamp
+	    // value: event id
+	    // TODO: Add expiration time?
+	    mutator.insert(event.name, cfPrefix + TIMELINE_CF, HFactory.createColumn(timeuuid, event.name+event.id, UUIDSerializer.get, StringSerializer.get))
+	
+	    // column family: Event
+	    // row key: event name + event.id
+	    // column key: "event" // Maybe 
+	    // value: event
+	    mutator.insert(event.name + event.id, cfPrefix + EVENT_CF, HFactory.createColumn("event", event, StringSerializer.get, ObjectSerializer.get))
+	
+	    // column family: EventState
+	    // row key: event name + state
+	    // column key: event timestamp
+	    // value: event id
+	    event match {
+	      case hasState: HasState => mutator.insert(event.name + ":" + hasState.state, cfPrefix + STATE_CF, HFactory.createColumn(timeuuid, "", UUIDSerializer.get, StringSerializer.get))
+	      case _ =>
+	    }
+	    
+	    // column family: EventCount
+	    // row key: event name + state + ["year";"month":"day":"hour"]
+	    // column key: timestamp
+	    // value: counter
+	    val time = new DateTime(event.timestamp)
+	    val count = new java.lang.Long(1L)
+	    val year = new java.lang.Long(new DateTime(time.getYear, 1, 1, 0, 0).toDate.getTime)
+	    val month = new java.lang.Long(new DateTime(time.getYear, time.getMonthOfYear, 1, 0, 0).toDate.getTime)
+	    val day = new java.lang.Long(new DateTime(time.getYear, time.getMonthOfYear, time.getDayOfMonth, 0, 0).toDate.getTime)
+	    val hour = new java.lang.Long(new DateTime(time.getYear, time.getMonthOfYear, time.getDayOfMonth, time.getHourOfDay, 0).toDate.getTime)
+	    
+	    val name = event match {
+	      case hasState: HasState => event.name + ":" + hasState.state
+	      case _ => event.name
+	    }
+	    
+	    mutator.incrementCounter(name + ":" + YEAR, cfPrefix + COUNT_CF, year, count)
+	    mutator.incrementCounter(name + ":" + MONTH, cfPrefix + COUNT_CF, month, count)
+	    mutator.incrementCounter(name + ":" + DAY, cfPrefix + COUNT_CF, day, count)
+	    mutator.incrementCounter(name + ":" + HOUR, cfPrefix + COUNT_CF, hour, count)
+	    true
     }
-    
-    // column family: EventCount
-    // row key: event name + state + ["year";"month":"day":"hour"]
-    // column key: timestamp
-    // value: counter
-    val time = new DateTime(event.timestamp)
-    val count = new java.lang.Long(1L)
-    val year = new java.lang.Long(new DateTime(time.getYear, 1, 1, 0, 0).toDate.getTime)
-    val month = new java.lang.Long(new DateTime(time.getYear, time.getMonthOfYear, 1, 0, 0).toDate.getTime)
-    val day = new java.lang.Long(new DateTime(time.getYear, time.getMonthOfYear, time.getDayOfMonth, 0, 0).toDate.getTime)
-    val hour = new java.lang.Long(new DateTime(time.getYear, time.getMonthOfYear, time.getDayOfMonth, time.getHourOfDay, 0).toDate.getTime)
-    
-    val name = event match {
-      case hasState: HasState => event.name + ":" + hasState.state
-      case _ => event.name
-    }
-    
-    mutator.incrementCounter(name + ":" + YEAR, cfPrefix + COUNT_CF, year, count)
-    mutator.incrementCounter(name + ":" + MONTH, cfPrefix + COUNT_CF, month, count)
-    mutator.incrementCounter(name + ":" + DAY, cfPrefix + COUNT_CF, day, count)
-    mutator.incrementCounter(name + ":" + HOUR, cfPrefix + COUNT_CF, hour, count)
   }
 
   // TODO: Implement paging
-  def readActivities(eventName: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], count: Int, start: Int): List[T] = {
+  def readEvents(eventName: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], count: Int, start: Int): List[T] = {
     val fromTimeuuid = fromTimestamp match {
       case Some(from) => TimeUUIDUtils.getTimeUUID(from)
       case None => null
@@ -86,25 +104,26 @@ abstract class CassandraStorage(keyspace: Keyspace, cfPrefix: String) extends Lo
       case None => null
     }
 
-    HFactory.createSliceQuery(keyspace, StringSerializer.get, UUIDSerializer.get, ObjectSerializer.get)
+    val eventIds = HFactory.createSliceQuery(keyspace, StringSerializer.get, UUIDSerializer.get, StringSerializer.get)
             .setColumnFamily(cfPrefix + TIMELINE_CF)
             .setKey(eventName)
             .setRange(fromTimeuuid, toTimeuuid, false, count)
             .execute()
             .get
-            .getColumns
+            .getColumns()
             .map { _.getValue match {
-                    case event:T => event
+                    case s:String => s
                  }}.toList
-  }
-
-  def eventExists(eventName: String, eventId: String): Boolean = {
-     HFactory.createColumnQuery(keyspace, StringSerializer.get, StringSerializer.get, ObjectSerializer.get)
-            .setColumnFamily(cfPrefix + EVENT_CF)
-            .setKey(eventName)
-            .setName(eventId)
-            .execute()
-            .get() != null
+     
+     val queryResult = HFactory.createMultigetSliceQuery(keyspace, StringSerializer.get, StringSerializer.get, ObjectSerializer.get)
+     		.setColumnFamily(cfPrefix + EVENT_CF)
+     		.setKeys(eventIds)
+     		.setColumnNames("event")
+     		.execute()
+     		
+     queryResult.get().iterator().map { _.getColumnSlice().getColumnByName("event").getValue() match {
+        case event:T => event
+     }}.toList    	
   }
 
   /**

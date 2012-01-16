@@ -10,12 +10,9 @@ import se.aorwall.bam.model.events.RequestEvent
 
 class LogEventStorage(keyspace: Keyspace) {
 
-  val LOG_EVENT_CF = "RequestEvent";
-  val LOG_EVENT_TIMELINE_CF = "RequestEventTimeline";
-  val LOG_EVENT_STATE_CF = "RequestEventState";
-  val LOG_EVENT_COUNT_CF = "RequestEventCount";
+  val LOG_EVENT_CF = "LogEvent";
   
-  def storeEvent(event: RequestEvent): Option[RequestEvent] = {
+  def storeEvent(event: LogEvent): Option[LogEvent] = {
     
      val mutator = HFactory.createMutator(keyspace, StringSerializer.get);
      // TODO: check if event already exists
@@ -25,7 +22,7 @@ class LogEventStorage(keyspace: Keyspace) {
      // row key: event.name
      // column key: event id
      // column value: event object
-     mutator.insert(event.name, LOG_EVENT_CF, HFactory.createColumn(event.id, event, StringSerializer.get, ObjectSerializer.get))
+     mutator.insert(event.name + event.id, LOG_EVENT_CF, HFactory.createColumn(event.id, event, StringSerializer.get, ObjectSerializer.get))
      Some(event)
   }
   

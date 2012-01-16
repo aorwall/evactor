@@ -6,7 +6,7 @@ import se.aorwall.bam.model.attributes.HasState
 /**
  * Represents a completed request to a component 
  */
-case class RequestEvent(
+case class RequestEvent (
     override val name: String, 
     override val id: String, 
     override val timestamp: Long, 

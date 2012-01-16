@@ -7,5 +7,5 @@ package se.aorwall.bam.model.events
 class Event (
     val name: String,
     val id: String,
-    val timestamp: Long) {
+    val timestamp: Long) extends Serializable {
 }
