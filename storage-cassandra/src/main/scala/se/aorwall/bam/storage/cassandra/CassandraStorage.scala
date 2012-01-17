@@ -1,9 +1,7 @@
 package se.aorwall.bam.storage.cassandra
 
 import scala.collection.JavaConversions.asScalaBuffer
-
 import org.joda.time.DateTime
-
 import grizzled.slf4j.Logging
 import me.prettyprint.cassandra.serializers.ObjectSerializer
 import me.prettyprint.cassandra.serializers.StringSerializer
@@ -14,8 +12,17 @@ import me.prettyprint.hector.api.Keyspace
 import se.aorwall.bam.model.attributes.HasState
 import se.aorwall.bam.model.events.Event
 import scala.collection.JavaConversions._
+import akka.actor.ActorContext
+import se.aorwall.bam.cassandra.CassandraUtil
+import se.aorwall.bam.storage.EventStorage
+import akka.actor.ActorSystem
+import se.aorwall.bam.storage.EventStorage
 
-abstract class CassandraStorage(keyspace: Keyspace, cfPrefix: String) extends Logging {
+abstract class CassandraStorage(val system: ActorSystem, cfPrefix: String) extends EventStorage with Logging{
+    
+  private val settings = CassandraStorageExtension(system)
+  private val keyspace = CassandraUtil.getKeyspace(settings.Clustername, settings.Hostname, settings.Port, settings.Keyspace)
+  
   type T <: Event
   
   val TIMELINE_CF = "Timeline"
@@ -29,7 +36,7 @@ abstract class CassandraStorage(keyspace: Keyspace, cfPrefix: String) extends Lo
   val YEAR = "year"
 
   // TODO: Consistency level should be set to ONE for all writes
-  def storeEvent(event: T): Boolean = {
+  def storeEvent(event: Event): Boolean = {
     val mutator = HFactory.createMutator(keyspace, StringSerializer.get)
     
     val existingEvent = HFactory.createColumnQuery(keyspace, StringSerializer.get, StringSerializer.get, ObjectSerializer.get)
@@ -94,7 +101,7 @@ abstract class CassandraStorage(keyspace: Keyspace, cfPrefix: String) extends Lo
   }
 
   // TODO: Implement paging
-  def readEvents(eventName: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], count: Int, start: Int): List[T] = {
+  def readEvents(eventName: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], count: Int, start: Int): List[Event] = {
     val fromTimeuuid = fromTimestamp match {
       case Some(from) => TimeUUIDUtils.getTimeUUID(from)
       case None => null

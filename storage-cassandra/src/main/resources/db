@@ -1,0 +1,11 @@
+create keyspace Bam;
+use Bam;
+create column family LogEvent with comparator = UTF8Type;
+create column family RequestEvent with comparator = UTF8Type;
+create column family RequestEventTimeline with comparator = UUIDType;
+create column family RequestEventState with comparator = UUIDType;
+create column family RequestEventCount with default_validation_class=CounterColumnType and comparator = LongType and replicate_on_write=true;
+create column family SimpleProcessEvent with comparator = UTF8Type;
+create column family SimpleProcessEventTimeline with comparator = UUIDType;
+create column family SimpleProcessEventState with comparator = UUIDType;
+create column family SimpleProcessEventCount with default_validation_class=CounterColumnType and comparator = LongType and replicate_on_write=true;
