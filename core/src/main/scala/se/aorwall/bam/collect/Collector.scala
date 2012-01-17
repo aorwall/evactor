@@ -1,9 +1,9 @@
 package se.aorwall.bam.collect
 
-import akka.actor.{Actor}
+import akka.actor.Actor
 import grizzled.slf4j.Logging
-import se.aorwall.bam.process.Processor
 import se.aorwall.bam.model.events.Event
+import se.aorwall.bam.process.Processor
 import se.aorwall.bam.storage.Storage
 
 /**
@@ -20,12 +20,9 @@ class Collector extends Actor with Storage with Logging {
     debug(context.self + " collecting: " + event)
 
     // save event and check for duplicates
-    val storedEvent = storeEvent(event)
+    if(storeEvent(event)) sendEvent(event)
+    else warn(context.self + " didn't send " + event)
     
-    storedEvent match {
-      case Some(event) => sendEvent(event)
-      case None => warn(context.self + " nothing to send")      
-    }    
   }
 
   private[this] def sendEvent(event: Event){    

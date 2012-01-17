@@ -5,7 +5,6 @@ import org.scalatest.junit.JUnitRunner
 import org.scalatest.matchers.MustMatchers
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.FunSuite
-
 import akka.actor.ActorSystem
 import akka.actor.Props
 import akka.actor.TypedActor
@@ -23,16 +22,17 @@ import se.aorwall.bam.model.Start
 import se.aorwall.bam.process.request.Request
 import se.aorwall.bam.process.simple.SimpleProcess
 import se.aorwall.bam.process.ProcessorHandler
+import com.typesafe.config.ConfigFactory
+import se.aorwall.bam.storage.EventStorageSpec
 
 /**
  * Testing the whole log data flow.
  *
- * FIXME: This test doesn't shut down properly
  */
 @RunWith(classOf[JUnitRunner])
 class LogdataIntegrationSuite(_system: ActorSystem) extends TestKit(_system) with FunSuite with MustMatchers with BeforeAndAfterAll with Logging {
-
-  def this() = this(ActorSystem("LogdataIntegrationSuite"))
+  
+  def this() = this(ActorSystem("LogdataIntegrationSuite", EventStorageSpec.storageConf))
 
   override protected def afterAll(): scala.Unit = {
     _system.shutdown()
@@ -45,7 +45,7 @@ class LogdataIntegrationSuite(_system: ActorSystem) extends TestKit(_system) wit
     val camelEndpoint = "hej"
 
     // Start up the modules
-    val system = ActorSystem("LogServerTest")
+    val system = _system
     val collector = system.actorOf(Props[Collector].withDispatcher(CallingThreadDispatcher.Id), name = "collect")
     val processor = system.actorOf(Props[ProcessorHandler].withDispatcher(CallingThreadDispatcher.Id), name = "process")
     val analyser = system.actorOf(Props[Analyser].withDispatcher(CallingThreadDispatcher.Id), "analyse")
