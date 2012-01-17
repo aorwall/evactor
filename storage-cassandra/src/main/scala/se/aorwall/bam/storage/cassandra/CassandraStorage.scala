@@ -59,22 +59,23 @@ abstract class CassandraStorage(val system: ActorSystem, cfPrefix: String) exten
 	    // column key: event timestamp
 	    // value: event id
 	    // TODO: Add expiration time?
-	    mutator.insert(event.name, cfPrefix + TIMELINE_CF, HFactory.createColumn(timeuuid, event.name+event.id, UUIDSerializer.get, StringSerializer.get))
+	    mutator.addInsertion(event.name, cfPrefix + TIMELINE_CF, HFactory.createColumn(timeuuid, event.name+event.id, UUIDSerializer.get, StringSerializer.get))
 	
 	    // column family: Event
 	    // row key: event name + event.id
 	    // column key: "event" // Maybe 
 	    // value: event
-	    mutator.insert(event.name + event.id, cfPrefix + EVENT_CF, HFactory.createColumn("event", event, StringSerializer.get, ObjectSerializer.get))
+	    mutator.addInsertion(event.name + event.id, cfPrefix + EVENT_CF, HFactory.createColumn("event", event, StringSerializer.get, ObjectSerializer.get))
 	
 	    // column family: EventState
 	    // row key: event name + state
 	    // column key: event timestamp
 	    // value: event id
 	    event match {
-	      case hasState: HasState => mutator.insert(event.name + ":" + hasState.state.name, cfPrefix + STATE_CF, HFactory.createColumn(timeuuid, "", UUIDSerializer.get, StringSerializer.get))
+	      case hasState: HasState => mutator.addInsertion(event.name + ":" + hasState.state.name, cfPrefix + STATE_CF, HFactory.createColumn(timeuuid, "", UUIDSerializer.get, StringSerializer.get))
 	      case _ =>
-	    }
+	    }	    
+	    mutator.execute()
 	    
 	    // column family: EventCount
 	    // row key: event name + state + ["year";"month":"day":"hour"]
