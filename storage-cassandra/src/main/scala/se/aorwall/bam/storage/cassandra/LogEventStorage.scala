@@ -3,7 +3,6 @@ import akka.actor.ActorContext
 import me.prettyprint.cassandra.serializers.ObjectSerializer
 import me.prettyprint.cassandra.serializers.StringSerializer
 import me.prettyprint.hector.api.factory.HFactory
-import se.aorwall.bam.cassandra.CassandraUtil
 import se.aorwall.bam.model.events.Event
 import se.aorwall.bam.model.events.LogEvent
 import se.aorwall.bam.storage.EventStorage

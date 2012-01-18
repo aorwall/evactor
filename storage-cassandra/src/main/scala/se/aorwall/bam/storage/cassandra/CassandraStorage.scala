@@ -13,7 +13,6 @@ import se.aorwall.bam.model.attributes.HasState
 import se.aorwall.bam.model.events.Event
 import scala.collection.JavaConversions._
 import akka.actor.ActorContext
-import se.aorwall.bam.cassandra.CassandraUtil
 import se.aorwall.bam.storage.EventStorage
 import akka.actor.ActorSystem
 import se.aorwall.bam.storage.EventStorage
