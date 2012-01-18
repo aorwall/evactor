@@ -7,11 +7,13 @@ import se.aorwall.bam.cassandra.CassandraUtil
 import se.aorwall.bam.model.events.Event
 import se.aorwall.bam.model.events.LogEvent
 import se.aorwall.bam.storage.EventStorage
+import me.prettyprint.cassandra.service.CassandraHostConfigurator
 
 class LogEventStorage(val owner: ActorContext) extends EventStorage {
 
-  private val settings = CassandraStorageExtension(owner.system)
-  private val keyspace = CassandraUtil.getKeyspace(settings.Clustername, settings.Hostname, settings.Port, settings.Keyspace)
+  private val settings = CassandraStorageExtension(owner.system)  
+  val cluster = HFactory.getOrCreateCluster(settings.Clustername, new CassandraHostConfigurator(settings.Hostname + ":" + settings.Port))
+  private val keyspace = HFactory.createKeyspace(settings.Keyspace, cluster)
   
   val LOG_EVENT_CF = "LogEvent";
   

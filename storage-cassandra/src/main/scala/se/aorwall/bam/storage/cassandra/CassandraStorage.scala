@@ -17,11 +17,14 @@ import se.aorwall.bam.cassandra.CassandraUtil
 import se.aorwall.bam.storage.EventStorage
 import akka.actor.ActorSystem
 import se.aorwall.bam.storage.EventStorage
+import me.prettyprint.cassandra.service.CassandraHostConfigurator
 
 abstract class CassandraStorage(val system: ActorSystem, cfPrefix: String) extends EventStorage with Logging{
     
   private val settings = CassandraStorageExtension(system)
-  private val keyspace = CassandraUtil.getKeyspace(settings.Clustername, settings.Hostname, settings.Port, settings.Keyspace)
+
+  val cluster = HFactory.getOrCreateCluster(settings.Clustername, new CassandraHostConfigurator(settings.Hostname + ":" + settings.Port))
+  protected val keyspace = HFactory.createKeyspace(settings.Keyspace, cluster)
   
   type T <: Event
   
