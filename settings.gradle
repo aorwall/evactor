@@ -1,1 +1,1 @@
-include "core", "storage-cassandra", "api"
+include "core", "storage-cassandra", "api", "irc-monitor"

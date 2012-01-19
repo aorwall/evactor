@@ -14,7 +14,7 @@ import org.joda.time.DateTime
 
 class KeywordEventStorage(system: ActorSystem, cfPrefix: String) extends CassandraStorage (system, cfPrefix) with EventStorage {
 
-	def this(system: ActorSystem) = this(system, "RequestEvent")
+	def this(system: ActorSystem) = this(system, "KeywordEvent")
 
 	override def storeEvent(event: Event): Boolean = event match {
 		  

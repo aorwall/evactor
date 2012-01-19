@@ -1,6 +1,5 @@
 apply plugin: 'scala'
 
-
 ideaModule {
     beforeConfigured { module ->
         module.dependencies.clear()
@@ -17,5 +16,10 @@ buildscript {
 }
 
 dependencies {
+    compile project(':core')
+    compile project(':storage-cassandra')
+
+    compile group: 'org.apache.camel', name:'camel-core', version:'2.6.0'
+    compile group: 'org.apache.camel', name:'camel-irc', version:'2.6.0'
 
 }

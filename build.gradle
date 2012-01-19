@@ -31,6 +31,7 @@ subprojects {
         scalaTools 'org.scala-lang:scala-library:2.9.1'
 
         compile group: 'com.typesafe.akka', name:'akka-actor', version:'2.0-M2'
+        compile group: 'com.typesafe.akka', name:'akka-kernel', version:'2.0-M2'
 //        compile group: 'com.typesafe.akka', name:'akka-typed-actor', version:'2.0-M1'
 //        compile group: 'com.typesafe.akka', name:'akka-camel', version:'2.0-M1'
 //        compile group: 'com.typesafe.akka', name:'akka-stm', version:'2.0-M1'
