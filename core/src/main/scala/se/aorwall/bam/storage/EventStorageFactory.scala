@@ -49,11 +49,7 @@ class EventStorageFactory(val system: ActorSystemImpl) extends Extension with Lo
 	val settings = new Settings(system.settings.config)	
 	
 	def getEventStorage(event: Event): Option[EventStorage] = {
-     info(event.getClass().getName)
-     info(storageImplMap)
-     val hej = storageImplMap.get(event.getClass().getName)
-     info(hej)
-     hej.getOrElse(None)
+      storageImplMap.get(event.getClass().getName).getOrElse(None)
    }  
 
    def storageImplOf(storageFQN: String): Option[EventStorage] =

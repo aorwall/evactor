@@ -1,18 +1,14 @@
 package se.aorwall.bam.model.events
 
-import se.aorwall.bam.model.attributes.HasLatency
-import se.aorwall.bam.model.attributes.HasState
-import se.aorwall.bam.model.State
 import se.aorwall.bam.model.attributes.HasMessage
 
 /**
- * An event representing a keyword
+ * An event with a message of some sort
  */
-case class KeywordEvent (
+case class DataEvent (
     override val name: String, 
     override val id: String, 
     override val timestamp: Long, 
-    val keyword: String,
-    val eventRef: Event) extends Event(name, id, timestamp) {
+    val message: String) extends Event(name, id, timestamp) with HasMessage  {
 
 }
