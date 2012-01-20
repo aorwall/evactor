@@ -124,16 +124,19 @@ abstract class CassandraStorage(val system: ActorSystem, cfPrefix: String) exten
             .map { _.getValue match {
                     case s:String => s
                  }}.toList
-     
+                      
      val queryResult = HFactory.createMultigetSliceQuery(keyspace, StringSerializer.get, StringSerializer.get, ObjectSerializer.get)
      		.setColumnFamily(cfPrefix + EVENT_CF)
-     		.setKeys(eventIds)
      		.setColumnNames("event")
+     		.setKeys(eventIds)
      		.execute()
      		
-     queryResult.get().iterator().map { _.getColumnSlice().getColumnByName("event").getValue() match {
-        case event:T => event
-     }}.toList    	
+     		
+     val multigetSlice = queryResult.get().iterator().map { _.getColumnSlice().getColumnByName("event").getValue() match {
+        case event:T => (event.name + event.id -> event)
+     }}.toMap	
+     
+     for(eventId <- eventIds) yield multigetSlice(eventId)                      
   }
 
   /**
