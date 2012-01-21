@@ -70,7 +70,7 @@ class KeywordEventStorage(system: ActorSystem, prefix: String) extends Cassandra
 			case keywordEvent: KeywordEvent => 
 				("name", event.name) :: 
 				("id", event.id) :: 
-				("timestamp", String.valueOf(event.timestamp)) :: 
+				("timestamp", event.timestamp.toString) :: 
 				("keyword", keywordEvent.keyword) :: 
 				getEventRefCol("eventRef", keywordEvent.eventRef)			
 		}
@@ -85,7 +85,7 @@ class KeywordEventStorage(system: ActorSystem, prefix: String) extends Cassandra
 	 val get = getValue(columns) _	
 	 new KeywordEvent(get("name"), 
 			 			get("id"),
-			 			java.lang.Long.parseLong(get("timestamp")),
+			 			get("timestamp").toLong,
 			 			get("keyword"),
 			 			getEventRef(columns, "eventRef"))
 	}

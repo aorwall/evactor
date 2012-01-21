@@ -12,7 +12,7 @@ import akka.util.ReflectiveAccess
 import grizzled.slf4j.Logging
 
 /**
- * Handling event storage. A lot of inspiration from the serialization and durable mailbox
+ * Handling event storage. Made in the same way as the serialization
  * implementations in Akka.
  *  
  */
@@ -29,14 +29,11 @@ object EventStorageFactory {
     val StorageBindings: Map[String, Seq[String]] = {
       val configPath = "akka.bam.storage.storage-bindings"
       hasPath(configPath) match {
-        case false ⇒ Map()
-        case true ⇒
-          val serializationBindings: Map[String, Seq[String]] = getConfig(configPath).root.unwrapped.asScala.toMap.map {
+        case false => Map()
+        case true => getConfig(configPath).root.unwrapped.asScala.toMap.map {
             case (k: String, v: java.util.Collection[_]) ⇒ (k -> v.asScala.toSeq.asInstanceOf[Seq[String]])
             case invalid ⇒ throw new ConfigurationException("Invalid storage-bindings [%s]".format(invalid))
           }
-          serializationBindings
-
       }
     }
   }
@@ -52,7 +49,13 @@ class EventStorageFactory(val system: ActorSystemImpl) extends Extension with Lo
       storageImplMap.get(event.getClass().getName).getOrElse(None)
    }  
 
-   def storageImplOf(storageFQN: String): Option[EventStorage] =
+	def getEventStorage(className: String): Option[EventStorage] = {
+     storageImplMap.get(className).getOrElse(None)
+   }  
+	
+   def storageImplOf(storageFQN: String): Option[EventStorage] = {
+     info(storageFQN)
+   
      storageFQN match {
       case "" => None
       case fqcn: String =>
@@ -61,15 +64,15 @@ class EventStorageFactory(val system: ActorSystemImpl) extends Extension with Lo
           case Right(instance) ⇒ Some(instance)
           case Left(exception) ⇒
             throw new IllegalArgumentException(
-              ("Cannot instantiate EventStorage [%s], defined in [%s], " +
-                "make sure it has constructor with a [akka.actor.ActorSystem] parameter")
+              ("Cannot instantiate EventStorage [%s], defined in [%s]")
                 .format(fqcn, system), exception)
         }
     }
-
-   lazy val storageImplementations: Map[String, Option[EventStorage]] = {
-    val serializersConf = settings.StorageImplementations
-    for ((k: String, v: String) <- serializersConf)
+   }
+   
+   lazy val storageImplementations: Map[String, Option[EventStorage]] = {     
+    val storageConf = settings.StorageImplementations
+    for ((k: String, v: String) <- storageConf)
       yield k -> storageImplOf(v)
    }
 	

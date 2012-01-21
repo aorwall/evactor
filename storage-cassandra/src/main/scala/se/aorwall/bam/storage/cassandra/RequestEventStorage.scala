@@ -23,7 +23,7 @@ class RequestEventStorage(system: ActorSystem, cfPrefix: String) extends Cassand
 	 val get = getValue(columns) _	
 	 new RequestEvent(get("name"), 
 			 			get("id"),
-			 			java.lang.Long.parseLong(get("timestamp")),
+			 			get("timestamp").toLong,
 			 			getEventRef(columns, "inboundRef"),
 			 			getEventRef(columns, "outboundRef"),
 			 			State(get("state")),
@@ -35,7 +35,7 @@ class RequestEventStorage(system: ActorSystem, cfPrefix: String) extends Cassand
 			case requestEvent: RequestEvent => 
 				("name", event.name) :: 
 				("id", event.id) ::
-				("timestamp", String.valueOf(event.timestamp)) ::
+				("timestamp", event.timestamp.toString) ::
 				getEventRefCol("inboundRef", requestEvent.inboundRef) :::
 				getEventRefCol("outboundRef", requestEvent.outboundRef) :::
 				("state", requestEvent.state.toString) ::

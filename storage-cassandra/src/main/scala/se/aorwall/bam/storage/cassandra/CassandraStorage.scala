@@ -27,6 +27,7 @@ import se.aorwall.bam.storage.EventStorage
 import se.aorwall.bam.storage.EventStorage
 import se.aorwall.bam.storage.EventStorage
 import org.joda.time.base.BaseSingleFieldPeriod
+import scala.collection.mutable.ListBuffer
 
 abstract class CassandraStorage(val system: ActorSystem, prefix: String) extends EventStorage with Logging{
     
@@ -47,6 +48,9 @@ abstract class CassandraStorage(val system: ActorSystem, prefix: String) extends
   val MONTH = "month"
   val YEAR = "year"
     
+  val maxHourTimespan = 1000*3600*24*365
+  val maxDayTimespan = 1000*3600*24*365*5
+ 
   val columnNames = List("name", "id", "timestamp")
 
   // TODO: Consistency level should be set to ONE for all writes
@@ -177,7 +181,7 @@ abstract class CassandraStorage(val system: ActorSystem, prefix: String) extends
   /**
    * Read statistics within a time span from fromTimestamp to toTimestamp
    */
-  def readStatistics(eventName: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], interval: String): List[Long] =
+  def readStatistics(eventName: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], interval: String): (Long, List[Long]) =
     (fromTimestamp, toTimestamp) match {
       case (None, None) => readStatisticsFromInterval(eventName, 0, System.currentTimeMillis, interval)
       case (Some(from), None) => readStatisticsFromInterval(eventName, from, System.currentTimeMillis, interval)
@@ -185,11 +189,20 @@ abstract class CassandraStorage(val system: ActorSystem, prefix: String) extends
       case (Some(from), Some(to)) => readStatisticsFromInterval(eventName, from, to, interval)
   }
   
-  def readStatisticsFromInterval(eventName: String, from: Long, to: Long, interval: String): List[Long] = {
+  def readStatisticsFromInterval(eventName: String, _from: Long, to: Long, interval: String): (Long, List[Long]) = {
 
-    if(from.compareTo(to) >= 0) throw new IllegalArgumentException("to is older than from")
+    if(_from.compareTo(to) >= 0) throw new IllegalArgumentException("to is older than from")
 
-    debug("Reading statistics for event with name " + eventName + " from " + from + " to " + to + " with interval: " + interval)
+    debug("Reading statistics for event with name " + eventName + " from " + _from + " to " + to + " with interval: " + interval)
+        
+    // Fix timestamp   
+    val from = if(interval == HOUR && _from > 0 && (to-_from) > maxHourTimespan ){
+      to - maxHourTimespan
+    } else if(interval == DAY && _from > 0 && (to-_from) > maxDayTimespan ){
+      to - maxDayTimespan
+    } else {
+      _from
+    }
     
     val columns = HFactory.createCounterSliceQuery(keyspace, StringSerializer.get, LongSerializer.get)
           .setColumnFamily(COUNT_CF)
@@ -198,7 +211,7 @@ abstract class CassandraStorage(val system: ActorSystem, prefix: String) extends
           .execute()
           .get
           .getColumns
-          
+                   
     val statsMap: Map[Long, Long] = columns.map {col => col.getName match {
             case k: java.lang.Long =>
             	col.getValue match {
@@ -208,31 +221,43 @@ abstract class CassandraStorage(val system: ActorSystem, prefix: String) extends
             case _ => 0L -> 0L
 	       } 
     } toMap
-    
-    // Fix timestamp
-    val dateTime = if(from == 0) new DateTime(statsMap.keys.min)
-   	 				 else new DateTime(from)
-    val (startDateTime, period) = interval match {
-    	case YEAR => (new DateTime(dateTime.getYear, 1, 1, 0, 0), Years.ONE)
-    	case MONTH => (new DateTime(dateTime.getYear, dateTime.getMonthOfYear, 1, 0, 0), Months.ONE)
-    	case DAY => (new DateTime(dateTime.getYear, dateTime.getMonthOfYear, dateTime.getDayOfMonth, 0, 0), Days.ONE)
-    	case HOUR => (new DateTime(dateTime.getYear, dateTime.getMonthOfYear, dateTime.getDayOfMonth, dateTime.getHourOfDay, 0), Hours.ONE) 
-    }  
-    
-    lazy val getTimestamps: (DateTime => List[Long]) = (fromDate: DateTime) =>  {	    
-	    val newFromDate = fromDate.plus(period)
+        
+    if(statsMap.size > 0){
 	    
-	    if(newFromDate.isBefore(to)) {
-	      newFromDate.toDate.getTime :: getTimestamps(newFromDate)
+	    val dateTime = if(from == 0){
+	      new DateTime(statsMap.keys.min)
 	    } else {
-	      List()
+	      new DateTime(from) 
 	    }
+	    
+	    val (startDateTime, period) = interval match {
+	    	case YEAR => (new DateTime(dateTime.getYear, 1, 1, 0, 0), Years.ONE)
+	    	case MONTH => (new DateTime(dateTime.getYear, dateTime.getMonthOfYear, 1, 0, 0), Months.ONE)
+	    	case DAY => (new DateTime(dateTime.getYear, dateTime.getMonthOfYear, dateTime.getDayOfMonth, 0, 0), Days.ONE)
+	    	case HOUR => (new DateTime(dateTime.getYear, dateTime.getMonthOfYear, dateTime.getDayOfMonth, dateTime.getHourOfDay, 0), Hours.ONE)
+	    	case _ => throw new IllegalArgumentException("Couldn't handle request")
+	    }  
+	           
+	    // Shorten down timespan on DAY and HOUR intervals
+	    var fromDate = startDateTime
+	    
+	    val timestampsBuffer = ListBuffer[Long]()
+	    
+	    while(fromDate.isBefore(to)){
+	      timestampsBuffer.append(fromDate.toDate.getTime)
+	      fromDate = fromDate.plus(period)
+	    }
+	    
+	    if(timestampsBuffer.size > 0){
+	   	 val timestamps = timestampsBuffer.toList   
+	    	(timestamps.head, timestamps.map(timestamp => statsMap.getOrElse(timestamp, 0L)))     
+	    } else {
+	      (0, List())
+	    }
+    } else {
+   	 (0, List())
     }
-    
-    val timestamps = startDateTime.toDate.getTime :: getTimestamps(startDateTime)
-    timestamps.map(timestamp => statsMap.getOrElse(timestamp, 0L))      
-  }
-  
+  }  
   
   def toMillis(date: DateTime) = date.toDate.getTime
 

@@ -24,7 +24,7 @@ class SimpleProcessEventStorage(system: ActorSystem, cfPrefix: String) extends C
 	 val get = getValue(columns) _	
 	 new SimpleProcessEvent(get("name"), 
 			 			get("id"),
-			 			java.lang.Long.parseLong(get("timestamp")),
+			 			get("timestamp").toLong,
 			 			getEventRefs(columns, "requests"),
 			 			State(get("state")),
 			 			java.lang.Long.parseLong(get("latency")))
@@ -35,7 +35,7 @@ class SimpleProcessEventStorage(system: ActorSystem, cfPrefix: String) extends C
 			case requestEvent: SimpleProcessEvent => 
 				("name", event.name) :: 
 				("id", event.id) ::
-				("timestamp", String.valueOf(event.timestamp)) ::
+				("timestamp", event.timestamp.toString) ::
 				("requests", requestEvent.requests.map(_.toString()).mkString(",")) ::
 				("state", requestEvent.state.toString) ::
 				("latency", String.valueOf(requestEvent.latency)) :: Nil

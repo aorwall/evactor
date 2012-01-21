@@ -34,8 +34,8 @@ class LogEventStorage(val system: ActorSystem) extends EventStorage {
     List[LogEvent]() // TODO
   }
   
-  def readStatistics(name: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], interval: String): List[Long] = {
-    List[Long]()
+  def readStatistics(name: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], interval: String): (Long, List[Long]) = {
+    (0L, List[Long]())
   }
   
 }

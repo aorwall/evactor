@@ -23,8 +23,8 @@ class TestEventStorage(system: ActorSystem) extends EventStorage {
     List[Event]()
   }
     
-  def readStatistics(name: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], interval: String): List[Long] = {
-    List[Long]()
+  def readStatistics(name: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], interval: String): (Long, List[Long]) = {
+    (0L, List[Long]())
   }
   
   

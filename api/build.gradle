@@ -13,14 +13,16 @@ buildscript {
     repositories {
         mavenCentral()
     }
+
 }
 
 dependencies {
     compile project(':core')
     compile project(':storage-cassandra')
-
-    compile group: 'se.scalablesolutions.akka', name:'akka-http', version:'1.2-RC5'
-    compile group: 'org.eclipse.jetty', name:'jetty-webapp', version:'8.0.0.M2'
-    compile group: 'org.mortbay.jetty', name:'servlet-api', version:'3.0.20100224'
-
+   
+    compile group: 'net.databinder', name:'unfiltered-filter_2.9.1', 	version:'0.5.3'
+    compile group: 'net.databinder', name:'unfiltered-netty_2.9.1', 	version:'0.5.3'    
+    compile group: 'net.databinder', name:'unfiltered-netty-server_2.9.1',	version:'0.5.3'
+    compile group: 'com.codahale', 	 name:'jerkson_2.9.1',				version:'0.5.0'    
+    
 }

@@ -1,0 +1,4 @@
+The API is totally unaware of the Akka processors and will only communicate
+with the storage implementation atm. 
+
+The idea is to be able to check active processors in the future...

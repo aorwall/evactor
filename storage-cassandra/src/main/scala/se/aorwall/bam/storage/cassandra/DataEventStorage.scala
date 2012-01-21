@@ -15,7 +15,7 @@ class DataEventStorage(system: ActorSystem, cfPrefix: String) extends CassandraS
    override val columnNames = List("name", "id", "timestamp", "message")
 	
    def eventToColumns(event: Event): List[(String, String)] = event match {  
-	  case dataEvent: DataEvent => ("name", event.name) :: ("id", event.id) :: ("timestamp", String.valueOf(event.timestamp)) :: ("message", dataEvent.message) :: Nil
+	  case dataEvent: DataEvent => ("name", event.name) :: ("id", event.id) :: ("timestamp", event.timestamp.toString) :: ("message", dataEvent.message) :: Nil
 	  case _ => throw new RuntimeException("Type not supported: " + event.getClass().getName()) // TODO: Fix some kind of storage exception...
 	}
 	
@@ -23,7 +23,7 @@ class DataEventStorage(system: ActorSystem, cfPrefix: String) extends CassandraS
 	 val get = getValue(columns) _	
 	 new DataEvent(get("name"), 
 			 			get("id"),
-			 			java.lang.Long.parseLong(get("timestamp")),
+			 			get("timestamp").toLong,
 			 			get("message"))
 	}
 }

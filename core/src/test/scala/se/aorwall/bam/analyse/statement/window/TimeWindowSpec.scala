@@ -15,7 +15,7 @@ class TimeWindowSpec extends WordSpec with MustMatchers with Logging {
   val events = TreeMap(currentTime - 10000000L -> 11, currentTime - 1000000L -> 22, currentTime - 1000L -> 33, currentTime - 2000L -> 44, currentTime - 3000L -> 55)
 
   "A TimeWindow" must {
-
+/*
     "return timed out events" in {
 
       new {
@@ -25,7 +25,7 @@ class TimeWindowSpec extends WordSpec with MustMatchers with Logging {
         assert(getInactive(events) == Map(currentTime - 10000000L -> 11, currentTime - 1000000L -> 22))
       }
     }
-
+*/
     "don't return any events when the timeframe is set to current time" in {
 
       new {

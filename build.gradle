@@ -18,7 +18,7 @@ subprojects {
 	apply plugin: 'eclipse'
 
     repositories {
-       mavenRepo(urls: ['http://www.scala-tools.org/repo-releases/', 'http://akka.io/repository', 'http://maven.twttr.com/', 'https://repository.jboss.org/nexus/content/groups/public-jboss/', 'https://oss.sonatype.org/content/repositories/releases', 'http://repository.codehaus.org/org/codehaus', 'http://guiceyfruit.googlecode.com/svn/repo/releases/','http://maven.ala.org.au/repository','http://download.java.net/maven/2'])
+       mavenRepo(urls: ['http://www.scala-tools.org/repo-releases/', 'http://akka.io/repository', 'http://maven.twttr.com/', 'https://repository.jboss.org/nexus/content/groups/public-jboss/', 'https://oss.sonatype.org/content/repositories/releases', 'http://repository.codehaus.org/org/codehaus', 'http://guiceyfruit.googlecode.com/svn/repo/releases/','http://maven.ala.org.au/repository','http://download.java.net/maven/2', 'http://repo.codahale.com'])
        mavenCentral()
 
 	   ivy {
@@ -37,21 +37,12 @@ subprojects {
 
         compile group: 'com.typesafe.akka', name:'akka-actor', version:'2.0-M2'
         compile group: 'com.typesafe.akka', name:'akka-kernel', version:'2.0-M2'
-//        compile group: 'com.typesafe.akka', name:'akka-typed-actor', version:'2.0-M1'
-//        compile group: 'com.typesafe.akka', name:'akka-camel', version:'2.0-M1'
-//        compile group: 'com.typesafe.akka', name:'akka-stm', version:'2.0-M1'
-
-        compile group: 'org.multiverse', name:'multiverse-core', version: '0.6'
-        compile group: 'org.multiverse', name:'multiverse-alpha-unborn', version: '0.6'
-
-        compile group: 'com.google.inject', name: 'guice', version: '3.0'
-        compile group: 'javax.inject', name: 'javax.inject', version:'1'
 
         compile group: 'com.typesafe.akka', name:'akka-remote', version:'2.0-M2'
         compile group: 'com.typesafe.akka', name:'akka-testkit', version:'2.0-M2'
 
-        compile group: 'org.codehaus.aspectwerkz', name: 'aspectwerkz', version: '2.2.3'
-        compile group: 'org.codehaus.jackson', name: 'jackson-core-asl', version: '1.9.3'
+		compile group: 'org.codehaus.jackson', name:'jackson-mapper-asl', 	version:'1.9.0'
+		compile group: 'org.codehaus.jackson', name:'jackson-core-asl', 	version:'1.9.0'
 
         testCompile group: 'junit', name: 'junit', version: '4.4'
         testCompile group: 'org.scalatest', name: 'scalatest_2.9.1', version: '1.6.1'
@@ -60,7 +51,6 @@ subprojects {
         // logging
         compile group: 'org.clapper', name:'grizzled-slf4j_2.9.1', version:'0.6.6'
         compile group: 'org.slf4j', name: 'slf4j-api', version: '1.6.2'
-        compile group: 'se.scalablesolutions.akka', name:'akka-slf4j', version:'1.2-RC5'
         runtime group: 'ch.qos.logback', name: 'logback-classic', version: '0.9.28'
         runtime group: 'ch.qos.logback', name: 'logback-core', version: '0.9.28'
     }
