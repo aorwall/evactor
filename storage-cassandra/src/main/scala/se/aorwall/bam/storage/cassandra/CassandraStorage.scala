@@ -1,31 +1,31 @@
 package se.aorwall.bam.storage.cassandra
 
+import scala.collection.JavaConversions._
 import scala.collection.JavaConversions.asScalaBuffer
+
 import org.joda.time.DateTime
+
+import akka.actor.ActorContext
+import akka.actor.ActorSystem
 import grizzled.slf4j.Logging
-import me.prettyprint.cassandra.serializers.ObjectSerializer
-import me.prettyprint.cassandra.serializers.StringSerializer
-import me.prettyprint.cassandra.serializers.UUIDSerializer
+import me.prettyprint.cassandra.serializers._
+import me.prettyprint.cassandra.service.CassandraHostConfigurator
 import me.prettyprint.cassandra.utils.TimeUUIDUtils
+import me.prettyprint.hector.api.beans.ColumnSlice
 import me.prettyprint.hector.api.factory.HFactory
 import me.prettyprint.hector.api.Keyspace
 import se.aorwall.bam.model.attributes.HasState
 import se.aorwall.bam.model.events.Event
-import scala.collection.JavaConversions._
-import akka.actor.ActorContext
 import se.aorwall.bam.storage.EventStorage
-import akka.actor.ActorSystem
-import se.aorwall.bam.storage.EventStorage
-import me.prettyprint.cassandra.service.CassandraHostConfigurator
 
 abstract class CassandraStorage(val system: ActorSystem, cfPrefix: String) extends EventStorage with Logging{
     
   private val settings = CassandraStorageExtension(system)
-
+  
   val cluster = HFactory.getOrCreateCluster(settings.Clustername, new CassandraHostConfigurator(settings.Hostname + ":" + settings.Port))
   protected val keyspace = HFactory.createKeyspace(settings.Keyspace, cluster)
   
-  type T <: Event
+  type EventType <: Event
   
   val TIMELINE_CF = "Timeline"
   val EVENT_CF = ""
@@ -36,6 +36,8 @@ abstract class CassandraStorage(val system: ActorSystem, cfPrefix: String) exten
   val DAY = "day"
   val MONTH = "month"
   val YEAR = "year"
+    
+  val columnNames = List("name", "id", "timestamp")
 
   // TODO: Consistency level should be set to ONE for all writes
   def storeEvent(event: Event): Boolean = {
@@ -65,10 +67,12 @@ abstract class CassandraStorage(val system: ActorSystem, cfPrefix: String) exten
 	
 	    // column family: Event
 	    // row key: event name + event.id
-	    // column key: "event" // Maybe 
-	    // value: event
-	    mutator.addInsertion(event.name + event.id, cfPrefix + EVENT_CF, HFactory.createColumn("event", event, StringSerializer.get, ObjectSerializer.get))
-	
+	    for(column <- eventToColumns(event)) {
+	      mutator.addInsertion(event.name + event.id, cfPrefix + EVENT_CF, column match {
+	      	case (k, v) => HFactory.createStringColumn(k, v)
+	      })
+	    }
+	    	    
 	    // column family: EventState
 	    // row key: event name + state
 	    // column key: event timestamp
@@ -125,20 +129,27 @@ abstract class CassandraStorage(val system: ActorSystem, cfPrefix: String) exten
                     case s:String => s
                  }}.toList
                       
-     val queryResult = HFactory.createMultigetSliceQuery(keyspace, StringSerializer.get, StringSerializer.get, ObjectSerializer.get)
+     val queryResult = HFactory.createMultigetSliceQuery(keyspace, StringSerializer.get, StringSerializer.get, StringSerializer.get)
      		.setColumnFamily(cfPrefix + EVENT_CF)
-     		.setColumnNames("event")
+     		.setColumnNames(columnNames: _*)
      		.setKeys(eventIds)
      		.execute()
-     		
-     		
-     val multigetSlice = queryResult.get().iterator().map { _.getColumnSlice().getColumnByName("event").getValue() match {
-        case event:T => (event.name + event.id -> event)
+     		     		
+     val multigetSlice = queryResult.get().iterator().map { columns => columnsToEvent(columns.getColumnSlice()) match {
+        case event:Event => (event.name + event.id -> event)
      }}.toMap	
      
      for(eventId <- eventIds) yield multigetSlice(eventId)                      
   }
 
+  def eventToColumns(event: Event): List[(String, String)]
+  
+  def columnsToEvent(columns: ColumnSlice[String, String]): Event
+  
+  def getValue(columns: ColumnSlice[String, String])(name: String): String = {
+    columns.getColumnByName(name).getValue()
+  } 
+  
   /**
    * Read statistics within a time span from fromTimestamp to toTimestamp
   def readStatistics(processId: String, fromTimestamp: Option[Long], toTimestamp: Option[Long]): Statistics =

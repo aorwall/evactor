@@ -8,6 +8,6 @@ case class KeywordEvent (
     override val id: String, 
     override val timestamp: Long, 
     val keyword: String,
-    val eventRef: Event) extends Event(name, id, timestamp) {
+    val eventRef: String) extends Event(name, id, timestamp) {
 
 }

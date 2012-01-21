@@ -7,10 +7,11 @@ import se.aorwall.bam.model.events.Event
 import se.aorwall.bam.model.events.LogEvent
 import se.aorwall.bam.storage.EventStorage
 import me.prettyprint.cassandra.service.CassandraHostConfigurator
+import akka.actor.ActorSystem
 
-class LogEventStorage(val owner: ActorContext) extends EventStorage {
+class LogEventStorage(val system: ActorSystem) extends EventStorage {
 
-  private val settings = CassandraStorageExtension(owner.system)  
+  private val settings = CassandraStorageExtension(system)  
   val cluster = HFactory.getOrCreateCluster(settings.Clustername, new CassandraHostConfigurator(settings.Hostname + ":" + settings.Port))
   private val keyspace = HFactory.createKeyspace(settings.Keyspace, cluster)
   

@@ -20,6 +20,11 @@ subprojects {
     repositories {
        mavenRepo(urls: ['http://www.scala-tools.org/repo-releases/', 'http://akka.io/repository', 'http://maven.twttr.com/', 'https://repository.jboss.org/nexus/content/groups/public-jboss/', 'https://oss.sonatype.org/content/repositories/releases', 'http://repository.codehaus.org/org/codehaus', 'http://guiceyfruit.googlecode.com/svn/repo/releases/','http://maven.ala.org.au/repository','http://download.java.net/maven/2'])
        mavenCentral()
+
+	   ivy {
+          url: 'http://download.playframework.org/ivy-releases/'
+       }
+
     }
 
     configurations {

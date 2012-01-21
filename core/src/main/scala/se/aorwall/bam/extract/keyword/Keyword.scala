@@ -29,7 +29,7 @@ class Keyword (val eventName: String, val name: String, val fieldName: String) e
 	  lazy val getJsonKeyword: (JsonParser => Option[KeywordEvent]) = (jsonParser: JsonParser) => {
 	     if(fieldName == jsonParser.getCurrentName) {
 	       jsonParser.nextToken()
-	       Some(new KeywordEvent(name, event.id, event.timestamp, jsonParser.getText, event))
+	       Some(new KeywordEvent(name, event.id, event.timestamp, jsonParser.getText, "%s/%s/%s".format(event.getClass().getName(), event.name, event.id)))
 	     } else if (jsonParser.nextToken() != JsonToken.END_OBJECT){
 	       getJsonKeyword(jsonParser)
 	     } else {
