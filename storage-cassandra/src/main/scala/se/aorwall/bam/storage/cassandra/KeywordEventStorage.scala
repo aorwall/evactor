@@ -12,6 +12,7 @@ import me.prettyprint.cassandra.serializers.UUIDSerializer
 import org.joda.time.DateTime
 import me.prettyprint.hector.api.beans.ColumnSlice
 import se.aorwall.bam.storage.EventStorage
+import se.aorwall.bam.model.events.EventRef
 
 
 class KeywordEventStorage(system: ActorSystem, cfPrefix: String) extends CassandraStorage (system, cfPrefix) with EventStorage {
@@ -29,19 +30,19 @@ class KeywordEventStorage(system: ActorSystem, cfPrefix: String) extends Cassand
 			val mutator = HFactory.createMutator(keyspace, StringSerializer.get)
 			val timeuuid = TimeUUIDUtils.getTimeUUID(event.timestamp)
 	
-			val key = keywordEvent.name + ":" + keywordEvent.keyword
+			val key = "%s/%s".format(keywordEvent.name, keywordEvent.keyword)
 	
 			// column family: KeywordEvent
 			// row key: keyword name
 			// column key: timeuuid
 			// column value: keyword value			
-			mutator.incrementCounter(event.name, cfPrefix + EVENT_CF, keywordEvent.keyword, 1)
+			mutator.incrementCounter(keywordEvent.name, cfPrefix + EVENT_CF, keywordEvent.keyword, 1)
 			
 			// column family: KeywordEventTimeline
 			// row key: keyword name + value
 			// column key: event timestamp
-			// value: event id		
-			mutator.insert(key, cfPrefix + TIMELINE_CF, HFactory.createColumn(timeuuid, keywordEvent.eventRef, UUIDSerializer.get, StringSerializer.get))
+			// value: ref event id		
+			mutator.insert(key, cfPrefix + TIMELINE_CF, HFactory.createColumn(timeuuid, keywordEvent.eventRef.getOrElse("").toString, UUIDSerializer.get, StringSerializer.get))
 	
 			// column family: EventCount
 			// row key: event name + state + ["year";"month":"day":"hour"]
@@ -54,27 +55,38 @@ class KeywordEventStorage(system: ActorSystem, cfPrefix: String) extends Cassand
 			val day = new java.lang.Long(new DateTime(time.getYear, time.getMonthOfYear, time.getDayOfMonth, 0, 0).toDate.getTime)
 			val hour = new java.lang.Long(new DateTime(time.getYear, time.getMonthOfYear, time.getDayOfMonth, time.getHourOfDay, 0).toDate.getTime)
 	
-			mutator.incrementCounter(key + ":" + YEAR, cfPrefix + COUNT_CF, year, count)
-			mutator.incrementCounter(key + ":" + MONTH, cfPrefix + COUNT_CF, month, count)
-			mutator.incrementCounter(key + ":" + DAY, cfPrefix + COUNT_CF, day, count)
-			mutator.incrementCounter(key + ":" + HOUR, cfPrefix + COUNT_CF, hour, count)
+			mutator.incrementCounter("%s/%s".format(key, YEAR), cfPrefix + COUNT_CF, year, count)
+			mutator.incrementCounter("%s/%s".format(key, MONTH), cfPrefix + COUNT_CF, month, count)
+			mutator.incrementCounter("%s/%s".format(key, DAY), cfPrefix + COUNT_CF, day, count)
+			mutator.incrementCounter("%s/%s".format(key, HOUR), cfPrefix + COUNT_CF, hour, count)
 	
 			true
 		}
 		case _ => false
 	}
 	
-	def eventToColumns(event: Event): List[(String, String)] = event match {  
-	  case keywordEvent: KeywordEvent => 	  
-		("name", event.name) :: ("id", event.id) :: ("timestamp", String.valueOf(event.timestamp)) :: ("keyword", keywordEvent.keyword) :: ("eventRef", keywordEvent.eventRef) :: Nil
+	def eventToColumns(event: Event): List[(String, String)] = {		  
+		event match {  
+			case keywordEvent: KeywordEvent => 
+				("name", event.name) :: 
+				("id", event.id) :: 
+				("timestamp", String.valueOf(event.timestamp)) :: 
+				("keyword", keywordEvent.keyword) :: 
+				getEventRefCol("eventRef", keywordEvent.eventRef)			
+		}
 	}
+	
+	def getEventRef(keywordEvent: KeywordEvent): List[(String, String)] = keywordEvent.eventRef match {
+	  case e: EventRef => ("eventRef", e.toString) :: Nil
+	  case None => Nil
+	} 
 	
    def columnsToEvent(columns: ColumnSlice[String, String]): Event = {
 	 val get = getValue(columns) _	
-	 new KeywordEvent(get("name").asInstanceOf[String], 
-			 			get("id").asInstanceOf[String],
+	 new KeywordEvent(get("name"), 
+			 			get("id"),
 			 			java.lang.Long.parseLong(get("timestamp")),
-			 			get("keyword").asInstanceOf[String],
-			 			get("eventRef").asInstanceOf[String])
+			 			get("keyword"),
+			 			getEventRef(columns, "eventRef"))
 	}
 }

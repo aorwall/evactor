@@ -2,6 +2,7 @@ package se.aorwall.bam.process.request
 
 import grizzled.slf4j.Logging
 import se.aorwall.bam.model.events.Event
+import se.aorwall.bam.model.events.EventRef
 import se.aorwall.bam.model.events.LogEvent
 import se.aorwall.bam.model.events.RequestEvent
 import se.aorwall.bam.model.Failure
@@ -64,9 +65,9 @@ class RequestEventBuilder extends EventBuilder {
 
   def createEvent(): RequestEvent = (startEvent, endEvent) match {
     case (Some(start: LogEvent), Some(end: LogEvent)) =>
-      new RequestEvent(end.name, end.correlationId, end.timestamp, Some(start), Some(end), end.state, end.timestamp - start.timestamp )
+      new RequestEvent(end.name, end.correlationId, end.timestamp, Some(EventRef(start)), Some(EventRef(end)), end.state, end.timestamp - start.timestamp )
     case (Some(start: LogEvent), _) =>
-      new RequestEvent(start.name, start.correlationId, System.currentTimeMillis, Some(start), None, Timeout, 0L)
+      new RequestEvent(start.name, start.correlationId, System.currentTimeMillis, Some(EventRef(start)), None, Timeout, 0L)
     case (_, end: LogEvent) =>
        throw new EventCreationException("RequestProcessor was trying to create an event with only an end log event. End event: " + end)
     case (_, _) =>

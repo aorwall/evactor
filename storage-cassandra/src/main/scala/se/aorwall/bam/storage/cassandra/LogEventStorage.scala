@@ -21,13 +21,12 @@ class LogEventStorage(val system: ActorSystem) extends EventStorage {
     
      val mutator = HFactory.createMutator(keyspace, StringSerializer.get);
      // TODO: check if event already exists
-     
-     
-     // column family: RequestEvent
+          
+     // column family: LogEvent
      // row key: event.name
      // column key: event id
      // column value: event object
-     mutator.insert(event.name + event.id, LOG_EVENT_CF, HFactory.createColumn(event.id, event, StringSerializer.get, ObjectSerializer.get))
+     mutator.insert("%s/%s".format(event.name, event.id), LOG_EVENT_CF, HFactory.createColumn(event.id, event, StringSerializer.get, ObjectSerializer.get))
      true
   }
   

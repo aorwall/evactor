@@ -21,9 +21,9 @@ class DataEventStorage(system: ActorSystem, cfPrefix: String) extends CassandraS
 	
    def columnsToEvent(columns: ColumnSlice[String, String]): Event = {
 	 val get = getValue(columns) _	
-	 new DataEvent(get("name").asInstanceOf[String], 
-			 			get("id").asInstanceOf[String],
+	 new DataEvent(get("name"), 
+			 			get("id"),
 			 			java.lang.Long.parseLong(get("timestamp")),
-			 			get("message").asInstanceOf[String])
+			 			get("message"))
 	}
 }

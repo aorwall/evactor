@@ -15,6 +15,7 @@ import org.codehaus.jackson.JsonParser
 import se.aorwall.bam.extract.Extractor
 import akka.actor.Actor
 import org.codehaus.jackson.JsonToken
+import se.aorwall.bam.model.events.EventRef
 
 /**
  * Extracts a path from a message and creates a KeywordEvent object.
@@ -29,7 +30,7 @@ class Keyword (val eventName: String, val name: String, val fieldName: String) e
 	  lazy val getJsonKeyword: (JsonParser => Option[KeywordEvent]) = (jsonParser: JsonParser) => {
 	     if(fieldName == jsonParser.getCurrentName) {
 	       jsonParser.nextToken()
-	       Some(new KeywordEvent(name, event.id, event.timestamp, jsonParser.getText, "%s/%s/%s".format(event.getClass().getName(), event.name, event.id)))
+	       Some(new KeywordEvent(name, event.id, event.timestamp, jsonParser.getText, Some(EventRef(event))))
 	     } else if (jsonParser.nextToken() != JsonToken.END_OBJECT){
 	       getJsonKeyword(jsonParser)
 	     } else {

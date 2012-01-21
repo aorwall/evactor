@@ -14,6 +14,7 @@ import se.aorwall.bam.model.Cancellation
 import se.aorwall.bam.model.State
 import se.aorwall.bam.model.Timeout
 import se.aorwall.bam.model.Failure
+import se.aorwall.bam.model.events.EventRef
 
 /**
  * Processes simple processes with a defined list of components requested. The process will complete when the first and the 
@@ -91,9 +92,9 @@ class SimpleProcessEventBuilder(val processId: String, val components: List[Stri
 
   def createEvent(): SimpleProcessEvent = (startEvent, endEvent) match {
     case (Some(start: RequestEvent), Some(end: RequestEvent)) =>
-      new SimpleProcessEvent(processId, end.id, end.timestamp, requests, end.state, end.timestamp - start.timestamp + start.latency )
+      new SimpleProcessEvent(processId, end.id, end.timestamp, requests.map(EventRef(_)), end.state, end.timestamp - start.timestamp + start.latency )
     case (Some(start: RequestEvent), _) => 
-      new SimpleProcessEvent(processId, start.id, System.currentTimeMillis, requests, getState(start), 0L)
+      new SimpleProcessEvent(processId, start.id, System.currentTimeMillis, requests.map(EventRef(_)), getState(start), 0L)
     case (_, end: RequestEvent) =>
        throw new EventCreationException("SimpleProcessEventBuilder was trying to create an event with only an end request event. End event: " + end)
     case (_, _) =>

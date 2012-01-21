@@ -11,8 +11,8 @@ case class RequestEvent (
     override val name: String, 
     override val id: String, 
     override val timestamp: Long, 
-    val inbound: Option[LogEvent],
-    val outbound: Option[LogEvent],
+    val inboundRef: Option[EventRef],
+    val outboundRef: Option[EventRef],
     val state: State,
     val latency: Long) extends Event(name, id, timestamp) with HasLatency with HasState  {
 
