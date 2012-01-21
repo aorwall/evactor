@@ -15,7 +15,7 @@ import se.aorwall.bam.storage.EventStorage
 import se.aorwall.bam.model.events.EventRef
 
 
-class KeywordEventStorage(system: ActorSystem, cfPrefix: String) extends CassandraStorage (system, cfPrefix) with EventStorage {
+class KeywordEventStorage(system: ActorSystem, prefix: String) extends CassandraStorage (system, prefix) with EventStorage {
 
    type EventType = KeywordEvent
   
@@ -36,13 +36,13 @@ class KeywordEventStorage(system: ActorSystem, cfPrefix: String) extends Cassand
 			// row key: keyword name
 			// column key: timeuuid
 			// column value: keyword value			
-			mutator.incrementCounter(keywordEvent.name, cfPrefix + EVENT_CF, keywordEvent.keyword, 1)
+			mutator.incrementCounter(keywordEvent.name, EVENT_CF, keywordEvent.keyword, 1)
 			
 			// column family: KeywordEventTimeline
 			// row key: keyword name + value
 			// column key: event timestamp
 			// value: ref event id		
-			mutator.insert(key, cfPrefix + TIMELINE_CF, HFactory.createColumn(timeuuid, keywordEvent.eventRef.getOrElse("").toString, UUIDSerializer.get, StringSerializer.get))
+			mutator.insert(key, TIMELINE_CF, HFactory.createColumn(timeuuid, keywordEvent.eventRef.getOrElse("").toString, UUIDSerializer.get, StringSerializer.get))
 	
 			// column family: EventCount
 			// row key: event name + state + ["year";"month":"day":"hour"]
@@ -55,10 +55,10 @@ class KeywordEventStorage(system: ActorSystem, cfPrefix: String) extends Cassand
 			val day = new java.lang.Long(new DateTime(time.getYear, time.getMonthOfYear, time.getDayOfMonth, 0, 0).toDate.getTime)
 			val hour = new java.lang.Long(new DateTime(time.getYear, time.getMonthOfYear, time.getDayOfMonth, time.getHourOfDay, 0).toDate.getTime)
 	
-			mutator.incrementCounter("%s/%s".format(key, YEAR), cfPrefix + COUNT_CF, year, count)
-			mutator.incrementCounter("%s/%s".format(key, MONTH), cfPrefix + COUNT_CF, month, count)
-			mutator.incrementCounter("%s/%s".format(key, DAY), cfPrefix + COUNT_CF, day, count)
-			mutator.incrementCounter("%s/%s".format(key, HOUR), cfPrefix + COUNT_CF, hour, count)
+			mutator.incrementCounter("%s/%s".format(key, YEAR), COUNT_CF, year, count)
+			mutator.incrementCounter("%s/%s".format(key, MONTH), COUNT_CF, month, count)
+			mutator.incrementCounter("%s/%s".format(key, DAY), COUNT_CF, day, count)
+			mutator.incrementCounter("%s/%s".format(key, HOUR), COUNT_CF, hour, count)
 	
 			true
 		}

@@ -16,8 +16,19 @@ import se.aorwall.bam.model.attributes.HasState
 import se.aorwall.bam.model.events.Event
 import se.aorwall.bam.storage.EventStorage
 import se.aorwall.bam.model.events.EventRef
+import org.joda.time.Years
+import se.aorwall.bam.storage.EventStorage
+import org.joda.time.Days
+import se.aorwall.bam.storage.EventStorage
+import org.joda.time.Hours
+import org.joda.time.Months
+import org.joda.time.Period
+import se.aorwall.bam.storage.EventStorage
+import se.aorwall.bam.storage.EventStorage
+import se.aorwall.bam.storage.EventStorage
+import org.joda.time.base.BaseSingleFieldPeriod
 
-abstract class CassandraStorage(val system: ActorSystem, cfPrefix: String) extends EventStorage with Logging{
+abstract class CassandraStorage(val system: ActorSystem, prefix: String) extends EventStorage with Logging{
     
   private val settings = CassandraStorageExtension(system)
   
@@ -26,10 +37,10 @@ abstract class CassandraStorage(val system: ActorSystem, cfPrefix: String) exten
   
   type EventType <: Event
   
-  val TIMELINE_CF = "Timeline"
-  val EVENT_CF = ""
-  val STATE_CF = "State"
-  val COUNT_CF = "Count"
+  val TIMELINE_CF = "%sTimeline".format(prefix)
+  val EVENT_CF = prefix
+  val STATE_CF = "%sState".format(prefix)
+  val COUNT_CF = "%sCount".format(prefix)
 
   val HOUR = "hour"
   val DAY = "day"
@@ -45,7 +56,7 @@ abstract class CassandraStorage(val system: ActorSystem, cfPrefix: String) exten
 	 val key = getKey(event)
 	    
     val existingEvent = HFactory.createColumnQuery(keyspace, StringSerializer.get, StringSerializer.get, ObjectSerializer.get)
-            .setColumnFamily(cfPrefix + EVENT_CF)
+            .setColumnFamily(EVENT_CF)
             .setKey(key)
             .setName("event")
             .execute()
@@ -63,12 +74,12 @@ abstract class CassandraStorage(val system: ActorSystem, cfPrefix: String) exten
 	    // column key: event timestamp
 	    // value: event name / event id
 	    // TODO: Add expiration time?
-	    mutator.addInsertion(event.name, cfPrefix + TIMELINE_CF, HFactory.createColumn(timeuuid, key, UUIDSerializer.get, StringSerializer.get))
+	    mutator.addInsertion(event.name, TIMELINE_CF, HFactory.createColumn(timeuuid, key, UUIDSerializer.get, StringSerializer.get))
 	
 	    // column family: Event
 	    // row key: event name + event.id
 	    for(column <- eventToColumns(event)) {
-	      mutator.addInsertion(key, cfPrefix + EVENT_CF, column match {
+	      mutator.addInsertion(key, EVENT_CF, column match {
 	      	case (k, v) => HFactory.createStringColumn(k, v)
 	      })
 	    }
@@ -78,7 +89,7 @@ abstract class CassandraStorage(val system: ActorSystem, cfPrefix: String) exten
 	    // column key: event timestamp
 	    // value: event id
 	    event match {
-	      case hasState: HasState => mutator.addInsertion("%s/%s".format(event.name, hasState.state.name), cfPrefix + STATE_CF, HFactory.createColumn(timeuuid, "", UUIDSerializer.get, StringSerializer.get))
+	      case hasState: HasState => mutator.addInsertion("%s/%s".format(event.name, hasState.state.name), STATE_CF, HFactory.createColumn(timeuuid, "", UUIDSerializer.get, StringSerializer.get))
 	      case _ =>
 	    }	    
 	    mutator.execute()
@@ -99,10 +110,10 @@ abstract class CassandraStorage(val system: ActorSystem, cfPrefix: String) exten
 	      case _ => event.name
 	    }
 	    
-	    mutator.incrementCounter("%s/%s".format(name, YEAR), cfPrefix + COUNT_CF, year, count)
-	    mutator.incrementCounter("%s/%s".format(name, MONTH), cfPrefix + COUNT_CF, month, count)
-	    mutator.incrementCounter("%s/%s".format(name, DAY), cfPrefix + COUNT_CF, day, count)
-	    mutator.incrementCounter("%s/%s".format(name, HOUR), cfPrefix + COUNT_CF, hour, count)
+	    mutator.incrementCounter("%s/%s".format(name, YEAR), COUNT_CF, year, count)
+	    mutator.incrementCounter("%s/%s".format(name, MONTH), COUNT_CF, month, count)
+	    mutator.incrementCounter("%s/%s".format(name, DAY), COUNT_CF, day, count)
+	    mutator.incrementCounter("%s/%s".format(name, HOUR), COUNT_CF, hour, count)
 	    true
     }
   }
@@ -119,7 +130,7 @@ abstract class CassandraStorage(val system: ActorSystem, cfPrefix: String) exten
     }
 
     val eventIds = HFactory.createSliceQuery(keyspace, StringSerializer.get, UUIDSerializer.get, StringSerializer.get)
-            .setColumnFamily(cfPrefix + TIMELINE_CF)
+            .setColumnFamily(TIMELINE_CF)
             .setKey(eventName)
             .setRange(fromTimeuuid, toTimeuuid, false, count)
             .execute()
@@ -130,14 +141,14 @@ abstract class CassandraStorage(val system: ActorSystem, cfPrefix: String) exten
                  }}.toList
                       
      val queryResult = HFactory.createMultigetSliceQuery(keyspace, StringSerializer.get, StringSerializer.get, StringSerializer.get)
-     		.setColumnFamily(cfPrefix + EVENT_CF)
+     		.setColumnFamily(EVENT_CF)
      		.setColumnNames(columnNames: _*)
      		.setKeys(eventIds)
      		.execute()
      		     		
      val multigetSlice = queryResult.get().iterator().map { columns => columnsToEvent(columns.getColumnSlice()) match {
-        case event:Event => (getKey(event) -> event)
-     }}.toMap	
+        			case event:Event => (getKey(event) -> event)
+     		}}.toMap	
      
      for(eventId <- eventIds) yield multigetSlice(eventId)                      
   }
@@ -165,50 +176,67 @@ abstract class CassandraStorage(val system: ActorSystem, cfPrefix: String) exten
 	
   /**
    * Read statistics within a time span from fromTimestamp to toTimestamp
-  def readStatistics(processId: String, fromTimestamp: Option[Long], toTimestamp: Option[Long]): Statistics =
+   */
+  def readStatistics(eventName: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], interval: String): List[Long] =
     (fromTimestamp, toTimestamp) match {
-      case (None, None) => readStatisticsFromInterval(processId, new DateTime(0), new DateTime(0))
-      case (Some(from), None) => readStatisticsFromInterval(processId, new DateTime(from), new DateTime(System.currentTimeMillis))
+      case (None, None) => readStatisticsFromInterval(eventName, 0, System.currentTimeMillis, interval)
+      case (Some(from), None) => readStatisticsFromInterval(eventName, from, System.currentTimeMillis, interval)
       case (None, Some(to)) => throw new IllegalArgumentException("Reading statistics with just a toTimestamp provided isn't implemented yet") //TODO
-      case (Some(from), Some(to)) => readStatisticsFromInterval(processId, new DateTime(from), new DateTime(to))
-    }
-
-  def readStatisticsFromInterval(processId: String, from: DateTime, to: DateTime): Statistics = {
+      case (Some(from), Some(to)) => readStatisticsFromInterval(eventName, from, to, interval)
+  }
+  
+  def readStatisticsFromInterval(eventName: String, from: Long, to: Long, interval: String): List[Long] = {
 
     if(from.compareTo(to) >= 0) throw new IllegalArgumentException("to is older than from")
 
-    debug("Reading statistics for process with id " + processId + " from " + from + " to " + to)
-
-    val readFromDb = readStatisticsFromDb(processId, toMillis(from)) _
-
-    if(toMillis(from) == 0 && toMillis(to) == 0){
-      info("al")
-        readFromDb(Some(YEAR), System.currentTimeMillis) // read all
-    } else if(from.getMinuteOfHour > 0 ||
-              from.getSecondOfMinute > 0 ||
-              from.getMillisOfSecond > 0 ||
-              to.getMinuteOfHour > 0 ||
-              to.getSecondOfMinute > 0 ||
-              to.getMillisOfSecond > 0){
-       info("s")
-       readFromDb(None, toMillis(to))
-    } else if (from.getHourOfDay > 0 || to.getHourOfDay > 0){
-      info(HOUR)
-      readFromDb(Some(HOUR), toMillis(to))
-    } else if (from.getDayOfMonth > 1 || to.getDayOfMonth > 1){
-      info(DAY)
-      readFromDb(Some(DAY), toMillis(to))
-    } else if (from.getMonthOfYear > 1 || to.getMonthOfYear > 1){
-      info(MONTH)
-      readFromDb(Some(MONTH), toMillis(to))
-    } else {
-      info(YEAR)
-      readFromDb(Some(YEAR), toMillis(to))
+    debug("Reading statistics for event with name " + eventName + " from " + from + " to " + to + " with interval: " + interval)
+    
+    val columns = HFactory.createCounterSliceQuery(keyspace, StringSerializer.get, LongSerializer.get)
+          .setColumnFamily(COUNT_CF)
+          .setKey("%s/%s".format(eventName, interval))
+          .setRange(from, to, false, 100000)
+          .execute()
+          .get
+          .getColumns
+          
+    val statsMap: Map[Long, Long] = columns.map {col => col.getName match {
+            case k: java.lang.Long =>
+            	col.getValue match {
+	              case v: java.lang.Long => k.longValue -> v.longValue 
+	              case _ => k.longValue -> 0L
+            	}
+            case _ => 0L -> 0L
+	       } 
+    } toMap
+    
+    // Fix timestamp
+    val dateTime = if(from == 0) new DateTime(statsMap.keys.min)
+   	 				 else new DateTime(from)
+    val (startDateTime, period) = interval match {
+    	case YEAR => (new DateTime(dateTime.getYear, 1, 1, 0, 0), Years.ONE)
+    	case MONTH => (new DateTime(dateTime.getYear, dateTime.getMonthOfYear, 1, 0, 0), Months.ONE)
+    	case DAY => (new DateTime(dateTime.getYear, dateTime.getMonthOfYear, dateTime.getDayOfMonth, 0, 0), Days.ONE)
+    	case HOUR => (new DateTime(dateTime.getYear, dateTime.getMonthOfYear, dateTime.getDayOfMonth, dateTime.getHourOfDay, 0), Hours.ONE) 
+    }  
+    
+    lazy val getTimestamps: (DateTime => List[Long]) = (fromDate: DateTime) =>  {	    
+	    val newFromDate = fromDate.plus(period)
+	    
+	    if(newFromDate.isBefore(to)) {
+	      newFromDate.toDate.getTime :: getTimestamps(newFromDate)
+	    } else {
+	      List()
+	    }
     }
+    
+    val timestamps = startDateTime.toDate.getTime :: getTimestamps(startDateTime)
+    timestamps.map(timestamp => statsMap.getOrElse(timestamp, 0L))      
   }
-
+  
+  
   def toMillis(date: DateTime) = date.toDate.getTime
 
+  /*
   def readStatisticsFromDb(processId: String, from: Long)(dateProperty: Option[String], to: Long) = {
     new Statistics(
             readStatisticsCountFromDb(processId, State.SUCCESS, dateProperty, from, to),
@@ -218,30 +246,6 @@ abstract class CassandraStorage(val system: ActorSystem, cfPrefix: String) exten
             readStatisticsCountFromDb(processId, State.TIMEOUT, dateProperty, from, to),
             0.0) //TODO: Fix average latency
   }
-
-  def readStatisticsCountFromDb(processId: String, state: Int, dateProperty: Option[String], from: Long, to: Long): Long = {
-    dateProperty match {
-      case Some(prop) =>
-        HFactory.createCounterSliceQuery(keyspace, StringSerializer.get, LongSerializer.get)
-          .setColumnFamily(ACTIVITY_COUNT_CF)
-          .setKey(processId + ":" + state + ":" + prop)
-          .setRange(from, to, false, 1000)
-          .execute()
-          .get
-          .getColumns
-          .map{_.getValue match {
-            case l: java.lang.Long => l.longValue
-            case _ => 0L
-          }}.sum
-      case None => {
-        HFactory.createCountQuery(keyspace, StringSerializer.get, UUIDSerializer.get)
-          .setColumnFamily(ACTIVITY_STATE_CF)
-          .setKey(processId + ":" + state)
-          .setRange(TimeUUIDUtils.getTimeUUID(from), TimeUUIDUtils.getTimeUUID(to), 100000000) // how set to unlimited?
-          .execute()
-          .get.toLong
-      }
-    }
-  }
   */
+  
 }

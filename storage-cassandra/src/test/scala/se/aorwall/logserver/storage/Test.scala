@@ -52,6 +52,7 @@ object Test extends Logging {
     dataStorage.storeEvent(data1)
     dataStorage.storeEvent(data2)
     info("DataEventStorage: " + dataStorage.readEvents("name", None, None, 10, 0))
+    info("DataEventStorage: " + dataStorage.readStatistics("name", None, None, "hour"))
             
     val keyStorage = new KeywordEventStorage(system)    
     keyStorage.storeEvent(new KeywordEvent("name", "329380921304", System.currentTimeMillis, "key1", Some(EventRef(data1))))
