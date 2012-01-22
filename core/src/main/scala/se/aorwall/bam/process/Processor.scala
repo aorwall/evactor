@@ -11,51 +11,36 @@ import akka.actor.Props
 import grizzled.slf4j.Logging
 import se.aorwall.bam.model.events.Event
 
-abstract class Processor extends Actor with Logging {
+abstract class Processor (val name: String) extends Actor with Logging {
   type T <: Event
   
-  val strategy = OneForOneStrategy({
-	  case _: EventCreationException  => Stop
-	  case _: Exception          => Restart
-  }: Decider, maxNrOfRetries = Some(10), withinTimeRange = Some(60000))
-
-  val processorId: String
+  protected val collector = context.actorFor("/user/collect")
+  protected var testActor: Option[ActorRef] = None // actor used for testing
   
-  def receive = {
-    case event: T => sendToRunningProcessor(event)
+  def receive  = {
+    case event: T => if (handlesEvent(event)) process(event) // TODO: case event: T  doesn't work...
+    case actor: ActorRef => testActor = Some(actor) 
     case _ => // skip
   }
 
-  def sendToRunningProcessor(event: T) {
-    debug(context.self + " about to process event: " + event)
-
-    val eventId = getEventId(event)    
-    debug(context.self + " looking for active event processor with id: " + eventId)
-    val runningActivity = getProcessorActor(eventId)
-    
-    runningActivity ! event    
-  }
-
-  def getEventId(event: T): String
+  protected def process(event: T)
   
-  def createProcessorActor(id: String): ProcessorActor
-  
-  def getProcessorActor(eventId: String): ActorRef = context.actorFor(eventId) match {
-    case empty: EmptyLocalActorRef => context.actorOf(Props(createProcessorActor(eventId)), eventId)
-    case actor: ActorRef => {
-     trace(context.self + " found: " + actor)
-     actor
-    }
-  }
+  protected def handlesEvent(event: T): Boolean
   
   override def preStart = {
     trace(context.self+ " starting...")
-
-    // TODO: Load started activities
-
   }
 
   override def postStop = {
     trace(context.self+ " stopping...")
+  }
+}
+
+trait CheckEventName extends Processor {
+  val eventName: Option[String]
+  
+  protected def handlesEvent(event: T) = eventName match {
+    case Some(e) => e == event.name
+    case None => true
   }
 }

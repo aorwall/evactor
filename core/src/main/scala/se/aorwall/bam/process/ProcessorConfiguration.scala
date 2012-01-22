@@ -1,8 +1,13 @@
 package se.aorwall.bam.process
 import akka.actor.Actor
 
-abstract class ProcessorConfiguration (val processorId: String) {
+/**
+ * Base class for process configurations. 
+ * 
+ * name is the name that will be set to the new event
+ */
+abstract class ProcessorConfiguration (val name: String) {
   
-  def getProcessor(): Actor
+  def getProcessor(): Processor
   
 }

@@ -28,9 +28,9 @@ class ProcessorHandler extends Actor with Logging  {
     
   def setProcessor(configuration: ProcessorConfiguration) {
     debug(context.self + " setting processor for configuration: " + configuration)
-    val runningActor = context.actorFor(configuration.processorId)
+    val runningActor = context.actorFor(configuration.name)
     context.stop(runningActor)    
-    context.actorOf(Props(configuration.getProcessor), name = configuration.processorId)
+    context.actorOf(Props(configuration.getProcessor), name = configuration.name)
   }
 
   def removeProcessor(processorId: String) {

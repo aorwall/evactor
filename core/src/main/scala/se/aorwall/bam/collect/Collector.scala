@@ -26,11 +26,8 @@ class Collector extends Actor with Storage with Logging {
   }
 
   private[this] def sendEvent(event: Event){    
-    // send event to processor
-    context.actorFor("../process") ! event
-    
-    // send event to analyser
-    context.actorFor("../analyse") ! event    
+    // send event to processors
+    context.actorFor("../process") ! event    
   }
   
   override def preStart = {

@@ -12,18 +12,16 @@ import akka.testkit.CallingThreadDispatcher
 import akka.testkit.TestKit
 import collect.Collector
 import grizzled.slf4j.Logging
-import model.statement.window.LengthWindowConf
-import model.statement.Latency
-import se.aorwall.bam.analyse.Analyser
+import se.aorwall.bam.model.events.AlertEvent
 import se.aorwall.bam.model.events.LogEvent
-import se.aorwall.bam.model.Alert
-import se.aorwall.bam.model.Success
 import se.aorwall.bam.model.Start
-import se.aorwall.bam.process.request.Request
-import se.aorwall.bam.process.simple.SimpleProcess
+import se.aorwall.bam.model.Success
 import se.aorwall.bam.process.ProcessorHandler
-import com.typesafe.config.ConfigFactory
 import se.aorwall.bam.storage.EventStorageSpec
+import se.aorwall.bam.process.analyse.latency.Latency
+import se.aorwall.bam.process.build.request.Request
+import se.aorwall.bam.process.build.simpleprocess.SimpleProcess
+import se.aorwall.bam.process.analyse.window.LengthWindowConf
 
 /**
  * Testing the whole log data flow.
@@ -40,7 +38,7 @@ class LogdataIntegrationSuite(_system: ActorSystem) extends TestKit(_system) wit
 
   test("Recieve a logdata objects and send an alert") {
     
-    var result: Alert = null
+    var result: AlertEvent = null
     val processId = "processId"
     val camelEndpoint = "hej"
 
@@ -48,13 +46,11 @@ class LogdataIntegrationSuite(_system: ActorSystem) extends TestKit(_system) wit
     val system = _system
     val collector = system.actorOf(Props[Collector].withDispatcher(CallingThreadDispatcher.Id), name = "collect")
     val processor = system.actorOf(Props[ProcessorHandler].withDispatcher(CallingThreadDispatcher.Id), name = "process")
-    val analyser = system.actorOf(Props[Analyser].withDispatcher(CallingThreadDispatcher.Id), "analyse")
       
     // start the processors
     processor ! new Request("requestProcessor", 120000L)
     processor ! new SimpleProcess(processId, List("startComponent", "endComponent"), 120000l)  
-    
-    analyser ! new Latency(processId, "statementId", camelEndpoint, 2000, Some(new LengthWindowConf(2)))
+    processor ! new Latency("latency", Some(processId), 2000, Some(new LengthWindowConf(2)))
 
     // Collect logs
     val currentTime = System.currentTimeMillis
