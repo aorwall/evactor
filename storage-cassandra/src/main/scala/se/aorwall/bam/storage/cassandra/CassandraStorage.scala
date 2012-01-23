@@ -42,6 +42,7 @@ abstract class CassandraStorage(val system: ActorSystem, prefix: String) extends
   val EVENT_CF = prefix
   val STATE_CF = "%sState".format(prefix)
   val COUNT_CF = "%sCount".format(prefix)
+  val NAMES_CF = "EventNames"
 
   val HOUR = "hour"
   val DAY = "day"
@@ -118,6 +119,8 @@ abstract class CassandraStorage(val system: ActorSystem, prefix: String) extends
 	    mutator.incrementCounter("%s/%s".format(name, MONTH), COUNT_CF, month, count)
 	    mutator.incrementCounter("%s/%s".format(name, DAY), COUNT_CF, day, count)
 	    mutator.incrementCounter("%s/%s".format(name, HOUR), COUNT_CF, hour, count)
+	    	    
+	    mutator.incrementCounter(prefix, NAMES_CF, event.name, 1)
 	    true
     }
   }
@@ -133,10 +136,12 @@ abstract class CassandraStorage(val system: ActorSystem, prefix: String) extends
       case None => null
     }
 
+    info("Looking for: " + eventName)
+    
     val eventIds = HFactory.createSliceQuery(keyspace, StringSerializer.get, UUIDSerializer.get, StringSerializer.get)
             .setColumnFamily(TIMELINE_CF)
             .setKey(eventName)
-            .setRange(fromTimeuuid, toTimeuuid, false, count)
+            .setRange(fromTimeuuid, toTimeuuid, true, count)
             .execute()
             .get
             .getColumns()
@@ -164,6 +169,18 @@ abstract class CassandraStorage(val system: ActorSystem, prefix: String) extends
   protected def getValue(columns: ColumnSlice[String, String])(name: String): String = {
     if(columns.getColumnByName(name) != null) columns.getColumnByName(name).getValue()
     else ""
+  }
+  
+  def getEventNames(): Map[String, Long] = {
+    
+    HFactory.createCounterSliceQuery(keyspace, StringSerializer.get, StringSerializer.get)
+          .setColumnFamily(NAMES_CF)
+          .setKey(prefix)
+          .setRange(null, null, false, 100000)
+          .execute()
+          .get
+          .getColumns.map ( col => col.getName -> col.getValue.longValue).toMap
+    
   }
   
   protected def getEventRef(columns: ColumnSlice[String, String], name: String): Option[EventRef] = {

@@ -6,6 +6,7 @@ import me.prettyprint.hector.api.beans.ColumnSlice
 import se.aorwall.bam.model.events.DataEvent
 import se.aorwall.bam.storage.EventStorage
 import se.aorwall.bam.model.events.Event
+import org.codehaus.jackson.map.ObjectMapper
 
 class DataEventStorage(system: ActorSystem, cfPrefix: String) extends CassandraStorage (system, cfPrefix) with EventStorage {
 	type EventType = DataEvent
@@ -13,7 +14,7 @@ class DataEventStorage(system: ActorSystem, cfPrefix: String) extends CassandraS
 	def this(system: ActorSystem) = this(system, "DataEvent")
 			
    override val columnNames = List("name", "id", "timestamp", "message")
-	
+	   
    def eventToColumns(event: Event): List[(String, String)] = event match {  
 	  case dataEvent: DataEvent => ("name", event.name) :: ("id", event.id) :: ("timestamp", event.timestamp.toString) :: ("message", dataEvent.message) :: Nil
 	  case _ => throw new RuntimeException("Type not supported: " + event.getClass().getName()) // TODO: Fix some kind of storage exception...
@@ -21,9 +22,11 @@ class DataEventStorage(system: ActorSystem, cfPrefix: String) extends CassandraS
 	
    def columnsToEvent(columns: ColumnSlice[String, String]): Event = {
 	 val get = getValue(columns) _	
-	 new DataEvent(get("name"), 
+	 val data = new DataEvent(get("name"), 
 			 			get("id"),
 			 			get("timestamp").toLong,
 			 			get("message"))
+	 println(data)
+	 data
 	}
 }

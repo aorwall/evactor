@@ -1,34 +1,44 @@
 package se.aorwall.bam.irc
 
-import akka.actor.ActorSystem
-import akka.actor.Props
-import se.aorwall.bam.collect.Collector
-import se.aorwall.bam.model.events.KeywordEvent
-import se.aorwall.bam.process.ProcessorHandler
+import org.apache.camel.builder.RouteBuilder
 import org.apache.camel.impl.DefaultCamelContext
 import org.apache.camel.util.jndi.JndiContext
-import se.aorwall.bam.irc.camel.SendToAkka
-import org.apache.camel.builder.RouteBuilder
+import akka.actor.actorRef2Scala
+import akka.actor.ActorSystem
+import akka.actor.Props
 import akka.kernel.Bootable
-import se.aorwall.bam.extract.keyword.Keyword
+import se.aorwall.bam.api.DataEventAPI
+import se.aorwall.bam.api.KeywordEventAPI
+import se.aorwall.bam.collect.Collector
+import se.aorwall.bam.irc.camel.SendToAkka
+import se.aorwall.bam.process.ProcessorHandler
+import se.aorwall.bam.process.extract.keyword.Keyword
 
 class IrcMonitorKernel extends Bootable {
 
-	val system = ActorSystem("IrcMonitor")
+	lazy val system = ActorSystem("IrcMonitor")
+		
 	val ircChannel = system.settings.config.getString("akka.bam.irc.channel")
-	val collector = system.actorOf(Props[Collector], name = "collect")
-	val processor = system.actorOf(Props[ProcessorHandler], name = "process")
-	val context = connect() 
 
+	lazy val collector = system.actorOf(Props[Collector], name = "collect")
+	lazy val processor = system.actorOf(Props[ProcessorHandler], name = "process")
+	lazy val context = connect() 	
+	lazy val nettyServer = unfiltered.netty.Http(8080).plan(new DataEventAPI(system)).plan(new KeywordEventAPI(system))
+	
 	def startup = {    
 		// Start and configure
-		processor ! new Keyword(ircChannel, ircChannel.replace("#", "")+".nick", "nick")    
+		processor ! new Keyword("%s.nick".format(ircChannel.replace("#", "").replace("%23", "")), Some(ircChannel.replace("%23", "#")), "nick")    
 		context.start();    
+		
+		nettyServer.run()	
+		
 	}
 
 	def shutdown = {
 		context.stop()
 		system.shutdown()
+		
+		nettyServer.stop()
 	}
 
 	def connect() = {	  
@@ -42,7 +52,7 @@ class IrcMonitorKernel extends Bootable {
 		
 		context.addRoutes(new RouteBuilder() {
 			def configure() {
-				from("irc:"+nick+"@"+server+"/"+ircChannel+"?onJoin=false&onQuit=false&onPart=false")
+				from("irc:%s@%s/%s?onJoin=false&onQuit=false&onPart=false".format(nick,server,ircChannel))
 				.to("bean:toAkka");
 			}
 		});

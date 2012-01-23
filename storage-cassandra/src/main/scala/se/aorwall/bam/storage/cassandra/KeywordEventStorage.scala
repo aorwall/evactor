@@ -60,6 +60,7 @@ class KeywordEventStorage(system: ActorSystem, prefix: String) extends Cassandra
 			mutator.incrementCounter("%s/%s".format(key, DAY), COUNT_CF, day, count)
 			mutator.incrementCounter("%s/%s".format(key, HOUR), COUNT_CF, hour, count)
 	
+			mutator.incrementCounter(prefix, NAMES_CF, event.name, 1)
 			true
 		}
 		case _ => false

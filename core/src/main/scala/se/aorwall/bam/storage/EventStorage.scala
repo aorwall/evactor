@@ -9,5 +9,6 @@ trait EventStorage {
   
   def readStatistics(name: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], interval: String): (Long, List[Long])
   
+  def getEventNames(): Map[String, Long]
 }
 

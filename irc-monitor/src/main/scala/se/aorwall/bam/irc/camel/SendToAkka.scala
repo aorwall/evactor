@@ -1,4 +1,5 @@
 package se.aorwall.bam.irc.camel
+
 import akka.actor.ActorRef
 import org.apache.camel.Body
 import se.aorwall.bam.model.events.DataEvent
@@ -11,7 +12,7 @@ class SendToAkka (actor: ActorRef) {
 	def send(@Headers headers: Map[String, String], @Body body: String, exchange: Exchange){
 
 		val jsonMessage = "{\"nick\": \"" + headers.get("irc.user.nick")+ "\", \"message\": \""+ body + "\"}";		
-		val dataEvent = new DataEvent(headers.get("irc.target"), ""+System.currentTimeMillis(), System.currentTimeMillis(), jsonMessage);
+		val dataEvent = new DataEvent(headers.get("irc.target"), headers.get("irc.user.nick")+":"+System.currentTimeMillis(), System.currentTimeMillis(), jsonMessage);
 
 		actor ! dataEvent;
 	}

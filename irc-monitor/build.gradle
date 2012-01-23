@@ -1,4 +1,5 @@
 apply plugin: 'scala'
+//apply plugin: 'war'
 
 ideaModule {
     beforeConfigured { module ->
@@ -18,8 +19,10 @@ buildscript {
 dependencies {
     compile project(':core')
     compile project(':storage-cassandra')
+    compile project(':api')
 
     compile group: 'org.apache.camel', name:'camel-core', version:'2.6.0'
     compile group: 'org.apache.camel', name:'camel-irc', version:'2.6.0'
-
+    
+    compile group: 'net.databinder', name:'unfiltered-netty-server_2.9.1',	version:'0.5.3'    
 }

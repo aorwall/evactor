@@ -20,15 +20,17 @@ class KeywordEventAPI(system: ActorSystem) extends NettyPlan {
     case Some(s) => s
     case None => throw new RuntimeException("No storage impl")
   }
-     
+       
   def now = System.currentTimeMillis
   
   def intent = {
-    case req @ Path(Seg("keyword" :: "stats" :: name :: keyword :: Nil)) => ResponseString(generate(storage.readStatistics("%s/%s".format(name, keyword), Some(0L), Some(now), "day")))
-    case req @ Path(Seg("keyword" :: "stats" :: name :: keyword ::interval :: Nil)) => ResponseString(generate(storage.readStatistics("%s/%s".format(name, keyword), Some(0L), Some(now), interval)))
-    case req @ Path(Seg("keyword" :: "stats" :: name :: keyword ::interval :: from :: Nil)) => ResponseString(generate(storage.readStatistics("%s/%s".format(name, keyword), Some(from.toLong), Some(now), interval)))
-    case req @ Path(Seg("keyword" :: "stats" :: name :: keyword ::interval :: from :: to :: Nil)) => ResponseString(generate(storage.readStatistics("%s/%s".format(name, keyword), Some(from.toLong), Some(to.toLong), interval)))
+    case req @ Path(Seg("keyword" :: Nil)) => ResponseString(generate(storage.getEventNames()))
+    case req @ Path(Seg("keyword" :: "stats" :: name :: keyword :: Nil)) => ResponseString(generate(storage.readStatistics(decode("%s/%s".format(name, keyword)), Some(0L), Some(now), "day")))
+    case req @ Path(Seg("keyword" :: "stats" :: name :: keyword ::interval :: Nil)) => ResponseString(generate(storage.readStatistics(decode("%s/%s".format(name, keyword)), Some(0L), Some(now), interval)))
+    case req @ Path(Seg("keyword" :: "stats" :: name :: keyword ::interval :: from :: Nil)) => ResponseString(generate(storage.readStatistics(decode("%s/%s".format(name, keyword)), Some(from.toLong), Some(now), interval)))
+    case req @ Path(Seg("keyword" :: "stats" :: name :: keyword ::interval :: from :: to :: Nil)) => ResponseString(generate(storage.readStatistics(decode("%s/%s".format(name, keyword)), Some(from.toLong), Some(to.toLong), interval)))
     case _ => ResponseString("Couldn't handle request")
   }
+  
   
 }

@@ -1,1 +1,7 @@
 This is a sample implementation for monitoring IRC channels.
+
+Deploy:
+I didn't get it to work on the Akka Microkernel so the system is packaged
+as a deployable war archive.
+
+
