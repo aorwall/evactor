@@ -11,12 +11,9 @@ import unfiltered.response.ResponseString
 import org.codehaus.jackson.map.ObjectMapper
 import java.net.URLEncoder
 import java.net.URLDecoder
-//import se.aorwall.bam.storage.cassandra.DataEventStorage
 
 class DataEventAPI(system: ActorSystem) extends NettyPlan {
     
-  //val storage = new DataEventStorage(system)    
-  
   lazy val storage = EventStorageExtension(system).getEventStorage(classOf[DataEvent].getName) match {
     case Some(s) => s
     case None => throw new RuntimeException("No storage impl")
@@ -31,6 +28,7 @@ class DataEventAPI(system: ActorSystem) extends NettyPlan {
     case req @ Path(Seg("data" :: "stats" :: name :: interval :: from :: Nil)) => ResponseString(generate(storage.readStatistics(decode(name), Some(from.toLong), Some(now), interval)))
     case req @ Path(Seg("data" :: "stats" :: name :: interval :: from :: to :: Nil)) => ResponseString(generate(storage.readStatistics(decode(name), Some(from.toLong), Some(to.toLong), interval)))
     case req @ Path(Seg("data" :: name :: Nil)) => ResponseString(generate(storage.readEvents(decode(name), None, None, 100, 0)))
+    case req @ Path(Seg("data" :: name :: count :: Nil)) => ResponseString(generate(storage.readEvents(decode(name), None, None, Integer.parseInt(count), 0)))
    // case _ => ResponseString("Couldn't handle request (data)")
   }
   

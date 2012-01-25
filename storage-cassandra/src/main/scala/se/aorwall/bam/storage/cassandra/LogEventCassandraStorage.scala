@@ -10,7 +10,7 @@ import me.prettyprint.cassandra.service.CassandraHostConfigurator
 import akka.actor.ActorSystem
 import me.prettyprint.cassandra.serializers.LongSerializer
 
-class LogEventStorage(val system: ActorSystem) extends EventStorage {
+class LogEventCassandraStorage(val system: ActorSystem) extends EventStorage {
 
   private val settings = CassandraStorageExtension(system)  
   val cluster = HFactory.getOrCreateCluster(settings.Clustername, new CassandraHostConfigurator(settings.Hostname + ":" + settings.Port))

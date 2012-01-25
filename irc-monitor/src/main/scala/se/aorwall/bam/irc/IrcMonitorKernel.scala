@@ -18,7 +18,7 @@ class IrcMonitorKernel extends Bootable {
 
 	lazy val system = ActorSystem("IrcMonitor")
 		
-	val ircChannel = system.settings.config.getString("akka.bam.irc.channel")
+	val ircChannels = system.settings.config.getString("akka.bam.irc.channels")
 
 	lazy val collector = system.actorOf(Props[Collector], name = "collect")
 	lazy val processor = system.actorOf(Props[ProcessorHandler], name = "process")
@@ -27,7 +27,7 @@ class IrcMonitorKernel extends Bootable {
 	
 	def startup = {    
 		// Start and configure
-		processor ! new Keyword("%s.nick".format(ircChannel.replace("#", "").replace("%23", "")), Some(ircChannel.replace("%23", "#")), "nick")    
+		processor ! new Keyword("skip.nick", Some("##skip"), "nick")    
 		context.start();    
 		
 		nettyServer.run()	
@@ -52,7 +52,7 @@ class IrcMonitorKernel extends Bootable {
 		
 		context.addRoutes(new RouteBuilder() {
 			def configure() {
-				from("irc:%s@%s/%s?onJoin=false&onQuit=false&onPart=false".format(nick,server,ircChannel))
+				from("irc:%s@%s/?channels=%s&onJoin=false&onQuit=false&onPart=false".format(nick,server,ircChannels))
 				.to("bean:toAkka");
 			}
 		});

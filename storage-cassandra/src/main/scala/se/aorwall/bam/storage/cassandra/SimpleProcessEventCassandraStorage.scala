@@ -13,7 +13,7 @@ import se.aorwall.bam.model.events.Event
 import se.aorwall.bam.model.State
 import se.aorwall.bam.model.events.EventRef
 
-class SimpleProcessEventStorage(system: ActorSystem, cfPrefix: String) extends CassandraStorage (system, cfPrefix) with EventStorage {
+class SimpleProcessEventCassandraStorage(system: ActorSystem, cfPrefix: String) extends CassandraStorage (system, cfPrefix) with EventStorage {
 	type EventType = SimpleProcessEvent
 	
    def this(system: ActorSystem) = this(system, "SimpleProcessEvent")

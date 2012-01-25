@@ -19,7 +19,7 @@ class Collector extends Actor with Storage with Logging {
    
     debug(context.self + " collecting: " + event)
 
-    // save event and check for duplicates
+    // save event and check for duplicates. TODO: Find a nice way of making this non blocking...
     if(storeEvent(event)) sendEvent(event)
     else warn(context.self + " didn't send " + event)
     

@@ -107,7 +107,8 @@ abstract class CassandraStorage(val system: ActorSystem, prefix: String) extends
 	    val count = new java.lang.Long(1L)
 	    val year = new java.lang.Long(new DateTime(time.getYear, 1, 1, 0, 0).toDate.getTime)
 	    val month = new java.lang.Long(new DateTime(time.getYear, time.getMonthOfYear, 1, 0, 0).toDate.getTime)
-	    val day = new java.lang.Long(new DateTime(time.getYear, time.getMonthOfYear, time.getDayOfMonth, 0, 0).toDate.getTime)
+	    val dayDate = new DateTime(time.getYear, time.getMonthOfYear, time.getDayOfMonth, 0, 0)
+	    val day = new java.lang.Long(dayDate.toDate.getTime)
 	    val hour = new java.lang.Long(new DateTime(time.getYear, time.getMonthOfYear, time.getDayOfMonth, time.getHourOfDay, 0).toDate.getTime)
 	    
 	    val name = event match {
@@ -135,8 +136,6 @@ abstract class CassandraStorage(val system: ActorSystem, prefix: String) extends
       case Some(to) => TimeUUIDUtils.getTimeUUID(to)
       case None => null
     }
-
-    info("Looking for: " + eventName)
     
     val eventIds = HFactory.createSliceQuery(keyspace, StringSerializer.get, UUIDSerializer.get, StringSerializer.get)
             .setColumnFamily(TIMELINE_CF)

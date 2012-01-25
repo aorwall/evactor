@@ -1,1 +1,1 @@
-Trying out akka by creating a simple tool for analysing logs.
+Trying out akka by creating a simple tool for analysing events in real time. Requests to a web service for example.

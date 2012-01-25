@@ -12,7 +12,7 @@ import se.aorwall.bam.model.events.Event
 import se.aorwall.bam.model.State
 import se.aorwall.bam.model.events.EventRef
 
-class RequestEventStorage(system: ActorSystem, cfPrefix: String) extends CassandraStorage (system, cfPrefix) with EventStorage {
+class RequestEventCassandraStorage(system: ActorSystem, cfPrefix: String) extends CassandraStorage (system, cfPrefix) with EventStorage {
 	type EventType = RequestEvent
 
 	def this(system: ActorSystem) = this(system, "RequestEvent")

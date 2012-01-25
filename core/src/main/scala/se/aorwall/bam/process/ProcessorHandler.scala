@@ -7,8 +7,15 @@ import akka.actor.Props
 import akka.routing.BroadcastRouter
 import grizzled.slf4j.Logging
 import se.aorwall.bam.model.events.Event
+import akka.util.Index
 
 class ProcessorHandler extends Actor with Logging  {
+  
+  /**
+   * Will try to do a more refined solution for selecting the 
+   * right processors for each event later...
+   */
+  val processorsWithEventName = new Index[String, ActorRef](100, _ compareTo _)
   
   override def preStart = {
     debug(context.self + " starting..")
@@ -28,8 +35,10 @@ class ProcessorHandler extends Actor with Logging  {
     
   def setProcessor(configuration: ProcessorConfiguration) {
     debug(context.self + " setting processor for configuration: " + configuration)
+    
+    // stopping previous actor if one exists
     val runningActor = context.actorFor(configuration.name)
-    context.stop(runningActor)    
+    context.stop(runningActor)          
     context.actorOf(Props(configuration.getProcessor), name = configuration.name)
   }
 

@@ -1,4 +1,6 @@
 package se.aorwall.bam.storage.cassandra
+
+import scala.collection.JavaConversions._
 import akka.actor.ActorSystem
 import me.prettyprint.cassandra.serializers.StringSerializer
 import me.prettyprint.cassandra.service.CassandraHostConfigurator
@@ -13,9 +15,10 @@ import org.joda.time.DateTime
 import me.prettyprint.hector.api.beans.ColumnSlice
 import se.aorwall.bam.storage.EventStorage
 import se.aorwall.bam.model.events.EventRef
+import me.prettyprint.hector.api.beans.HCounterColumn
+import se.aorwall.bam.storage.KeywordEventStorage
 
-
-class KeywordEventStorage(system: ActorSystem, prefix: String) extends CassandraStorage (system, prefix) with EventStorage {
+class KeywordEventCassandraStorage(system: ActorSystem, prefix: String) extends CassandraStorage (system, prefix) with KeywordEventStorage {
 
    type EventType = KeywordEvent
   
@@ -66,7 +69,28 @@ class KeywordEventStorage(system: ActorSystem, prefix: String) extends Cassandra
 		case _ => false
 	}
 	
-	def eventToColumns(event: Event): List[(String, String)] = {		  
+    // TODO: Implement paging
+  override def readEvents(eventName: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], count: Int, start: Int): List[Event] = {
+    val fromTimeuuid = fromTimestamp match {
+      case Some(from) => TimeUUIDUtils.getTimeUUID(from)
+      case None => null
+    }
+    val toTimeuuid = toTimestamp match {
+      case Some(to) => TimeUUIDUtils.getTimeUUID(to)
+      case None => null
+    }
+    
+    HFactory.createSliceQuery(keyspace, StringSerializer.get, UUIDSerializer.get, StringSerializer.get)
+            .setColumnFamily(TIMELINE_CF)
+            .setKey(eventName)
+            .setRange(fromTimeuuid, toTimeuuid, true, count)
+            .execute()
+            .get
+            .getColumns()
+            .map ( col => new KeywordEvent(eventName, TimeUUIDUtils.getTimeFromUUID(col.getName()).toString, TimeUUIDUtils.getTimeFromUUID(col.getName()), eventName.split("/")(1), Some(EventRef.fromString(col.getValue) ))).toList // TODO: Check values?                 
+  }  
+         
+  def eventToColumns(event: Event): List[(String, String)] = {		  
 		event match {  
 			case keywordEvent: KeywordEvent => 
 				("name", event.name) :: 
@@ -90,4 +114,22 @@ class KeywordEventStorage(system: ActorSystem, prefix: String) extends Cassandra
 			 			get("keyword"),
 			 			getEventRef(columns, "eventRef"))
 	}
+   
+   def getKeywords(eventName: String, count: Int, startsWith: Option[String]): List[String] = {
+    
+    val endString: String = startsWith match {
+      case Some(s) => s + '\377'// "fullösning"
+      case None => null
+    }
+     
+    val columns = HFactory.createCounterSliceQuery(keyspace, StringSerializer.get, StringSerializer.get)
+          .setColumnFamily(EVENT_CF)
+          .setKey(eventName)
+          .setRange(startsWith.getOrElse(null), endString, false, count)
+          .execute()
+          .get         
+          .getColumns
+          
+    columns.map ( col => col.getName).toList
+   }
 }
