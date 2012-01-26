@@ -34,7 +34,7 @@ class FailureAnalyserSpec(_system: ActorSystem) extends TestKit(_system) with Wo
 
     "alert when the number of failed incoming events exceeds max allowed failures" in {
 
-     val failureActor = TestActorRef(new FailureAnalyser(name, Some(eventName), 2))
+     val failureActor = TestActorRef(new FailureAnalyser(name, Some(classOf[LogEvent].getSimpleName() + "/" + eventName), 2))
      val probe = TestProbe()
      failureActor ! probe.ref
 
@@ -55,7 +55,7 @@ class FailureAnalyserSpec(_system: ActorSystem) extends TestKit(_system) with Wo
      val time = 100L
      val currentTime = System.currentTimeMillis()
 
-     val failureActor = TestActorRef(new FailureAnalyser(name, Some(eventName), 2) with TimeWindow {override val timeframe = time} )
+     val failureActor = TestActorRef(new FailureAnalyser(name, Some(classOf[LogEvent].getSimpleName() + "/" + eventName), 2) with TimeWindow {override val timeframe = time} )
      val probe = TestProbe()
      failureActor ! probe.ref
 

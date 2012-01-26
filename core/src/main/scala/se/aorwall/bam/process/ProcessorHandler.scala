@@ -30,7 +30,7 @@ class ProcessorHandler extends Actor with Logging  {
   
   def process(event: Event) {
     trace(context.self + " received event: " + event)
-    context.children.foreach(child => child ! event)
+    
   }
     
   def setProcessor(configuration: ProcessorConfiguration) {

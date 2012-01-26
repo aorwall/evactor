@@ -22,6 +22,7 @@ import se.aorwall.bam.process.analyse.latency.Latency
 import se.aorwall.bam.process.build.request.Request
 import se.aorwall.bam.process.build.simpleprocess.SimpleProcess
 import se.aorwall.bam.process.analyse.window.LengthWindowConf
+import se.aorwall.bam.model.events.SimpleProcessEvent
 
 /**
  * Testing the whole log data flow.
@@ -50,7 +51,7 @@ class LogdataIntegrationSuite(_system: ActorSystem) extends TestKit(_system) wit
     // start the processors
     processor ! new Request("requestProcessor", 120000L)
     processor ! new SimpleProcess(processId, List("startComponent", "endComponent"), 120000l)  
-    processor ! new Latency("latency", Some(processId), 2000, Some(new LengthWindowConf(2)))
+    processor ! new Latency("latency", Some(classOf[SimpleProcessEvent].getSimpleName + "/" + processId), 2000, Some(new LengthWindowConf(2)))
 
     // Collect logs
     val currentTime = System.currentTimeMillis

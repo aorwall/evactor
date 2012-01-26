@@ -12,6 +12,7 @@ import se.aorwall.bam.collect.Collector
 import se.aorwall.bam.irc.camel.SendToAkka
 import se.aorwall.bam.process.ProcessorHandler
 import se.aorwall.bam.process.extract.keyword.Keyword
+import se.aorwall.bam.model.events.DataEvent
 
 class IrcMonitorKernel extends Bootable {
 
@@ -26,7 +27,7 @@ class IrcMonitorKernel extends Bootable {
 	
 	def startup = {    
 		// Start and configure
-		processor ! new Keyword("nick", Some("##skip"), "nick")    
+		processor ! new Keyword("nick", Some(classOf[DataEvent].getSimpleName + "/##skip"), "nick")    
 		context.start();    
 		
 		nettyServer.run()	

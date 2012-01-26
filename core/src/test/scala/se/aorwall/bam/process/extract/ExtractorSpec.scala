@@ -19,6 +19,7 @@ import se.aorwall.bam.model.events.RequestEvent
 import org.mockito.Mockito._
 import se.aorwall.bam.model.attributes.HasMessage
 import se.aorwall.bam.model.events.Event
+import se.aorwall.bam.model.events.DataEvent
 
 @RunWith(classOf[JUnitRunner])
 class ExtractorSpec(_system: ActorSystem) extends TestKit(_system) with WordSpec with BeforeAndAfterAll with MustMatchers with BeforeAndAfter{
@@ -33,18 +34,17 @@ class ExtractorSpec(_system: ActorSystem) extends TestKit(_system) with WordSpec
      _system.shutdown()
   }
   
+  val event = new DataEvent("eventName", "id", 0L, "stuff")
+	   
   "An Extractor" must {
 
     "extract stuff from an events message and send to collector " in {
              
-      val actor = TestActorRef(new Extractor("name", Some("eventName"), extract))
+      val actor = TestActorRef(new Extractor("name", Some(event.path), extract))
       
       val eventPrope = TestProbe()
       actor ! eventPrope.ref
       
-	   val event = new Event("eventName", "id", 0L) with HasMessage {
-			val message = "stuff"
-	   }
 	  
       actor ! event
       
@@ -54,15 +54,11 @@ class ExtractorSpec(_system: ActorSystem) extends TestKit(_system) with WordSpec
     
     "abort if event with wrong name arrives " in {
              
-      val actor = TestActorRef(new Extractor("name", Some("eventName"), extract))
+      val actor = TestActorRef(new Extractor("name", Some("foo/bar"), extract))
       
       val eventPrope = TestProbe()
       actor ! eventPrope.ref
-      
-	   val event = new Event("wrongEvent", "id", 0L) with HasMessage {
-			val message = "stuff"
-	   }
-	  
+      	  
       actor ! event 
       
       eventPrope.expectNoMsg(1 seconds)

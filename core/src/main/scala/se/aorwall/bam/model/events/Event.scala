@@ -12,12 +12,18 @@ class Event (
     val timestamp: Long) extends Serializable {
   
   /**
-   * Clone the event but change the event name. Need to create 
+   * Clones the event but change the event name. Need to create 
    * new events with changed names
    */
   def clone(newName: String): Event = {
     new Event(newName, id, timestamp)
   }
+  
+  /**
+   * Returns the full path to the event (event class name + event name)
+   */
+  def path = "%s/%s".format(this.getClass.getSimpleName, name)
+  
 }
 
 object EventRef {

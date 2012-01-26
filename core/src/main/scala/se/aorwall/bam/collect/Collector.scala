@@ -5,6 +5,7 @@ import grizzled.slf4j.Logging
 import se.aorwall.bam.model.events.Event
 import se.aorwall.bam.process.Processor
 import se.aorwall.bam.storage.Storage
+import se.aorwall.bam.process.ProcessorEventBus
 
 /**
  * Collecting events
@@ -20,7 +21,7 @@ class Collector extends Actor with Storage with Logging {
     debug(context.self + " collecting: " + event)
 
     // save event and check for duplicates. TODO: Find a nice way of making this non blocking...
-    if(storeEvent(event)) sendEvent(event)
+    if(storeEvent(event)) ProcessorEventBus.publish(event)
     else warn(context.self + " didn't send " + event)
     
   }

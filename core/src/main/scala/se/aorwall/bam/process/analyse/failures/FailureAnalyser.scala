@@ -9,9 +9,10 @@ import se.aorwall.bam.model.State
 import se.aorwall.bam.process.analyse.window.Window
 import se.aorwall.bam.process.analyse.Analyser
 import akka.actor.ActorRef
+import se.aorwall.bam.process.CheckEventName
 
 class FailureAnalyser (name: String, eventName: Option[String], maxOccurrences: Long)
-extends Analyser(name, eventName) with Window with Logging {
+extends Analyser(name, eventName) with Window with CheckEventName with Logging {
 
 	type T = Event with HasState
 	type S = State

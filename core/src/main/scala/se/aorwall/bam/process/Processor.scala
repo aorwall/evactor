@@ -28,7 +28,7 @@ abstract class Processor (val name: String) extends Actor with Logging {
   protected def handlesEvent(event: T): Boolean
   
   override def preStart = {
-    trace(context.self+ " starting...")
+    trace(context.self+ " starting...")        
   }
 
   override def postStop = {
@@ -36,11 +36,22 @@ abstract class Processor (val name: String) extends Actor with Logging {
   }
 }
 
-trait CheckEventName extends Processor {
+trait CheckEventName extends Processor with Logging {
   val eventName: Option[String]
   
   protected def handlesEvent(event: T) = eventName match {
-    case Some(e) => e == event.name
+    case Some(e) => e == event.path
     case None => true
   }
+  
+  override def preStart = {
+    debug(context.self + " subscribing to: \"" + eventName.getOrElse("") + "\"")
+    ProcessorEventBus.subscribe(context.self, eventName.getOrElse(""))
+  }
+  
+  override def postStop = {
+    debug(context.self + " unsubscribing to: \"" + eventName.getOrElse("") + "\"")
+    ProcessorEventBus.unsubscribe(context.self, eventName.getOrElse(""))
+  }
+  
 }

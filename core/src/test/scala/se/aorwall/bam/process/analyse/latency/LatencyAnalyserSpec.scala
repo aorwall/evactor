@@ -34,7 +34,7 @@ class LatencyAnalyserSpec(_system: ActorSystem) extends TestKit(_system) with Wo
   "A LatencyAnalyser" must {
 
     "alert when the average latency of the incoming activities exceeds the specified max latency" in {
-      val latencyActor = TestActorRef(new LatencyAnalyser(name, Some(eventName), 5))
+      val latencyActor = TestActorRef(new LatencyAnalyser(name, Some(classOf[RequestEvent].getSimpleName() + "/" + eventName), 5))
       val probe = TestProbe()
       latencyActor ! probe.ref
 
@@ -50,7 +50,7 @@ class LatencyAnalyserSpec(_system: ActorSystem) extends TestKit(_system) with Wo
     }
 
     "alert when the average latency of the incoming activities exceeds the max latency within a specified length window" in {
-      val latencyActor = TestActorRef(new LatencyAnalyser(name, Some(eventName), 60) with LengthWindow {
+      val latencyActor = TestActorRef(new LatencyAnalyser(name, Some(classOf[RequestEvent].getSimpleName() + "/" + eventName), 60) with LengthWindow {
         override val noOfRequests = 2
       })
       val probe = TestProbe()

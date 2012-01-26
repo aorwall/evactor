@@ -19,7 +19,8 @@ class AbsenceOfRequestsAnalyserSpec(_system: ActorSystem) extends TestKit(_syste
   def this() = this(ActorSystem("AbsenceOfRequestsAnalyserSpec"))
 
   val name = "event"
-  val eventName = Some("eventName")
+  val eventName = Some(classOf[Event].getSimpleName + "/eventName")
+
   val correlationid = "correlationid"
 
   override protected def afterAll(): scala.Unit = {
@@ -35,9 +36,8 @@ class AbsenceOfRequestsAnalyserSpec(_system: ActorSystem) extends TestKit(_syste
       val probe = TestProbe()
       actor ! probe.ref
 
-      probe.expectMsgAllClassOf(200 millis, classOf[AlertEvent])
+      probe.expectMsgAllClassOf(1 second, classOf[AlertEvent])
       actor.stop()
-
     }
     
     "alert on timeout from set timeframe plus the time when the latest event arrived " in {
@@ -51,7 +51,7 @@ class AbsenceOfRequestsAnalyserSpec(_system: ActorSystem) extends TestKit(_syste
 
       actor ! new Event(eventName.get, "329380921309", 0L)
 
-      probe.expectMsgAllClassOf(200 millis, classOf[AlertEvent])
+      probe.expectMsgAllClassOf(1 second, classOf[AlertEvent])
       actor.stop()
     }
 
@@ -64,8 +64,8 @@ class AbsenceOfRequestsAnalyserSpec(_system: ActorSystem) extends TestKit(_syste
 
       probe.expectMsgAllClassOf(200 millis, classOf[AlertEvent])
 
-      actor ! new Event(eventName.get, "329380921309", System.currentTimeMillis)
-      probe.expectMsgAllClassOf(200 millis, classOf[AlertEvent]) // TODO: Need to check back to normal!
+      actor ! new Event("eventName", "329380921309", System.currentTimeMillis)
+      probe.expectMsgAllClassOf(1 second, classOf[AlertEvent]) // TODO: Need to check back to normal!
 
       actor.stop()
     }
@@ -78,10 +78,10 @@ class AbsenceOfRequestsAnalyserSpec(_system: ActorSystem) extends TestKit(_syste
       val probe = TestProbe()
       actor ! probe.ref
 
-      probe.expectMsgAllClassOf(200 millis, classOf[AlertEvent])
+      probe.expectMsgAllClassOf(1 second, classOf[AlertEvent])
 
       actor ! new Event("anotherEvent", "329380921309", 0L)
-      probe.expectNoMsg(200 millis)
+      probe.expectNoMsg(1 second)
 
       actor.stop()
     }

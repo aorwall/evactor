@@ -58,11 +58,11 @@ class ProcessorSpec(_system: ActorSystem) extends TestKit(_system) with WordSpec
     }
 
     "process valid event types with the right name" in {
-      val processor = TestActorRef(new TestProcessor("329380921309", Some("name")))
+      val testEvent = new TestEvent("name", "id", System.currentTimeMillis)
+      
+      val processor = TestActorRef(new TestProcessor("329380921309", Some(testEvent.path)))
       val testProbe = TestProbe()
       processor ! testProbe.ref
-      
-      val testEvent = new TestEvent("name", "id", System.currentTimeMillis)
       
       processor ! testEvent
       

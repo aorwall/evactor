@@ -8,7 +8,7 @@ import se.aorwall.bam.process.Processor
 import se.aorwall.bam.model.events.AlertEvent
 import se.aorwall.bam.process.CheckEventName
 
-abstract class Analyser(name: String, val eventName: Option[String]) extends Processor(name) with CheckEventName with Logging  {
+abstract class Analyser(name: String, val eventName: Option[String]) extends Processor(name) with Logging  {
     
   var triggered = false //TODO: use FSM for this
   

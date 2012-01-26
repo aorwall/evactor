@@ -7,9 +7,10 @@ import se.aorwall.bam.model.events.Event
 import se.aorwall.bam.model.attributes.HasLatency
 import se.aorwall.bam.process.analyse.Analyser
 import se.aorwall.bam.process.analyse.window.Window
+import se.aorwall.bam.process.CheckEventName
 
 class LatencyAnalyser(name: String, eventName: Option[String], maxLatency: Long)
-  extends Analyser(name, eventName) with Window with Logging {
+  extends Analyser(name, eventName) with Window with CheckEventName with Logging {
 
   type T = Event with HasLatency
   type S = Long
@@ -18,7 +19,7 @@ class LatencyAnalyser(name: String, eventName: Option[String], maxLatency: Long)
   var sum = 0L
 
 	override def receive = {
-	    case event: Event with HasLatency => if (handlesEvent(event)) process(event) // TODO: case event: T  doesn't work...
+	    case event: Event with HasLatency => info(event); if (handlesEvent(event)) process(event) // TODO: case event: T  doesn't work...
 	    case actor: ActorRef => testActor = Some(actor) 
 	    case _ => // skip
 	}
