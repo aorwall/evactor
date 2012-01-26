@@ -24,7 +24,7 @@ class KeywordSpec extends WordSpec with MustMatchers with Logging{
 
 			newEvent match {
 				case Some(e: Event) => e.name must be ("eventName/keyword/anothervalue")
-				case e => fail("expected an instance of se.aorwall.bam.model.events.KeywordEvent but found: " + e)
+				case e => fail("expected an instance of se.aorwall.bam.model.events.Event but found: " + e)
 			}		
 			
 		}
