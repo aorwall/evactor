@@ -4,11 +4,11 @@ import akka.actor.ActorSystem
 
 object Test {
 
-  lazy val system = ActorSystem("IrcMonitor")
+  lazy val system = ActorSystem("api")
 
   def main(args: Array[String]): Unit = {
     
-	 unfiltered.netty.Http(8080).plan(new DataEventAPI(system)).plan(new KeywordEventAPI(system)).run()	 
+	 unfiltered.netty.Http(8080).plan(new DataEventAPI(system)).run()	 
 	 
   }
   

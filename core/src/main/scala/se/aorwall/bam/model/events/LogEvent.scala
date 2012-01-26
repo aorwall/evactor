@@ -17,4 +17,8 @@ case class LogEvent(
     val state: State,
     val message: String) extends Event(name, id, timestamp) with HasMessage with HasState {
 
+  override def clone(newName: String): Event = {
+    new LogEvent(newName, id, timestamp, correlationId, client, server, state, message)
+  }
+  
 }

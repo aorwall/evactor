@@ -31,7 +31,5 @@ dependencies {
     compile group: 'joda-time', name: 'joda-time', version: '2.0'
     compile group: 'org.joda', name: 'joda-convert', version: '1.1'
 
-    //TODO: exclude log4j
-
     //testCompile group: 'org.apache.cassandra', name: 'cassandra-javautils', version: '0.7.1'
 }

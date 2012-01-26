@@ -11,6 +11,8 @@ import unfiltered.response.ResponseString
 import org.codehaus.jackson.map.ObjectMapper
 import java.net.URLEncoder
 import java.net.URLDecoder
+import unfiltered.request.Params
+import unfiltered.response.BadRequest
 
 class DataEventAPI(system: ActorSystem) extends NettyPlan {
     
@@ -22,14 +24,31 @@ class DataEventAPI(system: ActorSystem) extends NettyPlan {
   def now = System.currentTimeMillis
     
   def intent = {
-    case req @ Path(Seg("data" :: Nil)) => ResponseString(generate(storage.getEventNames()))
-    case req @ Path(Seg("data" :: "stats" :: name :: Nil)) => ResponseString(generate(storage.readStatistics(decode(name), Some(0L), Some(now), "day")))
-    case req @ Path(Seg("data" :: "stats" :: name :: interval :: Nil)) => ResponseString(generate(storage.readStatistics(decode(name), Some(0L), Some(now), interval)))
-    case req @ Path(Seg("data" :: "stats" :: name :: interval :: from :: Nil)) => ResponseString(generate(storage.readStatistics(decode(name), Some(from.toLong), Some(now), interval)))
-    case req @ Path(Seg("data" :: "stats" :: name :: interval :: from :: to :: Nil)) => ResponseString(generate(storage.readStatistics(decode(name), Some(from.toLong), Some(to.toLong), interval)))
-    case req @ Path(Seg("data" :: name :: Nil)) => ResponseString(generate(storage.readEvents(decode(name), None, None, 100, 0)))
-    case req @ Path(Seg("data" :: name :: count :: Nil)) => ResponseString(generate(storage.readEvents(decode(name), None, None, Integer.parseInt(count), 0)))
-   // case _ => ResponseString("Couldn't handle request (data)")
+    case req @ Path(Seg("data" :: "names" :: path)) => try {
+   	   val Params(params) = req      
+   	 	ResponseString(generate(storage.getEventNames(getPath(path), getCount(params.get("count"), 100))))
+    	} catch { case _ => BadRequest }
+
+    case req @ Path(Seg("data" :: "stats" :: path)) => try {
+	      val Params(params) = req       
+	      //TODO: Extract parameters
+	   	ResponseString(generate(storage.readStatistics(decode(path.mkString("/")), Some(0L), Some(now), "hour")))
+      } catch { case _ => BadRequest }
+    case req @ Path(Seg("data" :: "events" :: path)) =>  try {
+   	 	val Params(params) = req       
+   	 	//TODO: Extract parameters
+   	 	ResponseString(generate(storage.readEvents(decode(path.mkString("/")), None, None, 10, 0)))
+    	} catch { case _ => BadRequest }
+    case _ => ResponseString("Couldn't handle request (data)")
   }
   
+  private def getPath(pathlist: List[String]): Option[String] = 
+    if (pathlist.size == 0) None
+    else Some(decode(pathlist.mkString("/")))
+  
+  private def getCount(count: Option[Seq[String]], default: Int): Int = count match {
+    case Some(s) => s.mkString.toInt 
+    case None => default
+  }
 }
+

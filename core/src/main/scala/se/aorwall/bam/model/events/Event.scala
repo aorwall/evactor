@@ -10,6 +10,14 @@ class Event (
     val name: String,
     val id: String,
     val timestamp: Long) extends Serializable {
+  
+  /**
+   * Clone the event but change the event name. Need to create 
+   * new events with changed names
+   */
+  def clone(newName: String): Event = {
+    new Event(newName, id, timestamp)
+  }
 }
 
 object EventRef {

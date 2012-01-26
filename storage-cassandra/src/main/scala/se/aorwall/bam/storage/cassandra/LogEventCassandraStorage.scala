@@ -38,7 +38,7 @@ class LogEventCassandraStorage(val system: ActorSystem) extends EventStorage {
     List[LogEvent]() // TODO
   }
   
-  def getEventNames(): Map[String, Long] = {
+  def getEventNames(parent: Option[String], count: Int): Map[String, Long] = {
     Map[String, Long]() //TODO
   }
   

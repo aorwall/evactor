@@ -6,7 +6,7 @@ import grizzled.slf4j.Logging
 import org.scalatest.junit.JUnitRunner
 import se.aorwall.bam.model.events.Event
 import se.aorwall.bam.model.attributes.HasMessage
-import se.aorwall.bam.model.events.KeywordEvent
+import se.aorwall.bam.model.events.DataEvent
 
 @RunWith(classOf[JUnitRunner])
 class KeywordSpec extends WordSpec with MustMatchers with Logging{
@@ -20,10 +20,10 @@ class KeywordSpec extends WordSpec with MustMatchers with Logging{
 	"Keyword" must {
 
 		"extract keywords from json messages" in {
-			val keywordEvent = keyword.extract(event)
+			val newEvent = keyword.extract(event)
 
-			keywordEvent match {
-				case Some(e: KeywordEvent) => e.keyword must be ("anothervalue")
+			newEvent match {
+				case Some(e: Event) => e.name must be ("eventName/keyword/anothervalue")
 				case e => fail("expected an instance of se.aorwall.bam.model.events.KeywordEvent but found: " + e)
 			}		
 			

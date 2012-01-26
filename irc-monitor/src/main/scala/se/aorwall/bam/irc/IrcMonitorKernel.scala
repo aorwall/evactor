@@ -8,7 +8,6 @@ import akka.actor.ActorSystem
 import akka.actor.Props
 import akka.kernel.Bootable
 import se.aorwall.bam.api.DataEventAPI
-import se.aorwall.bam.api.KeywordEventAPI
 import se.aorwall.bam.collect.Collector
 import se.aorwall.bam.irc.camel.SendToAkka
 import se.aorwall.bam.process.ProcessorHandler
@@ -23,11 +22,11 @@ class IrcMonitorKernel extends Bootable {
 	lazy val collector = system.actorOf(Props[Collector], name = "collect")
 	lazy val processor = system.actorOf(Props[ProcessorHandler], name = "process")
 	lazy val context = connect() 	
-	lazy val nettyServer = unfiltered.netty.Http(8080).plan(new DataEventAPI(system)).plan(new KeywordEventAPI(system))
+	lazy val nettyServer = unfiltered.netty.Http(8080).plan(new DataEventAPI(system))
 	
 	def startup = {    
 		// Start and configure
-		processor ! new Keyword("skip.nick", Some("##skip"), "nick")    
+		processor ! new Keyword("nick", Some("##skip"), "nick")    
 		context.start();    
 		
 		nettyServer.run()	

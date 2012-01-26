@@ -6,4 +6,7 @@ case class AlertEvent (override val name: String,
 							  val triggered: Boolean,
 							  val message: String) extends Event(name, id, timestamp) {
 
+  override def clone(newName: String): Event = {
+    new AlertEvent(newName, id, timestamp, triggered, message)
+  }
 }

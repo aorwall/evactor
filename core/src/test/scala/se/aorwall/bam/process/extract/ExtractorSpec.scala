@@ -17,7 +17,6 @@ import se.aorwall.bam.model.Timeout
 import se.aorwall.bam.model.events.LogEvent
 import se.aorwall.bam.model.events.RequestEvent
 import org.mockito.Mockito._
-import se.aorwall.bam.model.events.KeywordEvent
 import se.aorwall.bam.model.attributes.HasMessage
 import se.aorwall.bam.model.events.Event
 

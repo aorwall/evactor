@@ -11,4 +11,8 @@ case class DataEvent (
     override val timestamp: Long, 
     val message: String) extends Event(name, id, timestamp) with HasMessage  {
 
+  override def clone(newName: String): Event = {
+    new DataEvent(newName, id, timestamp, message)
+  }
+  
 }

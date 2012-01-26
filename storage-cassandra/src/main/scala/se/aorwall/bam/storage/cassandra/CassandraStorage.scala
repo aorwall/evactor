@@ -2,7 +2,15 @@ package se.aorwall.bam.storage.cassandra
 
 import scala.collection.JavaConversions._
 import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.mutable.ListBuffer
+
+import org.joda.time.base.BaseSingleFieldPeriod
 import org.joda.time.DateTime
+import org.joda.time.Days
+import org.joda.time.Hours
+import org.joda.time.Months
+import org.joda.time.Years
+
 import akka.actor.ActorContext
 import akka.actor.ActorSystem
 import grizzled.slf4j.Logging
@@ -11,23 +19,17 @@ import me.prettyprint.cassandra.service.CassandraHostConfigurator
 import me.prettyprint.cassandra.utils.TimeUUIDUtils
 import me.prettyprint.hector.api.beans.ColumnSlice
 import me.prettyprint.hector.api.factory.HFactory
+import me.prettyprint.hector.api.mutation.Mutator
 import me.prettyprint.hector.api.Keyspace
 import se.aorwall.bam.model.attributes.HasState
 import se.aorwall.bam.model.events.Event
-import se.aorwall.bam.storage.EventStorage
 import se.aorwall.bam.model.events.EventRef
-import org.joda.time.Years
-import se.aorwall.bam.storage.EventStorage
-import org.joda.time.Days
-import se.aorwall.bam.storage.EventStorage
-import org.joda.time.Hours
-import org.joda.time.Months
-import org.joda.time.Period
 import se.aorwall.bam.storage.EventStorage
 import se.aorwall.bam.storage.EventStorage
 import se.aorwall.bam.storage.EventStorage
-import org.joda.time.base.BaseSingleFieldPeriod
-import scala.collection.mutable.ListBuffer
+import se.aorwall.bam.storage.EventStorage
+import se.aorwall.bam.storage.EventStorage
+import se.aorwall.bam.storage.EventStorage
 
 abstract class CassandraStorage(val system: ActorSystem, prefix: String) extends EventStorage with Logging{
     
@@ -54,6 +56,8 @@ abstract class CassandraStorage(val system: ActorSystem, prefix: String) extends
  
   val columnNames = List("name", "id", "timestamp")
 
+  
+  
   // TODO: Consistency level should be set to ONE for all writes
   def storeEvent(event: Event): Boolean = {
     val mutator = HFactory.createMutator(keyspace, StringSerializer.get)
@@ -120,12 +124,35 @@ abstract class CassandraStorage(val system: ActorSystem, prefix: String) extends
 	    mutator.incrementCounter("%s/%s".format(name, MONTH), COUNT_CF, month, count)
 	    mutator.incrementCounter("%s/%s".format(name, DAY), COUNT_CF, day, count)
 	    mutator.incrementCounter("%s/%s".format(name, HOUR), COUNT_CF, hour, count)
+	   
+	    storeEventName(mutator, prefix, event.name)
 	    	    
-	    mutator.incrementCounter(prefix, NAMES_CF, event.name, 1)
 	    true
     }
   }
-
+    
+  /**
+   * Store event name by path
+   * 
+   * TODO: Change to closure?
+   */
+  protected def storeEventName(mutator: Mutator[String], rowkey: String, path: String): Unit = {
+    val slash = path.indexOf("/")
+    
+    info("row and path: " + rowkey + ":" + path)
+    
+    if (slash == -1){
+      mutator.incrementCounter(rowkey, NAMES_CF, path, 1)
+    } else {
+      val name = path.substring(0, slash)
+      info("name: " + name)
+    	mutator.incrementCounter(rowkey, NAMES_CF, name, 1) 
+    	storeEventName(mutator, "%s/%s".format(rowkey, name), path.substring(slash+1))   
+    }
+    
+  } 
+  
+    
   // TODO: Implement paging
   def readEvents(eventName: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], count: Int, start: Int): List[Event] = {
     val fromTimeuuid = fromTimestamp match {
@@ -170,16 +197,18 @@ abstract class CassandraStorage(val system: ActorSystem, prefix: String) extends
     else ""
   }
   
-  def getEventNames(): Map[String, Long] = {
-    
+  def getEventNames(parent: Option[String], count: Int): Map[String, Long] = {
+    val rowKey = parent match {
+      case Some(s) => "%s/%s".format(prefix,s)
+      case None => prefix
+    }
     HFactory.createCounterSliceQuery(keyspace, StringSerializer.get, StringSerializer.get)
           .setColumnFamily(NAMES_CF)
-          .setKey(prefix)
-          .setRange(null, null, false, 100000)
+          .setKey(rowKey)
+          .setRange(null, null, false, count)
           .execute()
           .get
           .getColumns.map ( col => col.getName -> col.getValue.longValue).toMap
-    
   }
   
   protected def getEventRef(columns: ColumnSlice[String, String], name: String): Option[EventRef] = {

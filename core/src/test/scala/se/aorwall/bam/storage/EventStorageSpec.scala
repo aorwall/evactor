@@ -27,7 +27,7 @@ class TestEventStorage(system: ActorSystem) extends EventStorage {
     (0L, List[Long]())
   }
   
-  def getEventNames(): Map[String, Long] = {
+  def getEventNames(parent: Option[String], count: Int): Map[String, Long] = {
     Map[String, Long]()
   }
   
