@@ -16,7 +16,7 @@ class KpiSpec extends WordSpec with MustMatchers with Logging{
 	"Keyword" must {
 
 		"extract float from json messages" in {
-			val kpi = new Kpi("keyword", None, "doubleField")
+			val kpi = new Kpi("keyword", None, "message.doubleField")
 			val kpiEvent = kpi.extract(event)
 
 			kpiEvent match {
@@ -25,10 +25,9 @@ class KpiSpec extends WordSpec with MustMatchers with Logging{
 			}		
 			
 		}
-		
-		
+				
 		"extract int (as float from json messages" in {
-		   val kpi = new Kpi("keyword", None, "intField")
+		   val kpi = new Kpi("keyword", None, "message.intField")
 			val kpiEvent = kpi.extract(event)
 
 			kpiEvent match {
@@ -37,8 +36,8 @@ class KpiSpec extends WordSpec with MustMatchers with Logging{
 			}					
 		}
 				
-		"receive None when a non-numeric value is provided" in {
-		   val kpi = new Kpi("keyword", None, "anotherField")
+		"send None when a non-numeric value is provided" in {
+		   val kpi = new Kpi("keyword", None, "message.anotherField")
 			val kpiEvent = kpi.extract(event)
 
 			kpiEvent match {

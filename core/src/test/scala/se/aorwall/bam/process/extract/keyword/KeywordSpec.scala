@@ -15,7 +15,7 @@ class KeywordSpec extends WordSpec with MustMatchers with Logging{
 		val message = "{ \"field\": \"field2\", \"field2\": \"anothervalue\"}"
 	}
 
-	val keyword = new Keyword("keyword", None, "field2")
+	val keyword = new Keyword("keyword", None, "message.field2")
 
 	"Keyword" must {
 

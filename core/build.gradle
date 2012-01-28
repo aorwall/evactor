@@ -18,4 +18,5 @@ buildscript {
 
 dependencies {
 
+    compile group: 'org.mvel', name: 'mvel2', version: '2.0.9'
 }
