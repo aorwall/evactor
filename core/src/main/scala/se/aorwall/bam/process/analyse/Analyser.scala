@@ -7,6 +7,7 @@ import se.aorwall.bam.process.Processor
 import se.aorwall.bam.model.events.AlertEvent
 import se.aorwall.bam.process.CheckEventName
 import akka.actor.ActorLogging
+import se.aorwall.bam.process.ProcessorEventBus
 
 abstract class Analyser(name: String, val eventName: Option[String]) extends Processor(name) with ActorLogging  {
     
@@ -34,7 +35,7 @@ abstract class Analyser(name: String, val eventName: Option[String]) extends Pro
     val currentTime = System.currentTimeMillis
     val alert = new AlertEvent(name, currentTime.toString, currentTime, triggered, message)
     
-    collector  ! alert //TODO: The alerter isn't implemented yet
+    ProcessorEventBus.publish(alert)
 
     // If a test actor exists
     testActor match {

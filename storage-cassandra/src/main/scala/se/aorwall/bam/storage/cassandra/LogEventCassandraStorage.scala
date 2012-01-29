@@ -19,6 +19,8 @@ class LogEventCassandraStorage(val system: ActorSystem) extends EventStorage {
   val LOG_EVENT_CF = "LogEvent";
   val NAMES_CF = "EventNames"
   
+  def eventExists(event: Event) = false //TODO
+    
   def storeEvent(event: Event): Boolean = {
     
      val mutator = HFactory.createMutator(keyspace, StringSerializer.get);
@@ -34,7 +36,7 @@ class LogEventCassandraStorage(val system: ActorSystem) extends EventStorage {
      true
   }
   
-  def readEvents(eventName: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], count: Int, start: Int): List[Event] = {
+  def getEvents(eventName: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], count: Int, start: Int): List[Event] = {
     List[LogEvent]() // TODO
   }
   
@@ -42,7 +44,7 @@ class LogEventCassandraStorage(val system: ActorSystem) extends EventStorage {
     Map[String, Long]() //TODO
   }
   
-  def readStatistics(name: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], interval: String): (Long, List[Long]) = {
+  def getStatistics(name: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], interval: String): (Long, List[Long]) = {
     (0L, List[Long]())
   }
   

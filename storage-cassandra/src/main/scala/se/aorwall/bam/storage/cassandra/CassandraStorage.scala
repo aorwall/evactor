@@ -56,7 +56,20 @@ abstract class CassandraStorage(val system: ActorSystem, prefix: String) extends
  
   val columnNames = List("name", "id", "timestamp")
 
-  
+  def eventExists(event: Event): Boolean = {
+    val mutator = HFactory.createMutator(keyspace, StringSerializer.get)
+    
+	 val key = getKey(event)
+	    
+    val existingEvent = HFactory.createStringColumnQuery(keyspace)
+            .setColumnFamily(EVENT_CF)
+            .setKey(key)
+            .setName("id")
+            .execute()
+            .get()
+            
+    existingEvent != null
+  }
   
   // TODO: Consistency level should be set to ONE for all writes
   def storeEvent(event: Event): Boolean = {
@@ -151,7 +164,7 @@ abstract class CassandraStorage(val system: ActorSystem, prefix: String) extends
   
     
   // TODO: Implement paging
-  def readEvents(eventName: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], count: Int, start: Int): List[Event] = {
+  def getEvents(eventName: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], count: Int, start: Int): List[Event] = {
     val fromTimeuuid = fromTimestamp match {
       case Some(from) => TimeUUIDUtils.getTimeUUID(from)
       case None => null
@@ -223,7 +236,7 @@ abstract class CassandraStorage(val system: ActorSystem, prefix: String) extends
   /**
    * Read statistics within a time span from fromTimestamp to toTimestamp
    */
-  def readStatistics(eventName: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], interval: String): (Long, List[Long]) =
+  def getStatistics(eventName: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], interval: String): (Long, List[Long]) =
     (fromTimestamp, toTimestamp) match {
       case (None, None) => readStatisticsFromInterval(eventName, 0, System.currentTimeMillis, interval)
       case (Some(from), None) => readStatisticsFromInterval(eventName, from, System.currentTimeMillis, interval)

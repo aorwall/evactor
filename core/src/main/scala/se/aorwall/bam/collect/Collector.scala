@@ -9,7 +9,7 @@ import se.aorwall.bam.process.ProcessorEventBus
 import akka.actor.ActorLogging
 
 /**
- * Collecting events
+ * Collecting incoming events
  */
 class Collector extends Actor with Storage with ActorLogging {
 
@@ -21,9 +21,8 @@ class Collector extends Actor with Storage with ActorLogging {
    
     log.debug("collecting: " + event)
 
-    // save event and check for duplicates. TODO: Find a nice way of making this non blocking...
-    if(storeEvent(event)) ProcessorEventBus.publish(event)
-    else log.warning("didn't send " + event)
+    if(!eventExists(event)) ProcessorEventBus.publish(event)
+    else log.warning("The event is already processed: " + event)
     
   }
 

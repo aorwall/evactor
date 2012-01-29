@@ -34,12 +34,12 @@ class KpiEventAPI(system: ActorSystem) extends NettyPlan {
     case req @ Path(Seg("kpi" :: "stats" :: path)) => try {
 	      val Params(params) = req       
 	      //TODO: Extract parameters
-	   	ResponseString(generate(storage.readStatistics(decode(path.mkString("/")), Some(0L), Some(now), "hour")))
+	   	ResponseString(generate(storage.getStatistics(decode(path.mkString("/")), Some(0L), Some(now), "hour")))
       } catch { case _ => BadRequest }      
     case req @ Path(Seg("kpi" :: "avg" :: path)) => try {
 	      val Params(params) = req       
 	      //TODO: Extract parameters
-	      val sum = storage.readSumStatistics(decode(path.mkString("/")), Some(0L), Some(now), "hour")
+	      val sum = storage.getSumStatistics(decode(path.mkString("/")), Some(0L), Some(now), "hour")
 	      
 	      val avg = (sum._1, sum._2.map { 
 	        case (x,y) => if(x > 0) y/x
@@ -51,7 +51,7 @@ class KpiEventAPI(system: ActorSystem) extends NettyPlan {
     case req @ Path(Seg("kpi" :: "events" :: path)) =>  try {
    	 	val Params(params) = req       
    	 	//TODO: Extract parameters
-   	 	ResponseString(generate(storage.readEvents(decode(path.mkString("/")), None, None, 10, 0)))
+   	 	ResponseString(generate(storage.getEvents(decode(path.mkString("/")), None, None, 10, 0)))
     	} catch { case _ => BadRequest }
     case _ => ResponseString("Couldn't handle request (data)")
   }

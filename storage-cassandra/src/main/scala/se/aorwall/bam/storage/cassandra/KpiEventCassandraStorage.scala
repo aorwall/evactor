@@ -87,15 +87,15 @@ class KpiEventCassandraStorage(system: ActorSystem, cfPrefix: String) extends Ca
   /**
    * Read kpi statistics within a time span from fromTimestamp to toTimestamp
    */
-  def readSumStatistics(eventName: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], interval: String): (Long, List[(Long, Double)]) =
+  def getSumStatistics(eventName: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], interval: String): (Long, List[(Long, Double)]) =
     (fromTimestamp, toTimestamp) match {
-      case (None, None) => readSumStatisticsFromInterval(eventName, 0, System.currentTimeMillis, interval)
-      case (Some(from), None) => readSumStatisticsFromInterval(eventName, from, System.currentTimeMillis, interval)
+      case (None, None) => getSumStatisticsFromInterval(eventName, 0, System.currentTimeMillis, interval)
+      case (Some(from), None) => getSumStatisticsFromInterval(eventName, from, System.currentTimeMillis, interval)
       case (None, Some(to)) => throw new IllegalArgumentException("Reading statistics with just a toTimestamp provided isn't implemented yet") //TODO
-      case (Some(from), Some(to)) => readSumStatisticsFromInterval(eventName, from, to, interval)
+      case (Some(from), Some(to)) => getSumStatisticsFromInterval(eventName, from, to, interval)
   }
   
-  def readSumStatisticsFromInterval(eventName: String, from: Long, to: Long, interval: String): (Long, List[(Long, Double)]) = {
+  protected def getSumStatisticsFromInterval(eventName: String, from: Long, to: Long, interval: String): (Long, List[(Long, Double)]) = {
 	  val stats = readStatisticsFromInterval(eventName, from, to, interval)
 	  	  
      val period = interval match {

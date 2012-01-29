@@ -14,7 +14,6 @@ import akka.actor.ActorLogging
 abstract class Processor (val name: String) extends Actor with ActorLogging {
   type T <: Event
   
-  protected val collector = context.actorFor("/user/collect")
   protected var testActor: Option[ActorRef] = None // actor used for testing
   
   def receive  = {
@@ -41,7 +40,7 @@ trait CheckEventName extends Processor with ActorLogging {
   
   protected def handlesEvent(event: T) = eventName match {
     case Some(e) => {
-      if(e.endsWith("*")) e.substring(0, e.lastIndexOf("*")-1) == event.path.substring(0, event.path.lastIndexOf("/"))
+      if(e.endsWith("*")) e.substring(0, e.lastIndexOf("*")-1) == event.path.substring(0, event.path.lastIndexOf("/")) //TODO: Regex!
       else e == event.path
     }
     case None => true

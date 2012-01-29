@@ -1,12 +1,12 @@
 package se.aorwall.bam.storage
 import java.util.Date
-
 import akka.actor.Actor
 import akka.dispatch.MailboxType
 import se.aorwall.bam.model.events.Event
 import se.aorwall.bam.model.events.SimpleProcessEvent
+import akka.actor.ActorLogging
 
-trait Storage extends Actor {
+trait Storage extends Actor with ActorLogging {
 
 	val storage = EventStorageExtension(context.system)
 
@@ -16,11 +16,18 @@ trait Storage extends Actor {
 	def storeEvent(event: Event): Boolean = {	  
 		storage.getEventStorage(event) match {
 		  case Some(storageImpl) => storageImpl.storeEvent(event)
-		  case None => true // TODO: Do nothing, return true...
+		  case None => true 
 		}
 	}
 
 	def readEvents(name: String, from: Date, to: Date, count: Int, start: Int): List[Event] = {
 		List[Event]()
 	} 
+	
+	def eventExists(event: Event): Boolean = {
+	  storage.getEventStorage(event) match {
+		  case Some(storageImpl) => storageImpl.eventExists(event)
+		  case None => true // Return true if no storage implementation is found
+		}
+	}
 }

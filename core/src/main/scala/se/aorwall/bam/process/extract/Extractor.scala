@@ -7,6 +7,7 @@ import akka.actor.ActorRef
 import se.aorwall.bam.process.Processor
 import se.aorwall.bam.process.CheckEventName
 import akka.actor.ActorLogging
+import se.aorwall.bam.process.ProcessorEventBus
 
 /**
  * Extract information from messages
@@ -30,7 +31,8 @@ class Extractor(override val name: String, val eventName: Option[String], extrac
       case Some(event) => {
         testActor match {
            case Some(actor: ActorRef) => actor ! event
-           case None => collector ! event
+           case None => ProcessorEventBus.publish(event)
+
         }        
       }
       case None => log.info("couldn't extract anything from event: " + event)
