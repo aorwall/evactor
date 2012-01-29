@@ -12,11 +12,10 @@ import se.aorwall.bam.model.events.Event
 import se.aorwall.bam.model.events.LogEvent
 import se.aorwall.bam.model.Start
 
-
 class TestEventStorage(system: ActorSystem) extends EventStorage {
  
-  def storeEvent(event: Event): Boolean = {
-    true
+  def storeEvent(event: Event): Unit = {
+
   }
   
   def getEvents(eventName: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], count: Int, start: Int): List[Event] = {

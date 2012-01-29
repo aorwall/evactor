@@ -13,10 +13,10 @@ trait Storage extends Actor with ActorLogging {
 	/**
 	 * Store an event and returns true if successful.
 	 */
-	def storeEvent(event: Event): Boolean = {	  
+	def storeEvent(event: Event): Unit = {	  
 		storage.getEventStorage(event) match {
 		  case Some(storageImpl) => storageImpl.storeEvent(event)
-		  case None => true 
+		  case None => log.info("No storage implementation found for event: " + event) 
 		}
 	}
 
@@ -27,7 +27,7 @@ trait Storage extends Actor with ActorLogging {
 	def eventExists(event: Event): Boolean = {
 	  storage.getEventStorage(event) match {
 		  case Some(storageImpl) => storageImpl.eventExists(event)
-		  case None => true // Return true if no storage implementation is found
+		  case None => log.info("No storage implementation found for event: " + event) ; true // Return true if no storage implementation is found
 		}
 	}
 }

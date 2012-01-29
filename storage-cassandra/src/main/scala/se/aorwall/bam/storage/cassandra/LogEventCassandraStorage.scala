@@ -21,7 +21,7 @@ class LogEventCassandraStorage(val system: ActorSystem) extends EventStorage {
   
   def eventExists(event: Event) = false //TODO
     
-  def storeEvent(event: Event): Boolean = {
+  def storeEvent(event: Event): Unit = {
     
      val mutator = HFactory.createMutator(keyspace, StringSerializer.get);
      // TODO: check if event already exists
@@ -33,7 +33,7 @@ class LogEventCassandraStorage(val system: ActorSystem) extends EventStorage {
      mutator.insert("%s/%s".format(event.name, event.id), LOG_EVENT_CF, HFactory.createColumn(event.id, event, StringSerializer.get, ObjectSerializer.get))
      
 	  mutator.incrementCounter(LOG_EVENT_CF, NAMES_CF, event.name, 1)
-     true
+
   }
   
   def getEvents(eventName: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], count: Int, start: Int): List[Event] = {

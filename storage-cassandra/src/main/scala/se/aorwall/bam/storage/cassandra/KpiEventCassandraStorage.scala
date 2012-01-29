@@ -24,35 +24,30 @@ class KpiEventCassandraStorage(system: ActorSystem, cfPrefix: String) extends Ca
 	   
    val SUM_CF = "KpiEventSum"
      
-   override def storeEvent(event: Event): Boolean = event match {
+   override def storeEvent(event: Event): Unit = event match {
 	  case kpiEvent: KpiEvent => {
 	    
-	     // TODO: just save the value in KpiEventTimeline, skip KpiEvent
-		  if(super.storeEvent(event)) {
+		 super.storeEvent(event)
 		  
-		  // save sum
+		 // save sum
+	  
+	    // column family: KpiEventCountSum
+	    // row key: event name + state + ["year";"month":"day":"hour"]
+	    // column key: timestamp
+	    // value: counter
+	    val time = new DateTime(event.timestamp)
+	    val count = new java.lang.Long(1L)
+	    val year = new java.lang.Long(new DateTime(time.getYear, 1, 1, 0, 0).toDate.getTime)
+	    val month = new java.lang.Long(new DateTime(time.getYear, time.getMonthOfYear, 1, 0, 0).toDate.getTime)
+	    val dayDate = new DateTime(time.getYear, time.getMonthOfYear, time.getDayOfMonth, 0, 0)
+	    val day = new java.lang.Long(dayDate.toDate.getTime)
+	    val hour = new java.lang.Long(new DateTime(time.getYear, time.getMonthOfYear, time.getDayOfMonth, time.getHourOfDay, 0).toDate.getTime)
+	    
+	  	 sum("%s/%s".format(event.name, YEAR), year, kpiEvent)
+	  	 sum("%s/%s".format(event.name, MONTH), month, kpiEvent)
+	  	 sum("%s/%s".format(event.name, DAY), day, kpiEvent)
+	  	 sum("%s/%s".format(event.name, HOUR), hour, kpiEvent)
 		  
-		   // column family: KpiEventCountSum
-		    // row key: event name + state + ["year";"month":"day":"hour"]
-		    // column key: timestamp
-		    // value: counter
-		    val time = new DateTime(event.timestamp)
-		    val count = new java.lang.Long(1L)
-		    val year = new java.lang.Long(new DateTime(time.getYear, 1, 1, 0, 0).toDate.getTime)
-		    val month = new java.lang.Long(new DateTime(time.getYear, time.getMonthOfYear, 1, 0, 0).toDate.getTime)
-		    val dayDate = new DateTime(time.getYear, time.getMonthOfYear, time.getDayOfMonth, 0, 0)
-		    val day = new java.lang.Long(dayDate.toDate.getTime)
-		    val hour = new java.lang.Long(new DateTime(time.getYear, time.getMonthOfYear, time.getDayOfMonth, time.getHourOfDay, 0).toDate.getTime)
-		    
-		  	 sum("%s/%s".format(event.name, YEAR), year, kpiEvent)
-		  	 sum("%s/%s".format(event.name, MONTH), month, kpiEvent)
-		  	 sum("%s/%s".format(event.name, DAY), day, kpiEvent)
-		  	 sum("%s/%s".format(event.name, HOUR), hour, kpiEvent)
-		  	 
-		  	 true //TODO
-		  } else {
-		    false
-		  }
 	  }
 	  case msg => warn("not a KpiEvent: " + msg); false
 	  

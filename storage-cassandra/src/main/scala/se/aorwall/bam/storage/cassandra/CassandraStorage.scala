@@ -57,91 +57,95 @@ abstract class CassandraStorage(val system: ActorSystem, prefix: String) extends
   val columnNames = List("name", "id", "timestamp")
 
   def eventExists(event: Event): Boolean = {
-    val mutator = HFactory.createMutator(keyspace, StringSerializer.get)
-    
-	 val key = getKey(event)
-	    
-    val existingEvent = HFactory.createStringColumnQuery(keyspace)
-            .setColumnFamily(EVENT_CF)
-            .setKey(key)
-            .setName("id")
-            .execute()
-            .get()
-            
+	 val key = getKey(event)	    
+    val existingEvent = getColumn(EVENT_CF, key, "id")            
     existingEvent != null
   }
   
-  // TODO: Consistency level should be set to ONE for all writes
-  def storeEvent(event: Event): Boolean = {
-    val mutator = HFactory.createMutator(keyspace, StringSerializer.get)
-    
-	 val key = getKey(event)
-	    
-    val existingEvent = HFactory.createStringColumnQuery(keyspace)
-            .setColumnFamily(EVENT_CF)
-            .setKey(key)
-            .setName("id")
+  protected def getColumn(cf: String, rowKey: String, colName: String)  = 
+    HFactory.createStringColumnQuery(keyspace)
+            .setColumnFamily(cf)
+            .setKey(rowKey)
+            .setName(colName)
             .execute()
             .get()
+  
+  protected def getEventPath(name: String, id: String): Option[String] = {
+    
+    val key = getKey(name, id)
+    val existingEvent = getColumn(EVENT_CF, key, "id")
+    
+    if(existingEvent != null) Some(key)
+    else if(name.indexOf("/") > 0) getEventPath(name.substring(0, name.lastIndexOf("/")), id)
+    else None
+      
+  }
             
-    if (existingEvent != null){
-      warn("An event with name %s and id %s already exists".format(event.name, event.id));
-      false
-    } else {
-    	 // TODO: will need some kind of rollback if one of the inserts fails    
-	    val timeuuid = TimeUUIDUtils.getTimeUUID(event.timestamp)
-	    
-	    // column family: EventTimeline
-	    // row key: event name
-	    // column key: event timestamp
-	    // value: event name / event id
-	    // TODO: Add expiration time?
-	    mutator.addInsertion(event.name, TIMELINE_CF, HFactory.createColumn(timeuuid, key, UUIDSerializer.get, StringSerializer.get))
-	
+  // TODO: Consistency level should be set to ONE for all writes
+  def storeEvent(event: Event): Unit = {
+    val mutator = HFactory.createMutator(keyspace, StringSerializer.get)
+ 
+ 	 // TODO: will need some kind of rollback if one of the inserts fails    
+    val timeuuid = TimeUUIDUtils.getTimeUUID(event.timestamp)
+
+    // Traverse down the event path to see if a event is already saved in the event cf
+    val key = getEventPath(event.name, event.id) match {
+      case Some(s) => s
+      case None => {	     
+       // Save the the event if it hasn't been stored in this cf earlier.
+       val rowKey = getKey(event)
 	    // column family: Event
 	    // row key: event name + event.id
 	    for(column <- eventToColumns(event)) {
-	      mutator.addInsertion(key, EVENT_CF, column match {
+	      mutator.addInsertion(rowKey, EVENT_CF, column match {
 	      	case (k, v) => HFactory.createStringColumn(k, v)
 	      })
 	    }
-	    
-	    // column family: EventState
-	    // row key: event name + state
-	    // column key: event timestamp
-	    // value: event id
-	    event match {
-	      case hasState: HasState => mutator.addInsertion("%s/%s".format(event.name, hasState.state.name), STATE_CF, HFactory.createColumn(timeuuid, "", UUIDSerializer.get, StringSerializer.get))
-	      case _ =>
-	    }	    
-	    mutator.execute()
-	    
-	    // column family: EventCount
-	    // row key: event name + state + ["year";"month":"day":"hour"]
-	    // column key: timestamp
-	    // value: counter
-	    val time = new DateTime(event.timestamp)
-	    val count = new java.lang.Long(1L)
-	    val year = new java.lang.Long(new DateTime(time.getYear, 1, 1, 0, 0).toDate.getTime)
-	    val month = new java.lang.Long(new DateTime(time.getYear, time.getMonthOfYear, 1, 0, 0).toDate.getTime)
-	    val dayDate = new DateTime(time.getYear, time.getMonthOfYear, time.getDayOfMonth, 0, 0)
-	    val day = new java.lang.Long(dayDate.toDate.getTime)
-	    val hour = new java.lang.Long(new DateTime(time.getYear, time.getMonthOfYear, time.getDayOfMonth, time.getHourOfDay, 0).toDate.getTime)
-	    
-	    val name = event match {
-	      case hasState: HasState => "%s/%s".format(event.name, hasState.state.name)
-	      case _ => event.name
-	    }
-	    
-	    mutator.incrementCounter("%s/%s".format(name, YEAR), COUNT_CF, year, count)
-	    mutator.incrementCounter("%s/%s".format(name, MONTH), COUNT_CF, month, count)
-	    mutator.incrementCounter("%s/%s".format(name, DAY), COUNT_CF, day, count)
-	    mutator.incrementCounter("%s/%s".format(name, HOUR), COUNT_CF, hour, count)
-	   
-	    storeEventName(mutator, prefix, event.name)
-	    	    
-	    true
+       rowKey
+      }
     }
+    
+    // column family: EventTimeline
+    // row key: event name
+    // column key: event timestamp
+    // value: event name / event id
+    // TODO: Add expiration time?
+    mutator.addInsertion(event.name, TIMELINE_CF, HFactory.createColumn(timeuuid, key, UUIDSerializer.get, StringSerializer.get))
+    
+    // column family: EventState
+    // row key: event name + state
+    // column key: event timestamp
+    // value: event id
+    event match {
+      case hasState: HasState => mutator.addInsertion("%s/%s".format(event.name, hasState.state.name), STATE_CF, HFactory.createColumn(timeuuid, "", UUIDSerializer.get, StringSerializer.get))
+      case _ =>
+    }	    
+    mutator.execute()
+    
+    // column family: EventCount
+    // row key: event name + state + ["year";"month":"day":"hour"]
+    // column key: timestamp
+    // value: counter
+    val time = new DateTime(event.timestamp)
+    val count = new java.lang.Long(1L)
+    val year = new java.lang.Long(new DateTime(time.getYear, 1, 1, 0, 0).toDate.getTime)
+    val month = new java.lang.Long(new DateTime(time.getYear, time.getMonthOfYear, 1, 0, 0).toDate.getTime)
+    val dayDate = new DateTime(time.getYear, time.getMonthOfYear, time.getDayOfMonth, 0, 0)
+    val day = new java.lang.Long(dayDate.toDate.getTime)
+    val hour = new java.lang.Long(new DateTime(time.getYear, time.getMonthOfYear, time.getDayOfMonth, time.getHourOfDay, 0).toDate.getTime)
+    
+    val name = event match {
+      case hasState: HasState => "%s/%s".format(event.name, hasState.state.name)
+      case _ => event.name
+    }
+    
+    mutator.incrementCounter("%s/%s".format(name, YEAR), COUNT_CF, year, count)
+    mutator.incrementCounter("%s/%s".format(name, MONTH), COUNT_CF, month, count)
+    mutator.incrementCounter("%s/%s".format(name, DAY), COUNT_CF, day, count)
+    mutator.incrementCounter("%s/%s".format(name, HOUR), COUNT_CF, hour, count)
+   
+    storeEventName(mutator, prefix, event.name)
+    	    
   }
     
   /**
@@ -231,7 +235,9 @@ abstract class CassandraStorage(val system: ActorSystem, prefix: String) extends
 	  case None => Nil
    } 
    
-  private def getKey(event: Event) = "%s/%s".format(event.name, event.id)
+  private def getKey(event: Event): String = getKey(event.name, event.id)
+  
+  private def getKey(name: String, id: String): String = "%s/%s".format(name, id)
 	
   /**
    * Read statistics within a time span from fromTimestamp to toTimestamp
