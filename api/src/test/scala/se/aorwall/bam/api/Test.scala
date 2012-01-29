@@ -8,7 +8,7 @@ object Test {
 
   def main(args: Array[String]): Unit = {
     
-	 unfiltered.netty.Http(8080).plan(new DataEventAPI(system)).run()	 
+	 unfiltered.netty.Http(8080).plan(new DataEventAPI(system)).plan(new KpiEventAPI(system)).run()	 
 	 
   }
   

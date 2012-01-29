@@ -13,7 +13,7 @@ class KpiSpec extends WordSpec with MustMatchers with Logging{
 
 	val event = new DataEvent("eventName", "id", 0L, "{ \"doubleField\": \"123.42\", \"intField\": \"123\", \"anotherField\": \"anothervalue\"}");
 
-	"Keyword" must {
+	"Kpi" must {
 
 		"extract float from json messages" in {
 			val kpi = new Kpi("keyword", None, "message.doubleField")

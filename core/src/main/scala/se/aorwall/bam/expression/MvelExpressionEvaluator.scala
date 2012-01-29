@@ -12,14 +12,14 @@ import scala.Double._
 /**
  * Evaluate MVEL Expressions. Supports JSON and strings in message. XML to come...?
  * 
- * Maybe change so all events can be provided...
+ * Maybe change so all events can be provided... and use abstract type instead of String
  * 
  */
-class MvelExpressionEvaluator[T] (expression: String) extends ExpressionEvaluator with Logging {
+class MvelExpressionEvaluator (expression: String) extends ExpressionEvaluator with Logging {
   
   val compiledExp = MVEL.compileExpression(expression); 
 
-  def execute(event: Event with HasMessage): Option[T] = {
+  def execute(event: Event with HasMessage): Option[String] = {
     
     val obj = new HashMap[String,Any]
     
@@ -50,9 +50,9 @@ class MvelExpressionEvaluator[T] (expression: String) extends ExpressionEvaluato
     } catch {
       case e => warn("Failed to execute expression", e); None
     }
-
+    
     result match {
-      case r: T => Some(r)
+      case v: Any => Some(v.toString)
       case _ => None
     }
     

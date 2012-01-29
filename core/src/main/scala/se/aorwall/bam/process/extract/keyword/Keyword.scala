@@ -21,7 +21,7 @@ import se.aorwall.bam.expression.MvelExpressionEvaluator
  */
 class Keyword (override val name: String, val eventName: Option[String], val expression: String) extends ProcessorConfiguration(name: String){
 
-   val eval = new MvelExpressionEvaluator[String](expression)
+   val eval = new MvelExpressionEvaluator(expression)
   
 	def extract (event: Event with HasMessage): Option[Event] = {	  	    
      eval.execute(event) match {

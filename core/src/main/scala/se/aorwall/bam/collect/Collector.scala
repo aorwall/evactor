@@ -6,11 +6,12 @@ import se.aorwall.bam.model.events.Event
 import se.aorwall.bam.process.Processor
 import se.aorwall.bam.storage.Storage
 import se.aorwall.bam.process.ProcessorEventBus
+import akka.actor.ActorLogging
 
 /**
  * Collecting events
  */
-class Collector extends Actor with Storage with Logging {
+class Collector extends Actor with Storage with ActorLogging {
 
   def receive = {
     case event: Event => collect(event)
@@ -18,11 +19,11 @@ class Collector extends Actor with Storage with Logging {
 
   def collect(event: Event) = {
    
-    debug(context.self + " collecting: " + event)
+    log.debug("collecting: " + event)
 
     // save event and check for duplicates. TODO: Find a nice way of making this non blocking...
     if(storeEvent(event)) ProcessorEventBus.publish(event)
-    else warn(context.self + " didn't send " + event)
+    else log.warning("didn't send " + event)
     
   }
 
@@ -32,10 +33,10 @@ class Collector extends Actor with Storage with Logging {
   }
   
   override def preStart = {
-    trace(context.self + " starting...")
+    log.debug("starting...")
   }
 
   override def postStop = {
-    trace(context.self + " stopping...")
+    log.debug("stopping...")
   }
 }

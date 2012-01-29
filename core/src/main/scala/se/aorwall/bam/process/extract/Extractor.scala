@@ -6,23 +6,26 @@ import se.aorwall.bam.model.events.Event
 import akka.actor.ActorRef
 import se.aorwall.bam.process.Processor
 import se.aorwall.bam.process.CheckEventName
+import akka.actor.ActorLogging
 
 /**
  * Extract information from messages
  */
 class Extractor(override val name: String, val eventName: Option[String], extract: (Event with HasMessage) => Option[Event]) 
-	extends Processor(name) with CheckEventName with Logging {
+	extends Processor(name) with CheckEventName with ActorLogging {
          
   type T = Event with HasMessage
   
   override def receive  = {
-    case event: Event with HasMessage if(handlesEvent(event)) =>  process(event)
+    case event: Event with HasMessage if(handlesEvent(event)) => process(event)
     case actor: ActorRef => testActor = Some(actor) 
-    case _ => // skip
+    case msg => log.debug("can't handle " + msg )
   }
   
   protected def process(event: Event with HasMessage) {
     
+	 log.debug("will extract values from " + event )
+	  
     extract(event) match {
       case Some(event) => {
         testActor match {
@@ -30,7 +33,7 @@ class Extractor(override val name: String, val eventName: Option[String], extrac
            case None => collector ! event
         }        
       }
-      case None => info(context.self + " couldn't extract anything from event: " + event)
+      case None => log.info("couldn't extract anything from event: " + event)
     }
     
   }

@@ -7,6 +7,7 @@ import akka.event.SubchannelClassification
 import se.aorwall.bam.model.events.Event
 import se.aorwall.bam.model._
 import akka.event.EventBus
+import grizzled.slf4j.Logging
 
 /**
  * This is a first implementation of the event bus for only sending events
@@ -17,7 +18,7 @@ import akka.event.EventBus
  * Will be extended... 
  * 
  */*/
-object ProcessorEventBus extends ActorEventBus with LookupClassification { 
+object ProcessorEventBus extends ActorEventBus with LookupClassification with Logging { 
     
     type Event = events.Event
     type Classifier = String
@@ -29,6 +30,7 @@ object ProcessorEventBus extends ActorEventBus with LookupClassification {
     protected def compareClassifiers(a: Classifier, b: Classifier): Int = a compareTo b
     
     protected def publish(event: events.Event, subscriber: Subscriber): Unit = {
+      trace("publishing event " + event.name + " to " + subscriber)
       subscriber ! event
     }
     
@@ -37,16 +39,18 @@ object ProcessorEventBus extends ActorEventBus with LookupClassification {
        
        // send to all subscribers who subscribed to this specific event name
 	    val i = subscribers.valueIterator(name)
-	    
+	    	    
 	    while (i.hasNext) publish(event, i.next())
        
 	    // send to all subscribers who subscribed to all events at this path
-       val slashIndex = name.indexOf("/")
+       val slashIndex = name.lastIndexOf("/")
        if(slashIndex > 0) {         
          val path = name.substring(0, slashIndex+1) + "*"
          val j = subscribers.valueIterator(path)
                   
-         while (j.hasNext) publish(event, j.next())
+         while (j.hasNext){
+           publish(event, j.next())
+         } 
        } 
        
        // and send to all subscribers that hasn't specified a event name at all in the subscription

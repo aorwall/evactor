@@ -64,13 +64,13 @@ abstract class CassandraStorage(val system: ActorSystem, prefix: String) extends
     
 	 val key = getKey(event)
 	    
-    val existingEvent = HFactory.createColumnQuery(keyspace, StringSerializer.get, StringSerializer.get, ObjectSerializer.get)
+    val existingEvent = HFactory.createStringColumnQuery(keyspace)
             .setColumnFamily(EVENT_CF)
             .setKey(key)
-            .setName("event")
+            .setName("id")
             .execute()
             .get()
-
+            
     if (existingEvent != null){
       warn("An event with name %s and id %s already exists".format(event.name, event.id));
       false
@@ -92,7 +92,7 @@ abstract class CassandraStorage(val system: ActorSystem, prefix: String) extends
 	      	case (k, v) => HFactory.createStringColumn(k, v)
 	      })
 	    }
-	    	    
+	    
 	    // column family: EventState
 	    // row key: event name + state
 	    // column key: event timestamp
@@ -138,14 +138,11 @@ abstract class CassandraStorage(val system: ActorSystem, prefix: String) extends
    */
   protected def storeEventName(mutator: Mutator[String], rowkey: String, path: String): Unit = {
     val slash = path.indexOf("/")
-    
-    info("row and path: " + rowkey + ":" + path)
-    
+        
     if (slash == -1){
       mutator.incrementCounter(rowkey, NAMES_CF, path, 1)
     } else {
       val name = path.substring(0, slash)
-      info("name: " + name)
     	mutator.incrementCounter(rowkey, NAMES_CF, name, 1) 
     	storeEventName(mutator, "%s/%s".format(rowkey, name), path.substring(slash+1))   
     }

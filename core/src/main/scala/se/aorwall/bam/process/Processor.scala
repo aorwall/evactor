@@ -8,10 +8,10 @@ import akka.actor.EmptyLocalActorRef
 import akka.actor.InternalActorRef
 import akka.actor.OneForOneStrategy
 import akka.actor.Props
-import grizzled.slf4j.Logging
 import se.aorwall.bam.model.events.Event
+import akka.actor.ActorLogging
 
-abstract class Processor (val name: String) extends Actor with Logging {
+abstract class Processor (val name: String) extends Actor with ActorLogging {
   type T <: Event
   
   protected val collector = context.actorFor("/user/collect")
@@ -28,29 +28,32 @@ abstract class Processor (val name: String) extends Actor with Logging {
   protected def handlesEvent(event: T): Boolean
   
   override def preStart = {
-    trace(context.self+ " starting...")        
+    log.debug("starting...")        
   }
 
   override def postStop = {
-    trace(context.self+ " stopping...")
+    log.debug("stopping...")
   }
 }
 
-trait CheckEventName extends Processor with Logging {
+trait CheckEventName extends Processor with ActorLogging {
   val eventName: Option[String]
   
   protected def handlesEvent(event: T) = eventName match {
-    case Some(e) => e == event.path
+    case Some(e) => {
+      if(e.endsWith("*")) e.substring(0, e.lastIndexOf("*")-1) == event.path.substring(0, event.path.lastIndexOf("/"))
+      else e == event.path
+    }
     case None => true
   }
   
   override def preStart = {
-    debug(context.self + " subscribing to: \"" + eventName.getOrElse("") + "\"")
+    log.debug("subscribing to: \"" + eventName.getOrElse("") + "\"")
     ProcessorEventBus.subscribe(context.self, eventName.getOrElse(""))
   }
   
   override def postStop = {
-    debug(context.self + " unsubscribing to: \"" + eventName.getOrElse("") + "\"")
+    log.debug("unsubscribing to: \"" + eventName.getOrElse("") + "\"")
     ProcessorEventBus.unsubscribe(context.self, eventName.getOrElse(""))
   }
   

@@ -1,20 +1,20 @@
 package se.aorwall.bam.process.analyse
 
 import scala.Predef._
-import grizzled.slf4j.Logging
 import akka.actor.{Actor, ActorRef}
 import se.aorwall.bam.model.events.Event
 import se.aorwall.bam.process.Processor
 import se.aorwall.bam.model.events.AlertEvent
 import se.aorwall.bam.process.CheckEventName
+import akka.actor.ActorLogging
 
-abstract class Analyser(name: String, val eventName: Option[String]) extends Processor(name) with Logging  {
+abstract class Analyser(name: String, val eventName: Option[String]) extends Processor(name) with ActorLogging  {
     
   var triggered = false //TODO: use FSM for this
   
   protected def alert(message: String) {
     if (!triggered) {
-      warn(context.self + " Alert: " + message)
+      log.warning("Alert: " + message)
 
       triggered = true
       sendAlert(message)
@@ -23,7 +23,7 @@ abstract class Analyser(name: String, val eventName: Option[String]) extends Pro
 
   protected def backToNormal(message: String) {
     if (triggered) {
-      info(context.self + " Back to normal: " + message)
+      log.info("Back to normal: " + message)
 
       triggered = false
       sendAlert(message)
@@ -44,7 +44,7 @@ abstract class Analyser(name: String, val eventName: Option[String]) extends Pro
   }
 
   override def preStart() {
-    trace(context.self + " Starting analyser for events with name: " + name)
+    log.debug("Starting analyser for events with name: " + name)
 	    
 	  /**
 	   * Initialize analyser with activities from db?
@@ -52,6 +52,6 @@ abstract class Analyser(name: String, val eventName: Option[String]) extends Pro
   }
 
   override def postStop() {
-    trace(context.self + " Stopping analyser for events with name: " + name)
+    log.debug("Stopping analyser for events with name: " + name)
   }
 }

@@ -22,11 +22,9 @@ class DataEventCassandraStorage(system: ActorSystem, cfPrefix: String) extends C
 	
    def columnsToEvent(columns: ColumnSlice[String, String]): Event = {
 	 val get = getValue(columns) _	
-	 val data = new DataEvent(get("name"), 
+	 new DataEvent(get("name"), 
 			 			get("id"),
 			 			get("timestamp").toLong,
 			 			get("message"))
-	 println(data)
-	 data
 	}
 }
