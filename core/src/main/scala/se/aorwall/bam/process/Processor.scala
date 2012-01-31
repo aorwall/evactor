@@ -35,7 +35,7 @@ abstract class Processor (val name: String) extends Actor with ActorLogging {
   }
 }
 
-trait CheckEventName extends Processor with ActorLogging {
+trait CheckEventName extends Processor with Subscriber with ActorLogging {
   val eventName: Option[String]
   
   protected def handlesEvent(event: T) = eventName match {
@@ -48,12 +48,12 @@ trait CheckEventName extends Processor with ActorLogging {
   
   override def preStart = {
     log.debug("subscribing to: \"" + eventName.getOrElse("") + "\"")
-    ProcessorEventBus.subscribe(context.self, eventName.getOrElse(""))
+    subscribe(context.self, eventName.getOrElse(""))
   }
   
   override def postStop = {
     log.debug("unsubscribing to: \"" + eventName.getOrElse("") + "\"")
-    ProcessorEventBus.unsubscribe(context.self, eventName.getOrElse(""))
+    unsubscribe(context.self, eventName.getOrElse(""))
   }
   
 }

@@ -8,8 +8,9 @@ import se.aorwall.bam.model.events.AlertEvent
 import se.aorwall.bam.process.CheckEventName
 import akka.actor.ActorLogging
 import se.aorwall.bam.process.ProcessorEventBus
+import se.aorwall.bam.process.Publisher
 
-abstract class Analyser(name: String, val eventName: Option[String]) extends Processor(name) with ActorLogging  {
+abstract class Analyser(name: String, val eventName: Option[String]) extends Processor(name) with Publisher with ActorLogging  {
     
   var triggered = false //TODO: use FSM for this
   
@@ -35,7 +36,7 @@ abstract class Analyser(name: String, val eventName: Option[String]) extends Pro
     val currentTime = System.currentTimeMillis
     val alert = new AlertEvent(name, currentTime.toString, currentTime, triggered, message)
     
-    ProcessorEventBus.publish(alert)
+    publish(alert)
 
     // If a test actor exists
     testActor match {

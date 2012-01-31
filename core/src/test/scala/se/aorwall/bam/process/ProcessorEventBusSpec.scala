@@ -20,7 +20,7 @@ class ProcessorEventBusSpec (_system: ActorSystem) extends TestKit(_system) with
      _system.shutdown()
   }
     
-  val bus = ProcessorEventBus
+  val bus = ProcessorEventBusExtension(_system)
   
   val eventpath_one_eventname = classOf[DataEvent].getSimpleName + "/foo";
   val eventpath_all_eventnames = classOf[DataEvent].getSimpleName + "/*";

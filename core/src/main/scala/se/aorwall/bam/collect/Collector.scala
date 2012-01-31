@@ -7,11 +7,12 @@ import se.aorwall.bam.process.Processor
 import se.aorwall.bam.storage.Storage
 import se.aorwall.bam.process.ProcessorEventBus
 import akka.actor.ActorLogging
+import se.aorwall.bam.process.Publisher
 
 /**
  * Collecting incoming events
  */
-class Collector extends Actor with Storage with ActorLogging {
+class Collector extends Actor with Publisher with Storage with ActorLogging {
 
   def receive = {
     case event: Event => collect(event)
@@ -21,7 +22,7 @@ class Collector extends Actor with Storage with ActorLogging {
    
     log.debug("collecting: " + event)
 
-    if(!eventExists(event)) ProcessorEventBus.publish(event)
+    if(!eventExists(event)) publish(event)
     else log.warning("The event is already processed: " + event)
     
   }

@@ -1,13 +1,17 @@
 package se.aorwall.bam.process
 
+import akka.actor.actorRef2Scala
+import akka.actor.Actor
+import akka.actor.ActorRef
+import akka.actor.ActorSystem
+import akka.actor.Extension
+import akka.actor.ExtensionId
+import akka.actor.ExtensionIdProvider
 import akka.event.ActorEventBus
 import akka.event.LookupClassification
-import akka.event.ScanningClassification
-import akka.event.SubchannelClassification
-import se.aorwall.bam.model.events.Event
-import se.aorwall.bam.model._
-import akka.event.EventBus
 import grizzled.slf4j.Logging
+import se.aorwall.bam.model.events
+import akka.actor.ActorSystemImpl
 
 /**
  * This is a first implementation of the event bus for only sending events
@@ -17,8 +21,19 @@ import grizzled.slf4j.Logging
  * 
  * Will be extended... 
  * 
+ * It's used as an extension atm, maybe change to an actor instead to be 100%
+ * thread safe...
+ * 
  */*/
-object ProcessorEventBus extends ActorEventBus with LookupClassification with Logging { 
+
+object ProcessorEventBusExtension extends ExtensionId[ProcessorEventBus] with ExtensionIdProvider {
+
+  override def lookup = ProcessorEventBusExtension
+
+  override def createExtension(system: ActorSystemImpl) = new ProcessorEventBus
+}
+
+class ProcessorEventBus extends Extension with ActorEventBus with LookupClassification with Logging { 
     
     type Event = events.Event
     type Classifier = String
@@ -51,11 +66,43 @@ object ProcessorEventBus extends ActorEventBus with LookupClassification with Lo
          while (j.hasNext){
            publish(event, j.next())
          } 
-       } 
+       }
        
        // and send to all subscribers that hasn't specified a event name at all in the subscription
        val k = subscribers.valueIterator("")
        while (k.hasNext) publish(event, k.next())
        
     }
+}
+
+trait UseProcessorEventBus extends Actor {
+ 
+  private[process] val bus = ProcessorEventBusExtension(context.system)
+  
+}
+
+/**
+ * Trait extended by actors publishing events to the processor event bus
+ */
+trait Publisher extends UseProcessorEventBus {
+   
+  def publish(event: events.Event) {
+    bus.publish(event)
+  }
+  
+}
+
+/**
+ * Trait extended by actors subscribing to the processor event bus  
+ */
+trait Subscriber extends UseProcessorEventBus {
+   
+  def subscribe(subscriber: ActorRef, classifier: String) {
+    bus.subscribe(subscriber, classifier)
+  }
+  
+  def unsubscribe(subscriber: ActorRef, classifier: String) {
+    bus.unsubscribe(subscriber, classifier)
+  }
+    
 }

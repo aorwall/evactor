@@ -8,12 +8,13 @@ import se.aorwall.bam.process.Processor
 import se.aorwall.bam.process.CheckEventName
 import akka.actor.ActorLogging
 import se.aorwall.bam.process.ProcessorEventBus
+import se.aorwall.bam.process.Publisher
 
 /**
  * Extract information from messages
  */
 class Extractor(override val name: String, val eventName: Option[String], extract: (Event with HasMessage) => Option[Event]) 
-	extends Processor(name) with CheckEventName with ActorLogging {
+	extends Processor(name) with CheckEventName with Publisher with ActorLogging {
          
   type T = Event with HasMessage
   
@@ -31,7 +32,7 @@ class Extractor(override val name: String, val eventName: Option[String], extrac
       case Some(event) => {
         testActor match {
            case Some(actor: ActorRef) => actor ! event
-           case None => ProcessorEventBus.publish(event)
+           case None => publish(event)
 
         }        
       }
