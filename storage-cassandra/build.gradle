@@ -18,12 +18,12 @@ buildscript {
 dependencies {
     compile project(':core')
 
-    compile group: 'me.prettyprint', name: 'hector-core', version: '0.8.0-2'
-    compile group: 'me.prettyprint', name: 'hector', version: '0.8.0-2'
+    compile group: 'me.prettyprint', name: 'hector-core', version: '1.0-2'
+    compile group: 'me.prettyprint', name: 'hector', version: '1.0-2'
     compile group: 'org.perf4j', name: 'perf4j', version: '0.9.14'
     compile group: 'com.eaio.uuid', name: 'uuid', version: '3.2'
-    compile group: 'org.apache.cassandra', name: 'cassandra-all', version: '0.8.3'
-    compile group: 'org.apache.cassandra', name: 'cassandra-thrift', version: '0.8.3'
+    compile group: 'org.apache.cassandra', name: 'cassandra-all', version: '1.0.6'
+    compile group: 'org.apache.cassandra', name: 'cassandra-thrift', version: '1.0.6'
     compile group: 'org.apache.thrift', name: 'libthrift', version: '0.6.1'
     compile group: 'org.cliffc.high_scale_lib', name: 'high-scale-lib', version: '1.0'
 
