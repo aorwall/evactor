@@ -166,7 +166,6 @@ abstract class CassandraStorage(val system: ActorSystem, prefix: String) extends
     
   } 
   
-    
   // TODO: Implement paging
   def getEvents(eventName: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], count: Int, start: Int): List[Event] = {
     val fromTimeuuid = fromTimestamp match {

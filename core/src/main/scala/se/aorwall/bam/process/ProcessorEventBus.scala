@@ -12,6 +12,7 @@ import akka.event.LookupClassification
 import grizzled.slf4j.Logging
 import se.aorwall.bam.model.events
 import akka.actor.ActorSystemImpl
+import akka.actor.ExtendedActorSystem
 
 /**
  * This is a first implementation of the event bus for only sending events
@@ -30,7 +31,7 @@ object ProcessorEventBusExtension extends ExtensionId[ProcessorEventBus] with Ex
 
   override def lookup = ProcessorEventBusExtension
 
-  override def createExtension(system: ActorSystemImpl) = new ProcessorEventBus
+  override def createExtension(system: ExtendedActorSystem) = new ProcessorEventBus
 }
 
 class ProcessorEventBus extends Extension with ActorEventBus with LookupClassification with Logging { 

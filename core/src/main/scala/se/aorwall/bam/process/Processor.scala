@@ -1,6 +1,5 @@
 package se.aorwall.bam.process
 
-import akka.actor.FaultHandlingStrategy._
 import akka.actor.Actor
 import akka.actor.ActorRef
 import akka.actor.DeadLetterActorRef

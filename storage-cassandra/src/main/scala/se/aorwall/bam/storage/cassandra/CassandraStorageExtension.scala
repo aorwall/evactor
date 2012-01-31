@@ -6,7 +6,7 @@ import akka.actor._
 object CassandraStorageExtension extends ExtensionId[CassandraStorageSettings] with ExtensionIdProvider {
   override def get(system: ActorSystem): CassandraStorageSettings = super.get(system)
   def lookup() = this
-  def createExtension(system: ActorSystemImpl) = new CassandraStorageSettings(system.settings.config)
+  def createExtension(system: ExtendedActorSystem) = new CassandraStorageSettings(system.settings.config)
 }
 
 class CassandraStorageSettings(val config: Config) extends Extension {

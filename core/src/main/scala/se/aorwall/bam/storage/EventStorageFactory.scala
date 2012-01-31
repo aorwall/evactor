@@ -10,6 +10,7 @@ import com.typesafe.config.Config
 import akka.config.ConfigurationException
 import akka.util.ReflectiveAccess
 import grizzled.slf4j.Logging
+import akka.actor.ExtendedActorSystem
 
 /**
  * Handling event storage. Made in the same way as the serialization
@@ -39,7 +40,7 @@ object EventStorageFactory {
   }
 }
 
-class EventStorageFactory(val system: ActorSystemImpl) extends Extension with Logging {
+class EventStorageFactory(val system: ExtendedActorSystem) extends Extension with Logging {
   
    import EventStorageFactory._
   
