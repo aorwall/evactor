@@ -21,7 +21,7 @@ class AbsenceOfRequestsAnalyser (name: String, eventName: Option[String], val ti
     
   override def receive  = {
     case event: T => if (handlesEvent(event)) process(event) 
-    case Timeout => alert("No events within the timeframe " + timeframe + "ms")
+    case Timeout => alert("", "No events within the timeframe " + timeframe + "ms")
     case actor: ActorRef => testActor = Some(actor) 
     case _ => // skip
   }
@@ -30,7 +30,7 @@ class AbsenceOfRequestsAnalyser (name: String, eventName: Option[String], val ti
     log.debug("received: " + event)
 
     // TODO: Check event.timestamp to be really sure about the timeframe between events
-    backToNormal("Back to normal")
+    backToNormal("", "Back to normal")
     
     scheduledFuture match {
       case Some(s) => s.cancel()

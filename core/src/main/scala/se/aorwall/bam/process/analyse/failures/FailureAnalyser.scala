@@ -40,9 +40,9 @@ extends Analyser(name, eventName) with Window with CheckEventName with ActorLogg
 				log.debug("no of failed events with name " + eventName.get + ": " + failedEvents.size)
 	
 				if(failedEvents.size > maxOccurrences) {
-					alert(failedEvents.size + " failed events with name " + eventName.get + " is more than allowed (" + maxOccurrences + ")")
+					alert(event.name, failedEvents.size + " failed events with name " + eventName.get + " is more than allowed (" + maxOccurrences + ")")
 				} else {
-					backToNormal("Back to normal!")
+					backToNormal(event.name, "Back to normal!")
 				}
 			}
 			

@@ -11,18 +11,21 @@ import akka.actor.TypedActor
 import akka.testkit.CallingThreadDispatcher
 import akka.testkit.TestKit
 import collect.Collector
+import akka.testkit.TestProbe
 import grizzled.slf4j.Logging
 import se.aorwall.bam.model.events.AlertEvent
 import se.aorwall.bam.model.events.LogEvent
+import se.aorwall.bam.model.events.SimpleProcessEvent
 import se.aorwall.bam.model.Start
 import se.aorwall.bam.model.Success
-import se.aorwall.bam.process.ProcessorHandler
-import se.aorwall.bam.storage.EventStorageSpec
 import se.aorwall.bam.process.analyse.latency.Latency
+import se.aorwall.bam.process.analyse.window.LengthWindowConf
 import se.aorwall.bam.process.build.request.Request
 import se.aorwall.bam.process.build.simpleprocess.SimpleProcess
-import se.aorwall.bam.process.analyse.window.LengthWindowConf
-import se.aorwall.bam.model.events.SimpleProcessEvent
+import se.aorwall.bam.process.ProcessorHandler
+import se.aorwall.bam.storage.EventStorageSpec
+import se.aorwall.bam.process.ProcessorEventBusExtension
+import akka.util.duration._
 
 /**
  * Testing the whole log data flow.
@@ -34,17 +37,18 @@ class LogdataIntegrationSuite(_system: ActorSystem) extends TestKit(_system) wit
   def this() = this(ActorSystem("LogdataIntegrationSuite", EventStorageSpec.storageConf))
 
   override protected def afterAll(): scala.Unit = {
-    _system.shutdown()
+    system.shutdown()
   }
 
-  test("Recieve a logdata objects and send an alert") {
+  test("Recieve a logdata objects and send an alert") {    
     
+  	 val probe = TestProbe()
+  	 
     var result: AlertEvent = null
     val processId = "processId"
     val camelEndpoint = "hej"
 
     // Start up the modules
-    val system = _system
     val collector = system.actorOf(Props[Collector].withDispatcher(CallingThreadDispatcher.Id), name = "collect")
     val processor = system.actorOf(Props[ProcessorHandler].withDispatcher(CallingThreadDispatcher.Id), name = "process")
       
@@ -53,6 +57,9 @@ class LogdataIntegrationSuite(_system: ActorSystem) extends TestKit(_system) wit
     processor ! new SimpleProcess(processId, List("startComponent", "endComponent"), 120000l)  
     processor ! new Latency("latency", Some(classOf[SimpleProcessEvent].getSimpleName + "/" + processId), 2000, Some(new LengthWindowConf(2)))
 
+  	 val classifier = classOf[AlertEvent].getSimpleName + "/" + processId + "/latency"
+  	 ProcessorEventBusExtension(system).subscribe(probe.ref, classifier)
+    
     // Collect logs
     val currentTime = System.currentTimeMillis
 
@@ -65,7 +72,7 @@ class LogdataIntegrationSuite(_system: ActorSystem) extends TestKit(_system) wit
 
     Thread.sleep(400)
     
-  	//expectMsg(1 seconds, new Alert(processId, "Average latency 3000ms is higher than the maximum allowed latency 2000ms", true)) // the latency alert
+  	 probe.expectMsgAllClassOf(1 seconds, classOf[AlertEvent]) // the latency alert
 
     TypedActor(system).stop(processor)
     //TypedActor(system).stop(analyser)
