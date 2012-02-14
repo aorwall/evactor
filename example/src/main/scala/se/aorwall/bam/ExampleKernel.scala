@@ -16,6 +16,7 @@ import se.aorwall.bam.process.extract.kpi.Kpi
 import se.aorwall.bam.train.GetTrainReports
 import se.aorwall.bam.irc.IrcAgent
 import se.aorwall.bam.atom.AtomAgent
+import se.aorwall.bam.expression.MvelExpression
 
 object ExampleKernel {
   
@@ -49,14 +50,14 @@ class ExampleKernel extends Bootable {
 	  	
 	  	// TRAINS
 	  	// categorize train arrivals by station
-	  	processor ! new Keyword("station", Some(classOf[DataEvent].getSimpleName + "/train/arrival"), "message.TrafikplatsSignatur")
+	  	processor ! new Keyword("station", Some(classOf[DataEvent].getSimpleName + "/train/arrival"), new MvelExpression("message.TrafikplatsSignatur"))
 	  	
 	  	// check delay 
 		processor ! new Kpi("delay", Some(classOf[DataEvent].getSimpleName + "/train/arrival/station/*"), "(new java.text.SimpleDateFormat(\"yyyy-MM-dd'T'HH:mm:ss\").parse(message.AnnonseradTidpunktAnkomst).getTime() - new java.text.SimpleDateFormat(\"yyyy-MM-dd'T'HH:mm:ss\").parse(message.VerkligTidpunktAnkomst).getTime()) / 1000 / 60")
 	  	
 	  	// IRC
 	  	// categorize messages to irc by nick
-	  	processor ! new Keyword("nick", Some(classOf[DataEvent].getSimpleName + "/*"), "message.nick")	  	  	
+	  	processor ! new Keyword("nick", Some(classOf[DataEvent].getSimpleName + "/*"), new MvelExpression("message.nick"))	  	  	
 
 		//nettyServer.run()	
 		

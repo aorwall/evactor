@@ -3,17 +3,17 @@ This is a sample configuration of the event processor.
 IRC:
 Creating data events with name irc/[channel] on each message in the IRC channels #scala and #cassandra 
 	
-	- KeywordProcessors is used to categorize these data events:
-		- by nick: irc/[channel]/nick/[nick] [ /
-		- by all words in each message like this: irc/[channel]/word/[word] (which makes it possible to search the messages)
+	- KeywordProcessors are used to categorize these data events:
+		- by nick: irc/[channel]/nick/[nick] 
+		- by all words in each message like this: irc/[channel]/word/[word] (not implemented)
 		
-	- KpiProcessor is used to :
+	- A KpiProcessor is used to :
 		- count the word in the message and put the value in the kpi event: irc/[channel]/count
 		
-	- A OccurenceAnalyser alarms if a user writes more than 5 messages in one minute
+	- A OccurenceAnalyser alarms if a user writes more than 5 messages in one minute (not implemented)
 			
 TRAIN ARRIVALS:
-This is a data event with the name "/train/arrival" created when a train arrives at a station in the swedish railway network. 
+A data event with the name "/train/arrival" is created when a train arrives at a station in the swedish railway network. 
 
 	- KeywordProcessors categorize the data events:
 		- by train number: train/arrival/trainno/[number]
@@ -22,7 +22,7 @@ This is a data event with the name "/train/arrival" created when a train arrives
 	- KpiProcessors listens to the categorized events "train/arrival/trainNo/*" and "train/arrival/station/*" and:
 		- creates kpi events with then name train/arrival/trainno/[number]/delay train/arrival/station/[station signature]/delay and with the delay in minutes as value
 		
-	- A ValueAnalyser alarms if the average delay is more than 10 minutes under one hour
+	- A ValueAnalyser alarms if the average delay is more than 10 minutes under one hour (not implemented)
 	
 GITHUB COMMITS:
 Data events created every time a commit is made to the projects scala/scala, jboner/akka, apache/cassandra, aorwall/bam, with the event name github/commits/[user]/[repo]
@@ -35,12 +35,13 @@ Data events created every time a commit is made to the projects scala/scala, jbo
 		- counting the number of deletions in kpi event: github/commits/[user]/[repo]/deletions
 		- counting the number of insertions in kpi event: github/commits/[user]/[repo]/insertions
 
-	- A ValueAnalyser alarms if there are more than 100 deleted files in one day in any repo.
+	- A ValueAnalyser alarms if there are more than 100 deleted files in one day in any repo. (not implemented)
 
-WEATHER:
-Data events with the name /weather/[city] is created hourly with weather info in Stockholm and Gothenburg
+WEATHER (not implemented):
+Data events with the name /weather/[city] is created hourly with weather data from Stockholm and Gothenburg
 
 	- KpiProcessors is:
 		- creating new kpi events with the temperature as value: weather/[city]/temperature 
 		
-	- XXXANalyser alarms if the temperature changes more than xxxX in one day (klura liteh är!)
+	- XXXANalyser alarms if the temperature changes more than xxxX in one day....
+	
