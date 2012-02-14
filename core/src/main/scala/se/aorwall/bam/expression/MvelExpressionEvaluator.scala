@@ -59,3 +59,5 @@ class MvelExpressionEvaluator (expression: String) extends ExpressionEvaluator w
   }
 
 }
+
+case class MvelExpression (val expression: String) extends Expression

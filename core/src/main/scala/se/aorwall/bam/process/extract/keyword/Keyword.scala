@@ -12,6 +12,10 @@ import se.aorwall.bam.process.extract.Extractor
 import se.aorwall.bam.process.ProcessorConfiguration
 import se.aorwall.bam.process.Processor
 import se.aorwall.bam.expression.MvelExpressionEvaluator
+import se.aorwall.bam.expression.Expression
+import se.aorwall.bam.expression.MvelExpression
+import se.aorwall.bam.expression.XPathExpression
+import se.aorwall.bam.expression.XPathExpressionEvaluator
 
 /**
  * Extracts a path from a message and creates a new event object of the same type
@@ -19,10 +23,14 @@ import se.aorwall.bam.expression.MvelExpressionEvaluator
  * 
  * Uses MVEL to evaluate expressions, will be extended later...
  */
-class Keyword (override val name: String, val eventName: Option[String], val expression: String) extends ProcessorConfiguration(name: String){
+class Keyword (override val name: String, val eventName: Option[String], val expression: Expression) extends ProcessorConfiguration(name: String){
 
-   val eval = new MvelExpressionEvaluator(expression)
-  
+   val eval = expression match {
+     case MvelExpression(expr) => new MvelExpressionEvaluator(expr)
+     case XPathExpression(expr) => new XPathExpressionEvaluator(expr)
+     case other => throw new IllegalArgumentException("Not a valid expression: " + other)
+   }
+    
 	def extract (event: Event with HasMessage): Option[Event] = {	  	    
      eval.execute(event) match {
        case Some(keyword) => Some(event.clone("%s/%s/%s".format(event.name, name, keyword)))

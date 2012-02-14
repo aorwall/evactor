@@ -10,3 +10,5 @@ abstract class ExpressionEvaluator {
   def execute(event: Event with HasMessage): Option[Any]  
   
 }
+
+abstract class Expression 

@@ -7,6 +7,7 @@ import org.scalatest.junit.JUnitRunner
 import se.aorwall.bam.model.events.Event
 import se.aorwall.bam.model.attributes.HasMessage
 import se.aorwall.bam.model.events.DataEvent
+import se.aorwall.bam.expression.MvelExpression
 
 @RunWith(classOf[JUnitRunner])
 class KeywordSpec extends WordSpec with MustMatchers with Logging{
@@ -15,7 +16,7 @@ class KeywordSpec extends WordSpec with MustMatchers with Logging{
 		val message = "{ \"field\": \"field2\", \"field2\": \"anothervalue\"}"
 	}
 
-	val keyword = new Keyword("keyword", None, "message.field2")
+	val keyword = new Keyword("keyword", None, new MvelExpression("message.field2"))
 
 	"Keyword" must {
 
