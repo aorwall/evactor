@@ -15,6 +15,7 @@ import se.aorwall.bam.model.events.DataEvent
 import se.aorwall.bam.process.extract.kpi.Kpi
 import se.aorwall.bam.train.GetTrainReports
 import se.aorwall.bam.irc.IrcAgent
+import se.aorwall.bam.atom.AtomAgent
 
 object ExampleKernel {
   
@@ -40,6 +41,7 @@ class ExampleKernel extends Bootable {
 	def startup = {    
 		// Start and configure 
 	  	val irc = system.actorOf(Props(new IrcAgent(nick, server, ircChannels, collector)), name = "irc")
+	  	val bamCommits = system.actorOf(Props(new AtomAgent("https://github.com/aorwall/bam/commits/master.atom", "github/commits/aorwall/bam", collector)), name = "bamCommits")
 	  	val trv = system.actorOf(Props(new GetTrainReports(collector)), name = "trains")
 	  	Thread.sleep(100)
 	  	
@@ -56,9 +58,6 @@ class ExampleKernel extends Bootable {
 	  	// categorize messages to irc by nick
 	  	processor ! new Keyword("nick", Some(classOf[DataEvent].getSimpleName + "/*"), "message.nick")	  	  	
 
-	  	
-	  	
-	  	
 		//nettyServer.run()	
 		
 	}

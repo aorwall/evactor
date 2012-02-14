@@ -1,7 +1,5 @@
 This is a sample configuration of the event processor. 
  
-An example is deployed on http://bam.orwall.se 
-
 IRC:
 Creating data events with name irc/[channel] on each message in the IRC channels #scala and #cassandra 
 	
@@ -27,15 +25,15 @@ This is a data event with the name "/train/arrival" created when a train arrives
 	- A ValueAnalyser alarms if the average delay is more than 10 minutes under one hour
 	
 GITHUB COMMITS:
-Data events created every time a commit is made to the projects scala/scala, jboner/akka, apache/cassandra, aorwall/bam, with the event name github/commit/[user]/[repo]
+Data events created every time a commit is made to the projects scala/scala, jboner/akka, apache/cassandra, aorwall/bam, with the event name github/commits/[user]/[repo]
 
 	- KeywordProcessors categorize the data events:
-		- by committing user: github/commit/[user]/[repo]/commiter/[username] 
+		- by committing user: github/commits/[user]/[repo]/commiter/[username] 
 		
 	- KpiProcessors is:
-		- counting the number of modifications in kpi event: github/commit/[user]/[repo]/modifications
-		- counting the number of deletions in kpi event: github/commit/[user]/[repo]/deletions
-		- counting the number of insertions in kpi event: github/commit/[user]/[repo]/insertions
+		- counting the number of modifications in kpi event: github/commits/[user]/[repo]/modifications
+		- counting the number of deletions in kpi event: github/commits/[user]/[repo]/deletions
+		- counting the number of insertions in kpi event: github/commits/[user]/[repo]/insertions
 
 	- A ValueAnalyser alarms if there are more than 100 deleted files in one day in any repo.
 

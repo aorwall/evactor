@@ -22,7 +22,7 @@ class IrcAgent(val nick: String, val server: String, val ircChannels: String, va
   }
   
   override def preStart() {
-     log.info("starting to listen on channel %s on server %s".format(ircChannels, server))
+     log.info("listening on channel %s on server %s".format(ircChannels, server))
 	  camelContext.addRoutes(new RouteBuilder() {
 			def configure() {
 				from("irc:%s@%s/?channels=%s&onJoin=false&onQuit=false&onPart=false".format(nick,server,ircChannels))
