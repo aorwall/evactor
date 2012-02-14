@@ -23,7 +23,7 @@ class XPathExpressionEvaluator (expression: String) extends ExpressionEvaluator 
   val expr = xpath.compile(expression) 
   
   val domFactory = DocumentBuilderFactory.newInstance();
-  domFactory.setNamespaceAware(true); 
+  //domFactory.setNamespaceAware(true); 
   val builder = domFactory.newDocumentBuilder(); 
   
   def execute(event: Event with HasMessage): Option[String] = {

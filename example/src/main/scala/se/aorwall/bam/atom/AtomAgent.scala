@@ -27,7 +27,7 @@ class AtomAgent (val url: String, val eventName: String, val collector: ActorRef
     log.info("listening on atom feed on %s".format(url))
     camelContext.addRoutes(new RouteBuilder() {
 		def configure() {
-			from("atom://%s?consumer.delay=5000".format(url))
+			from("atom://%s?consumer.delay=10000".format(url))
 			.to("bean:toAkka");
 		}
     });

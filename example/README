@@ -25,15 +25,15 @@ A data event with the name "/train/arrival" is created when a train arrives at a
 	- A ValueAnalyser alarms if the average delay is more than 10 minutes under one hour (not implemented)
 	
 GITHUB COMMITS:
-Data events created every time a commit is made to the projects scala/scala, jboner/akka, apache/cassandra, aorwall/bam, with the event name github/commits/[user]/[repo]
+Data events created every time a commit is made to the projects scala/scala, jboner/akka, apache/cassandra, aorwall/bam, with the event name github/commits/[repo]
 
 	- KeywordProcessors categorize the data events:
-		- by committing user: github/commits/[user]/[repo]/commiter/[username] 
+		- by committing user: github/commits/[repo]/committer/[username] 
 		
 	- KpiProcessors is:
-		- counting the number of modifications in kpi event: github/commits/[user]/[repo]/modifications
-		- counting the number of deletions in kpi event: github/commits/[user]/[repo]/deletions
-		- counting the number of insertions in kpi event: github/commits/[user]/[repo]/insertions
+		- counting the number of modifications in kpi event: github/commits/[repo]/modifications
+		- counting the number of deletions in kpi event: github/commits/[repo]/deletions
+		- counting the number of insertions in kpi event: github/commits/[repo]/insertions
 
 	- A ValueAnalyser alarms if there are more than 100 deleted files in one day in any repo. (not implemented)
 
