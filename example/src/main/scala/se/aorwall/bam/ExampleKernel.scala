@@ -18,6 +18,8 @@ import se.aorwall.bam.irc.IrcAgent
 import se.aorwall.bam.atom.AtomAgent
 import se.aorwall.bam.expression.MvelExpression
 import se.aorwall.bam.expression.XPathExpression
+import se.aorwall.bam.api.DataEventAPI
+import se.aorwall.bam.api.KpiEventAPI
 
 object ExampleKernel {
   
@@ -38,12 +40,15 @@ class ExampleKernel extends Bootable {
 	lazy val collector = system.actorOf(Props[Collector], name = "collect")
 	lazy val processor = system.actorOf(Props[ProcessorHandler], name = "process")
 	
-	//lazy val nettyServer = unfiltered.netty.Http(8080).plan(new DataEventAPI(system)).plan(new KpiEventAPI(system))
+	lazy val nettyServer = unfiltered.netty.Http(8080).plan(new DataEventAPI(system)).plan(new KpiEventAPI(system))
 	
 	def startup = {    
 		// Start and configure 
 	   val irc = system.actorOf(Props(new IrcAgent(nick, server, ircChannels, collector)), name = "irc")
 	  	val bamCommits = system.actorOf(Props(new AtomAgent("https://github.com/aorwall/bam/commits/master.atom", "github/commits/bam", collector)), name = "bamCommits")
+	  	val akkaCommits = system.actorOf(Props(new AtomAgent("https://github.com/jboner/akka/commits/master.atom", "github/commits/akka", collector)), name = "akkaCommits")
+	  	val cassandraCommits = system.actorOf(Props(new AtomAgent("https://github.com/apache/cassandra/commits/trunk.atom", "github/commits/cassandra", collector)), name = "cassandraCommits")
+	  	val scalaCommits = system.actorOf(Props(new AtomAgent("https://github.com/scala/scala/commits/master.atom", "github/commits/scala", collector)), name = "scalaCommits")
 	  	val trv = system.actorOf(Props(new GetTrainReports(collector)), name = "trains")
 	  	Thread.sleep(100)
 	  	
@@ -63,15 +68,12 @@ class ExampleKernel extends Bootable {
 	  	// COMMITS
 	  	processor ! new Keyword("committer", Some(classOf[DataEvent].getSimpleName + "/github/commits/*"), new XPathExpression("//entry/author/name")) //TODO: Extract username!
 	  	
-	  	
-		//nettyServer.run()	
-		
+		nettyServer.run()			
 	}
 
 	def shutdown = {
 		system.shutdown()
-		
-	//	nettyServer.stop()
+		nettyServer.stop()
 	}
 
 }

@@ -26,15 +26,14 @@ class DataEventAPI(system: ActorSystem) extends NettyPlan {
   def intent = {
     case req @ Path(Seg("data" :: "names" :: path)) => try {
    	   val Params(params) = req      
-   	 	ResponseString(generate(storage.getEventNames(getPath(path), getCount(params.get("count"), 100))))
+   	 	ResponseString(generate(storage.getEventNames(getPath(path), getCount(params.get("count"), 20))))
     	} catch { case _ => BadRequest }
-
     case req @ Path(Seg("data" :: "stats" :: path)) => try {
 	      val Params(params) = req       
 	      //TODO: Extract parameters
 	   	ResponseString(generate(storage.getStatistics(decode(path.mkString("/")), Some(0L), Some(now), "hour")))
       } catch { case _ => BadRequest }
-    case req @ Path(Seg("data" :: "events" :: path)) =>  try {
+    case req @ Path(Seg("data" :: "events" :: path)) => try {
    	 	val Params(params) = req       
    	 	//TODO: Extract parameters
    	 	ResponseString(generate(storage.getEvents(decode(path.mkString("/")), None, None, 10, 0)))

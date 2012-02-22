@@ -27,10 +27,10 @@ class GetTrainReports(val collector: ActorRef) extends Actor with ActorLogging {
   def process = {
 			val request = 
 			  """
-			  <ORIONML version="1.0"><REQUEST plugin="WOW" version="" locale="SE_sv"><PLUGINML table="LpvTrafiklagen" filter="VerkligTidpunktAnkomst > datetime('now','localtime','-5 minute') AND datetime('now','localtime','1 minute') > VerkligTidpunktAnkomst AND ArAnkomstTag = true" orderby="AnnonseradTidpunktAnkomst" selectcolumns=""></PLUGINML></REQUEST></ORIONML>
+			  <ORIONML version="1.0"><REQUEST plugin="WOW" version="" locale="SE_sv"><PLUGINML table="LpvTrafiklagen" filter="VerkligTidpunktAnkomst > datetime('now','localtime','-2 minute') AND datetime('now','localtime','1 minute') > VerkligTidpunktAnkomst AND ArAnkomstTag = true" orderby="AnnonseradTidpunktAnkomst" selectcolumns=""></PLUGINML></REQUEST></ORIONML>
 			  """
 			  
-			log.info("fetching trains")  
+			log.info("fetching trains")
 			  
 			val endpointAddress = "http://trafikinfo.trafikverket.se/litcore/orion/orionproxy.ashx"
 			val client = new DefaultHttpClient();

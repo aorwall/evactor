@@ -12,7 +12,7 @@ import se.aorwall.bam.model.events.DataEvent
 class IrcAgent(val nick: String, val server: String, val ircChannels: String, val collector: ActorRef) extends Actor with ActorLogging {
 	    
   val jndiContext = new JndiContext();
-  jndiContext.bind("toAkka", new SendToAkka(context.self));
+  jndiContext.bind("toAkka", new SendToAkka(collector));
 	
   val camelContext = new DefaultCamelContext(jndiContext);	
   
@@ -22,19 +22,19 @@ class IrcAgent(val nick: String, val server: String, val ircChannels: String, va
   }
   
   override def preStart() {
-     log.info("listening on channel %s on server %s".format(ircChannels, server))
-	  camelContext.addRoutes(new RouteBuilder() {
+    log.info("listening on channel %s on server %s".format(ircChannels, server))
+    camelContext.addRoutes(new RouteBuilder() {
 			def configure() {
 				from("irc:%s@%s/?channels=%s&onJoin=false&onQuit=false&onPart=false".format(nick,server,ircChannels))
 				.to("bean:toAkka");
-			}
-	  });
-	  camelContext.start()
+      }
+    });
+    camelContext.start()
   } 
-	
-	override def postStop() {	  
-	  log.info("stopping...")
-	  camelContext.stop()	 
-	}
+  
+  override def postStop() {	  
+	 log.info("stopping...")
+	 camelContext.stop()	 
+  }
 	
 }
