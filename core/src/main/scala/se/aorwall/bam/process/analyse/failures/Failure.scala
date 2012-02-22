@@ -14,7 +14,7 @@ class Failure (
     window: Option[WindowConf])
   extends ProcessorConfiguration(name) {
 
-  def getProcessor = window match {
+  def processor = window match {
     case Some(length: LengthWindowConf) => 
       new FailureAnalyser(name, eventName, maxOccurrences) 
         with LengthWindow { override val noOfRequests = length.noOfRequests }

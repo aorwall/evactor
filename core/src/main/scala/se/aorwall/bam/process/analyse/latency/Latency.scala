@@ -14,7 +14,7 @@ class Latency (
     window: Option[WindowConf])
   extends ProcessorConfiguration(name) {
 
-  def getProcessor = window match {
+  def processor = window match {
     case Some(length: LengthWindowConf) => 
       new LatencyAnalyser(name, eventName, maxLatency) 
         with LengthWindow { override val noOfRequests = length.noOfRequests }

@@ -44,7 +44,7 @@ class Keyword (
     }	  
   }
 
-  override def getProcessor(): Processor = {
+  override def processor: Processor = {
     new Extractor(name, eventName, extract)
   }
 

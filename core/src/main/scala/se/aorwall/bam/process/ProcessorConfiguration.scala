@@ -8,6 +8,6 @@ import akka.actor.Actor
  */
 abstract class ProcessorConfiguration (val name: String) {
   
-  def getProcessor(): Processor
+  def processor: Processor
   
 }

@@ -30,6 +30,6 @@ class Kpi (override val name: String, val eventName: Option[String], val express
       case a => None
     }
   
-  override def getProcessor(): Processor = 
+  override def processor: Processor = 
     new Extractor(name, eventName, extract)
 }

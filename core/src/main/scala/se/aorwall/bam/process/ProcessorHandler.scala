@@ -35,7 +35,7 @@ class ProcessorHandler extends Actor with ActorLogging  {
     // stopping previous actor if one exists
     val runningActor = context.actorFor(configuration.name)
     context.stop(runningActor)
-    context.actorOf(Props(configuration.getProcessor), name = configuration.name)
+    context.actorOf(Props(configuration.processor), name = configuration.name)
   }
 
   def removeProcessor(processorId: String) {
