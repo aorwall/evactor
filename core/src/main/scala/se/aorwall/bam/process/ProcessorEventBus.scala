@@ -68,7 +68,7 @@ class ProcessorEventBus extends Extension with ActorEventBus with LookupClassifi
         publish(event, j.next())
       } 
     }
-       
+
     // and send to all subscribers that hasn't specified a event name at all in the subscription
     val k = subscribers.valueIterator("")
     while (k.hasNext) { publish(event, k.next()) }

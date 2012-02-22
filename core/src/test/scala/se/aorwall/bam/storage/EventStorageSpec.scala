@@ -75,10 +75,8 @@ class EventStorageSpec(system: ActorSystem) extends WordSpec with MustMatchers w
       store.getEventStorage(logEvent) match {
         case Some(e) => e.getClass.getName must be ("se.aorwall.bam.storage.TestEventStorage")
         case e => fail("expected an instance of se.aorwall.bam.storage.TestEventStorage but found: " + e)
-     }      
-            
+      }    
     }
-
   }
     
 }

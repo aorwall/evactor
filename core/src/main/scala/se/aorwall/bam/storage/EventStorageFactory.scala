@@ -1,16 +1,13 @@
 package se.aorwall.bam.storage
 
-import se.aorwall.bam.model.events.Event
-import se.aorwall.bam.model.events.LogEvent
-import akka.actor.ActorSystemImpl
-import akka.actor.Extension
 import scala.util.DynamicVariable
-import akka.actor.ActorSystem
 import com.typesafe.config.Config
+import akka.actor.Extension
 import akka.config.ConfigurationException
-import akka.util.ReflectiveAccess
 import grizzled.slf4j.Logging
+import se.aorwall.bam.model.events.Event
 import akka.actor.ExtendedActorSystem
+import akka.actor.ActorSystem
 
 /**
  * Handling event storage. Made in the same way as the serialization
@@ -32,8 +29,8 @@ object EventStorageFactory {
       hasPath(configPath) match {
         case false => Map()
         case true => getConfig(configPath).root.unwrapped.asScala.toMap.map {
-            case (k: String, v: java.util.Collection[_]) ⇒ (k -> v.asScala.toSeq.asInstanceOf[Seq[String]])
-            case invalid ⇒ throw new ConfigurationException("Invalid storage-bindings [%s]".format(invalid))
+            case (k: String, v: java.util.Collection[_]) => (k -> v.asScala.toSeq.asInstanceOf[Seq[String]])
+            case invalid => throw new ConfigurationException("Invalid storage-bindings [%s]".format(invalid))
           }
       }
     }
@@ -54,29 +51,16 @@ class EventStorageFactory(val system: ExtendedActorSystem) extends Extension wit
     storageImplMap.get(className).getOrElse(None)
   }  
 	
-  def storageImplOf(storageFQN: String): Option[EventStorage] = {
-    info(storageFQN)
-   
-    storageFQN match {
-      case "" => None
-      case fqcn: String =>
-        val constructorSignature = Array[Class[_]](classOf[ActorSystem])
-        ReflectiveAccess.createInstance[EventStorage](fqcn, constructorSignature, Array[AnyRef](system)) match {
-          case Right(instance) ⇒ Some(instance)
-          case Left(exception) ⇒
-            throw new IllegalArgumentException(
-              ("Cannot instantiate EventStorage [%s], defined in [%s]")
-                .format(fqcn, system), exception)
-        }
-    }
-  }
-   
+  def storageImplOf(storageFQN: String): Either[Throwable, EventStorage] = 
+    system.dynamicAccess.createInstanceFor[EventStorage](storageFQN, Seq(classOf[ActorSystem] -> system))
+        
   lazy val storageImplementations: Map[String, Option[EventStorage]] = {     
     val storageConf = settings.StorageImplementations
+    
     for ((k: String, v: String) <- storageConf)
-      yield k -> storageImplOf(v)
+      yield k -> storageImplOf(v).fold(throw _, Some(_)) // TODO: we don't care about exceptions atm...
   }
-	
+
   lazy val bindings: Map[String, String] = {
     settings.StorageBindings.foldLeft(Map[String, String]()) {
       // All keys which are lists, take the Strings from them and Map them
@@ -86,7 +70,7 @@ class EventStorageFactory(val system: ExtendedActorSystem) extends Extension wit
       case (result, _) ⇒ result
     }
   }
-   
+
   lazy val storageImplMap: Map[String, Option[EventStorage]] = bindings mapValues storageImplementations
    
 }

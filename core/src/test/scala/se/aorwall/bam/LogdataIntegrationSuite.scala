@@ -44,6 +44,7 @@ class LogdataIntegrationSuite(_system: ActorSystem) extends TestKit(_system) wit
     
   	 val probe = TestProbe()
   	 
+    println("rajraj")
     var result: AlertEvent = null
     val processId = "processId"
     val camelEndpoint = "hej"
@@ -51,7 +52,7 @@ class LogdataIntegrationSuite(_system: ActorSystem) extends TestKit(_system) wit
     // Start up the modules
     val collector = system.actorOf(Props[Collector].withDispatcher(CallingThreadDispatcher.Id), name = "collect")
     val processor = system.actorOf(Props[ProcessorHandler].withDispatcher(CallingThreadDispatcher.Id), name = "process")
-      
+          
     // start the processors
     processor ! new Request("requestProcessor", 120000L)
     processor ! new SimpleProcess(processId, List("startComponent", "endComponent"), 120000l)  
@@ -59,7 +60,7 @@ class LogdataIntegrationSuite(_system: ActorSystem) extends TestKit(_system) wit
 
   	 val classifier = classOf[AlertEvent].getSimpleName + "/" + processId + "/latency"
   	 ProcessorEventBusExtension(system).subscribe(probe.ref, classifier)
-    
+        
     // Collect logs
     val currentTime = System.currentTimeMillis
 
@@ -73,8 +74,5 @@ class LogdataIntegrationSuite(_system: ActorSystem) extends TestKit(_system) wit
     Thread.sleep(400)
     
   	 probe.expectMsgAllClassOf(1 seconds, classOf[AlertEvent]) // the latency alert
-
-    TypedActor(system).stop(processor)
-    //TypedActor(system).stop(analyser)
   }
 }
