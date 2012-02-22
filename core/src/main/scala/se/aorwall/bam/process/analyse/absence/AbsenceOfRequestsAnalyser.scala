@@ -12,8 +12,13 @@ import akka.actor.ActorLogging
 /**
  * TODO: Check event.timestamp to be really sure about the timeframe between events 
  */
-class AbsenceOfRequestsAnalyser (name: String, eventName: Option[String], val timeframe: Long)
-  extends Analyser(name, eventName) with CheckEventName with ActorLogging {
+class AbsenceOfRequestsAnalyser (
+    name: String, 
+    eventName: Option[String], 
+    val timeframe: Long)
+  extends Analyser(name, eventName) 
+  with CheckEventName 
+  with ActorLogging {
   
   type T = Event
   

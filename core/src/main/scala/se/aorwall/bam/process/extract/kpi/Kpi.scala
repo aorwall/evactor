@@ -20,21 +20,16 @@ class Kpi (override val name: String, val eventName: Option[String], val express
    
   val eval = new MvelExpressionEvaluator(expression) // Must fix so MvelExpressionEvaluator always returns a double
    
-	def extract (event: Event with HasMessage): Option[Event] = {
-
+  def extract (event: Event with HasMessage): Option[Event] = 
     eval.execute(event) match {
-       case Some(value: String) => try {
-         Some(new KpiEvent("%s/%s".format(event.name, name), event.id, event.timestamp, value.toDouble)) 
-       } catch {
-         case _ => None
-       }
-       case a => None
-     }
-	  	
-	}
-
-   override def getProcessor(): Processor = {
-     new Extractor(name, eventName, extract)
-   }
-
+      case Some(value: String) => try {
+        Some(new KpiEvent("%s/%s".format(event.name, name), event.id, event.timestamp, value.toDouble)) 
+      } catch {
+        case _ => None
+      }
+      case a => None
+    }
+  
+  override def getProcessor(): Processor = 
+    new Extractor(name, eventName, extract)
 }

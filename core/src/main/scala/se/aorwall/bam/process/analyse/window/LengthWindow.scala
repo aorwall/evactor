@@ -21,6 +21,6 @@ trait LengthWindow extends Window with Logging {
   }
 }
 
-case class LengthWindowConf (noOfRequests: Int) extends WindowConf{
+case class LengthWindowConf (noOfRequests: Int) extends WindowConf {
 
 }

@@ -23,23 +23,29 @@ import se.aorwall.bam.expression.XPathExpressionEvaluator
  * 
  * Uses MVEL to evaluate expressions, will be extended later...
  */
-class Keyword (override val name: String, val eventName: Option[String], val expression: Expression) extends ProcessorConfiguration(name: String){
+class Keyword (
+    override val name: String, 
+    val eventName: Option[String], 
+    val expression: Expression) 
+  extends ProcessorConfiguration(name: String){
 
-   val eval = expression match {
-     case MvelExpression(expr) => new MvelExpressionEvaluator(expr)
-     case XPathExpression(expr) => new XPathExpressionEvaluator(expr)
-     case other => throw new IllegalArgumentException("Not a valid expression: " + other)
-   }
+  val eval = expression match {
+    case MvelExpression(expr) => new MvelExpressionEvaluator(expr)
+    case XPathExpression(expr) => new XPathExpressionEvaluator(expr)
+    case other => 
+      throw new IllegalArgumentException("Not a valid expression: " + other)
+  }
     
-	def extract (event: Event with HasMessage): Option[Event] = {	  	    
-     eval.execute(event) match {
-       case Some(keyword) => Some(event.clone("%s/%s/%s".format(event.name, name, keyword)))
-       case _ => None
-     }	  
-	}
+  def extract (event: Event with HasMessage): Option[Event] = {	  	    
+    eval.execute(event) match {
+      case Some(keyword) => 
+        Some(event.clone("%s/%s/%s".format(event.name, name, keyword)))
+      case _ => None
+    }	  
+  }
 
-   override def getProcessor(): Processor = {
-     new Extractor(name, eventName, extract)
-   }
+  override def getProcessor(): Processor = {
+    new Extractor(name, eventName, extract)
+  }
 
 }

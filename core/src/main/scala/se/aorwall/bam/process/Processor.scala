@@ -15,7 +15,7 @@ abstract class Processor (val name: String) extends Actor with ActorLogging {
   
   protected var testActor: Option[ActorRef] = None // actor used for testing
   
-  def receive  = {
+  def receive = {
     case event: T => if (handlesEvent(event)) process(event) // TODO: case event: T  doesn't work...
     case actor: ActorRef => testActor = Some(actor) 
     case _ => // skip
@@ -26,7 +26,7 @@ abstract class Processor (val name: String) extends Actor with ActorLogging {
   protected def handlesEvent(event: T): Boolean
   
   override def preStart = {
-    log.debug("starting...")        
+    log.debug("starting...")
   }
 
   override def postStop = {

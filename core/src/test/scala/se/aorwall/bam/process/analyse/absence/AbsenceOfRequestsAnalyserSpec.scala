@@ -14,7 +14,11 @@ import se.aorwall.bam.model.events.Event
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class AbsenceOfRequestsAnalyserSpec(_system: ActorSystem) extends TestKit(_system) with WordSpec with BeforeAndAfterAll with MustMatchers  {
+class AbsenceOfRequestsAnalyserSpec(_system: ActorSystem) 
+  extends TestKit(_system) 
+  with WordSpec 
+  with BeforeAndAfterAll 
+  with MustMatchers {
 
   def this() = this(ActorSystem("AbsenceOfRequestsAnalyserSpec"))
 
@@ -69,8 +73,7 @@ class AbsenceOfRequestsAnalyserSpec(_system: ActorSystem) extends TestKit(_syste
 
       actor.stop()
     }
-    
-    
+        
     "alert on timeout, and don't send \"back to normal\" message when a event with another name arrives" in {
       val time = 100L
 

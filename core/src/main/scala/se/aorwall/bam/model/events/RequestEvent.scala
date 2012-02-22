@@ -14,9 +14,12 @@ case class RequestEvent (
     val inboundRef: Option[EventRef],
     val outboundRef: Option[EventRef],
     val state: State,
-    val latency: Long) extends Event(name, id, timestamp) with HasLatency with HasState  {
+    val latency: Long) 
+  extends Event(name, id, timestamp)
+  with HasLatency 
+  with HasState {
 
-  override def clone(newName: String): Event = {
+  override def clone(newName: String): Event = 
     new RequestEvent(newName, id, timestamp, inboundRef, outboundRef, state, latency)
-  }
+  
 }

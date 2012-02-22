@@ -42,22 +42,22 @@ object EventStorageFactory {
 
 class EventStorageFactory(val system: ExtendedActorSystem) extends Extension with Logging {
   
-   import EventStorageFactory._
+  import EventStorageFactory._
   
-	val settings = new Settings(system.settings.config)	
+  val settings = new Settings(system.settings.config)	
 	
-	def getEventStorage(event: Event): Option[EventStorage] = {
-      storageImplMap.get(event.getClass().getName).getOrElse(None)
-   }  
+  def getEventStorage(event: Event): Option[EventStorage] = {
+    storageImplMap.get(event.getClass().getName).getOrElse(None)
+  }  
 
-	def getEventStorage(className: String): Option[EventStorage] = {
-     storageImplMap.get(className).getOrElse(None)
-   }  
+  def getEventStorage(className: String): Option[EventStorage] = {
+    storageImplMap.get(className).getOrElse(None)
+  }  
 	
-   def storageImplOf(storageFQN: String): Option[EventStorage] = {
-     info(storageFQN)
+  def storageImplOf(storageFQN: String): Option[EventStorage] = {
+    info(storageFQN)
    
-     storageFQN match {
+    storageFQN match {
       case "" => None
       case fqcn: String =>
         val constructorSignature = Array[Class[_]](classOf[ActorSystem])
@@ -69,19 +69,20 @@ class EventStorageFactory(val system: ExtendedActorSystem) extends Extension wit
                 .format(fqcn, system), exception)
         }
     }
-   }
+  }
    
-   lazy val storageImplementations: Map[String, Option[EventStorage]] = {     
+  lazy val storageImplementations: Map[String, Option[EventStorage]] = {     
     val storageConf = settings.StorageImplementations
     for ((k: String, v: String) <- storageConf)
       yield k -> storageImplOf(v)
-   }
+  }
 	
-   lazy val bindings: Map[String, String] = {
+  lazy val bindings: Map[String, String] = {
     settings.StorageBindings.foldLeft(Map[String, String]()) {
-      //All keys which are lists, take the Strings from them and Map them
-      case (result, (k: String, vs: Seq[_])) ⇒ result ++ (vs collect { case v: String ⇒ (v, k) })
-      //For any other values, just skip them
+      // All keys which are lists, take the Strings from them and Map them
+      case (result, (k: String, vs: Seq[_])) => 
+        result ++ (vs collect { case v: String ⇒ (v, k) })
+      // For any other values, just skip them
       case (result, _) ⇒ result
     }
   }

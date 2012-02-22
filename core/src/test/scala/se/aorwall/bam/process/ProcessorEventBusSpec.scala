@@ -12,7 +12,12 @@ import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class ProcessorEventBusSpec (_system: ActorSystem) extends TestKit(_system) with WordSpec with BeforeAndAfterAll with MustMatchers with BeforeAndAfter{
+class ProcessorEventBusSpec (_system: ActorSystem) 
+  extends TestKit(_system) 
+  with WordSpec 
+  with BeforeAndAfterAll 
+  with MustMatchers 
+  with BeforeAndAfter {
 
   def this() = this(ActorSystem("ProcessorEventBusSpec"))
 

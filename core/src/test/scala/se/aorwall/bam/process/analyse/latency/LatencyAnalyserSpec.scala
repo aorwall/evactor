@@ -19,7 +19,11 @@ import se.aorwall.bam.model.Success
 import se.aorwall.bam.process.analyse.window.LengthWindow
 
 @RunWith(classOf[JUnitRunner])
-class LatencyAnalyserSpec(_system: ActorSystem) extends TestKit(_system) with WordSpec with BeforeAndAfterAll with MustMatchers {
+class LatencyAnalyserSpec(_system: ActorSystem) 
+  extends TestKit(_system)
+  with WordSpec
+  with BeforeAndAfterAll
+  with MustMatchers {
 
   def this() = this(ActorSystem("LatencyAnalyserSpec"))
 

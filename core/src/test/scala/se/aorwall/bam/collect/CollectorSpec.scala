@@ -9,11 +9,11 @@ import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class CollectorSpec extends WordSpec with MustMatchers {
-   "A Collector" must {
+  "A Collector" must {
 
-     "create a log event when receiving a log object and send to process actors" in {
-         (pending)
-     }
+    "create a log event when receiving a log object and send to process actors" in {
+       (pending)
+    }
 
-   }
+  }
 }

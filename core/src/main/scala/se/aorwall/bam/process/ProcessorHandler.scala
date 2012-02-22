@@ -24,23 +24,17 @@ class ProcessorHandler extends Actor with ActorLogging  {
   }
   
   def receive = {
-    case event: Event => process(event)
     case configuration: ProcessorConfiguration => setProcessor(configuration)
     case processorId: String => removeProcessor(processorId)
     case msg => log.info("can't handle: " + msg)
   }
   
-  def process(event: Event) {
-    log.debug("received event: " + event)
-    
-  }
-    
   def setProcessor(configuration: ProcessorConfiguration) {
     log.debug("setting processor for configuration: " + configuration)
-    
+
     // stopping previous actor if one exists
     val runningActor = context.actorFor(configuration.name)
-    context.stop(runningActor)          
+    context.stop(runningActor)
     context.actorOf(Props(configuration.getProcessor), name = configuration.name)
   }
 
@@ -50,7 +44,7 @@ class ProcessorHandler extends Actor with ActorLogging  {
     context.stop(runningActor)    
   }
 
-  override def postStop(): Unit = {
+  override def postStop() {
     log.debug("stopping..")
   }
 }

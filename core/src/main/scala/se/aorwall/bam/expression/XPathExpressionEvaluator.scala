@@ -1,4 +1,5 @@
 package se.aorwall.bam.expression
+
 import java.util.HashMap
 import org.codehaus.jackson.map.ObjectMapper
 import org.mvel2.MVEL

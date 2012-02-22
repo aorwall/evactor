@@ -11,8 +11,8 @@ import se.aorwall.bam.process.Subscriber
 class StorageProcessor extends Actor with Subscriber with Storage with ActorLogging {
   
   override def receive = {
-	    case event: Event => log.debug("Storing: " + event); storeEvent(event) 
-	    case msg => log.info("Can't handle: " + msg)
+    case event: Event => log.debug("Storing: " + event); storeEvent(event) 
+    case msg => log.info("Can't handle: " + msg)
   }
   
   override def preStart = {

@@ -9,10 +9,11 @@ case class DataEvent (
     override val name: String, 
     override val id: String, 
     override val timestamp: Long, 
-    val message: String) extends Event(name, id, timestamp) with HasMessage  {
+    val message: String) 
+  extends Event(name, id, timestamp) 
+  with HasMessage {
 
-  override def clone(newName: String): Event = {
+  override def clone(newName: String): Event = 
     new DataEvent(newName, id, timestamp, message)
-  }
   
 }

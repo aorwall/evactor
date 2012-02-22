@@ -14,7 +14,9 @@ import org.scalatest.junit.JUnitRunner
 import org.scalatest.BeforeAndAfterAll
 import akka.actor.ActorRef
 
-class TestProcessor (name: String, val eventName: Option[String]) extends Processor (name) with CheckEventName {
+class TestProcessor (name: String, val eventName: Option[String]) 
+  extends Processor (name) 
+  with CheckEventName {
   
   type T = TestEvent
     

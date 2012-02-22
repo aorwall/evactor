@@ -3,7 +3,12 @@ import akka.actor.{ ActorSystem, ExtensionId, ExtensionIdProvider, ActorSystemIm
 import akka.actor.ExtendedActorSystem
 
 object EventStorageExtension extends ExtensionId[EventStorageFactory] with ExtensionIdProvider {
+  
   override def get(system: ActorSystem): EventStorageFactory = super.get(system)
+  
   override def lookup = EventStorageExtension
-  override def createExtension(system: ExtendedActorSystem): EventStorageFactory = new EventStorageFactory(system)
+  
+  override def createExtension(system: ExtendedActorSystem): EventStorageFactory = 
+    new EventStorageFactory(system)
+  
 }

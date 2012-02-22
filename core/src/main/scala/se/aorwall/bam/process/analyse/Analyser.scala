@@ -16,9 +16,14 @@ import se.aorwall.bam.process.Publisher
  * if eventName = type/name/* and name = test and the new eventname should be
  * the event.name + /name"... Doesn't work for AbsenceOfRequestsAnalyser though...
  */*/
-abstract class Analyser(name: String, val eventName: Option[String]) extends Processor(name) with Publisher with ActorLogging  {
-    
-  var triggered = false //TODO: use FSM for this
+abstract class Analyser(
+    name: String, 
+    val eventName: Option[String]) 
+  extends Processor(name) 
+  with Publisher 
+  with ActorLogging  {
+
+  var triggered = false 
   
   protected def alert(eventName: String, message: String) {
     if (!triggered) {
@@ -40,7 +45,14 @@ abstract class Analyser(name: String, val eventName: Option[String]) extends Pro
 
   def sendAlert(eventName: String, message: String) {
     val currentTime = System.currentTimeMillis
-    val alert = new AlertEvent("%s/%s".format(eventName, name), currentTime.toString, currentTime, triggered, message)
+    val alert = 
+      new AlertEvent(
+        "%s/%s".format(eventName, name), 
+        currentTime.toString, 
+        currentTime, 
+        triggered, 
+        message)
+    
     log.info(alert.path)
     publish(alert)
 

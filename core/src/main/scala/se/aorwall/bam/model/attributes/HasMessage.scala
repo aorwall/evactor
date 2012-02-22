@@ -5,5 +5,5 @@ package se.aorwall.bam.model.attributes
  * 
  */
 trait HasMessage {
-	val message: String
+  val message: String
 }

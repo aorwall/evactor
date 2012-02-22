@@ -11,9 +11,9 @@ import org.scalatest.junit.JUnitRunner
 class LengthWindowSpec extends WordSpec with MustMatchers {
 
   val lengthWindow = new {
-        type S = Int
-        val noOfRequests = 3
-      } with LengthWindow
+      type S = Int
+      val noOfRequests = 3
+    } with LengthWindow
 
   "A LengthWindowConf" must {
 

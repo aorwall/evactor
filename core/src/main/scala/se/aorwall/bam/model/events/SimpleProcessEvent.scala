@@ -9,10 +9,12 @@ case class SimpleProcessEvent(
     override val timestamp: Long,
     val requests: List[EventRef], // eventRefs
     val state: State,    
-    val latency: Long) extends Event(name, id, timestamp) with HasLatency with HasState  {
+    val latency: Long) 
+  extends Event(name, id, timestamp) 
+  with HasLatency
+  with HasState  {
   
-  override def clone(newName: String): Event = {
+  override def clone(newName: String): Event = 
     new SimpleProcessEvent(newName, id, timestamp, requests, state, latency)
-  }
   
 }

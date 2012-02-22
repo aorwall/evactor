@@ -12,7 +12,12 @@ import org.scalatest.junit.JUnitRunner
 class TimeWindowSpec extends WordSpec with MustMatchers with Logging {
 
   val currentTime = System.currentTimeMillis
-  val events = TreeMap(currentTime - 10000000L -> 11, currentTime - 1000000L -> 22, currentTime - 1000L -> 33, currentTime - 2000L -> 44, currentTime - 3000L -> 55)
+  val events = TreeMap(
+      currentTime - 10000000L -> 11, 
+      currentTime - 1000000L -> 22, 
+      currentTime - 1000L -> 33, 
+      currentTime - 2000L -> 44, 
+      currentTime - 3000L -> 55)
 
   "A TimeWindow" must {
 /*
@@ -26,7 +31,7 @@ class TimeWindowSpec extends WordSpec with MustMatchers with Logging {
       }
     }
 */
-    "don't return any events when the timeframe is set to current time" in {
+    "not return any events when the timeframe is set to current time" in {
 
       new {
         type S = Int

@@ -18,17 +18,21 @@ import se.aorwall.bam.model.Success
 import se.aorwall.bam.process.analyse.window.TimeWindow
 
 @RunWith(classOf[JUnitRunner])
-class FailureAnalyserSpec(_system: ActorSystem) extends TestKit(_system) with WordSpec with BeforeAndAfterAll with MustMatchers {
+class FailureAnalyserSpec(_system: ActorSystem) 
+  extends TestKit(_system) 
+  with WordSpec 
+  with BeforeAndAfterAll 
+  with MustMatchers {
 
-   def this() = this(ActorSystem("FailureAnalyserSpec"))
+  def this() = this(ActorSystem("FailureAnalyserSpec"))
 
-   val name = "name"
-   val eventName = "event"
-   val correlationid = "correlationid"
+  val name = "name"
+  val eventName = "event"
+  val correlationid = "correlationid"
 
-   override protected def afterAll(): scala.Unit = {
-     _system.shutdown()
-   }
+  override protected def afterAll(): scala.Unit = {
+    _system.shutdown()
+  }
 
   "A FailureAnalyser" must {
 

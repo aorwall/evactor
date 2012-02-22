@@ -18,16 +18,19 @@ class Collector extends Actor with Publisher with Storage with ActorLogging {
     case event: Event => collect(event)
   }
 
-  def collect(event: Event) = {
+  def collect(event: Event) {
    
     log.debug("collecting: " + event)
 
-    if(!eventExists(event)) publish(event)
-    else log.warning("The event is already processed: " + event)
+    if(!eventExists(event)) {
+      publish(event)
+    } else {
+      log.warning("The event is already processed: " + event) 
+    }
     
   }
 
-  private[this] def sendEvent(event: Event){    
+  private[this] def sendEvent(event: Event) {
     // send event to processors
     context.actorFor("../process") ! event    
   }
