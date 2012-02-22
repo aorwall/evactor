@@ -44,7 +44,6 @@ class LogdataIntegrationSuite(_system: ActorSystem) extends TestKit(_system) wit
     
   	 val probe = TestProbe()
   	 
-    println("rajraj")
     var result: AlertEvent = null
     val processId = "processId"
     val camelEndpoint = "hej"
