@@ -28,7 +28,7 @@ class FailureAnalyser (name: String, eventName: Option[String], maxOccurrences: 
     case _ => // skip
   }
 
-  protected def process(event: T) {
+  override protected def process(event: T) {
     event.state match {
       case model.Failure => {
 				// Add new

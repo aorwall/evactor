@@ -1,14 +1,9 @@
 package se.aorwall.bam.process.analyse
 
+import akka.actor.{Actor, ActorRef, ActorLogging}
 import scala.Predef._
-import akka.actor.{Actor, ActorRef}
-import se.aorwall.bam.model.events.Event
-import se.aorwall.bam.process.Processor
-import se.aorwall.bam.model.events.AlertEvent
-import se.aorwall.bam.process.CheckEventName
-import akka.actor.ActorLogging
-import se.aorwall.bam.process.ProcessorEventBus
-import se.aorwall.bam.process.Publisher
+import se.aorwall.bam.model.events.{Event, AlertEvent}
+import se.aorwall.bam.process._
 
 /**
  * Need support for wildcards in eventName.
@@ -20,7 +15,8 @@ abstract class Analyser(
     name: String, 
     val eventName: Option[String]) 
   extends Processor(name) 
-  with Publisher 
+  with Publisher
+  with Monitored
   with ActorLogging  {
 
   var triggered = false 

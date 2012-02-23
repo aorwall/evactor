@@ -31,7 +31,7 @@ class AbsenceOfRequestsAnalyser (
     case _ => // skip
   }
   
-  protected def process(event: T) {
+  override protected def process(event: T) {
     log.debug("received: " + event)
 
     // TODO: Check event.timestamp to be really sure about the timeframe between events

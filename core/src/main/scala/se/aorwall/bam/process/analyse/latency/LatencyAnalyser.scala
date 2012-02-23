@@ -24,7 +24,7 @@ class LatencyAnalyser(name: String, eventName: Option[String], maxLatency: Long)
 	    case _ => // skip
 	}
   
-  def process(event: T) {
+  override protected def process(event: T) {
 
    log.debug("received: " + event)
 	

@@ -1,14 +1,12 @@
 package se.aorwall.bam.process
 
 import akka.actor.Actor
+import akka.actor.ActorLogging
 import akka.actor.ActorRef
-import akka.actor.DeadLetterActorRef
 import akka.actor.EmptyLocalActorRef
 import akka.actor.InternalActorRef
-import akka.actor.OneForOneStrategy
-import akka.actor.Props
 import se.aorwall.bam.model.events.Event
-import akka.actor.ActorLogging
+import com.twitter.ostrich.stats.Stats
 
 abstract class Processor (val name: String) extends Actor with ActorLogging {
   type T <: Event
@@ -39,20 +37,56 @@ trait CheckEventName extends Processor with Subscriber with ActorLogging {
   
   protected def handlesEvent(event: T) = eventName match {
     case Some(e) => {
-      if(e.endsWith("*")) e.substring(0, e.lastIndexOf("*")-1) == event.path.substring(0, event.path.lastIndexOf("/")) //TODO: Regex!
+      if(e.endsWith("*")) e.substring(0, e.lastIndexOf("*")-1) == event.path.substring(0, event.path.lastIndexOf("/")) //TODO: Regex?
       else e == event.path
     }
     case None => true
   }
   
-  override def preStart = {
+  abstract override def preStart = {
     log.debug("subscribing to: \"" + eventName.getOrElse("") + "\"")
     subscribe(context.self, eventName.getOrElse(""))
+    super.preStart()
   }
   
-  override def postStop = {
+  abstract override def postStop = {
     log.debug("unsubscribing to: \"" + eventName.getOrElse("") + "\"")
     unsubscribe(context.self, eventName.getOrElse(""))
+    super.postStop()
   }
   
+}
+
+/**
+ * Extended by processors that should be monitored by
+ * Ostrich (https://github.com/twitter/ostrich)
+ * 
+ * TODO: This trait should use an extension instead to be able to
+ * use other statistics libraries..
+ * 
+ */
+trait Monitored extends Processor with ActorLogging {
+  
+  abstract override def preStart = {
+    log.debug("setting processor status to \"running\"")
+    // set label context.self + running
+    Stats.setLabel(context.self.toString, "running")
+    super.preStart()
+  }
+
+  abstract override def postStop = {
+    log.debug("setting processor status to \"stopped\"")
+    // set label context.self + stopped
+    Stats.setLabel(context.self.toString, "stopped")
+    super.postStop()
+  }
+  
+  //TODO: This doesn't work, try intercepting the receive method instead if that's possible...
+  
+  //abstract override def receive = {
+  //  case _: T => Stats.incr(context.self.toString)
+    // count
+    
+ // }
+
 }

@@ -41,9 +41,17 @@ subprojects {
         compile group: 'com.typesafe.akka', name:'akka-remote', version:'2.0-RC2'
         compile group: 'com.typesafe.akka', name:'akka-testkit', version:'2.0-RC2'
 
-		compile group: 'org.codehaus.jackson', name:'jackson-mapper-asl', 	version:'1.9.0'
-		compile group: 'org.codehaus.jackson', name:'jackson-core-asl', 	version:'1.9.0'
+		compile group: 'org.codehaus.jackson', name:'jackson-mapper-asl', version:'1.9.0'
+		compile group: 'org.codehaus.jackson', name:'jackson-core-asl', version:'1.9.0'
 
+        // monitoring
+		compile group: 'com.twitter', name:'ostrich_2.9.1', version:'4.10.6'
+		compile group: 'com.twitter', name:'json_2.9.1', version:'2.1.7'
+		compile group: 'com.twitter', name:'util-logging_2.9.1', version:'1.12.13'
+		compile group: 'com.twitter', name:'util-core_2.9.1', version:'1.12.13'
+		compile group: 'com.twitter', name:'util-eval_2.9.1', version:'1.12.13'
+
+        // testing
         testCompile group: 'junit', name: 'junit', version: '4.4'
         testCompile group: 'org.scalatest', name: 'scalatest_2.9.1', version: '1.6.1'
         testCompile group: 'org.mockito', name:'mockito-core', version: '1.8.1'

@@ -1,14 +1,10 @@
 package se.aorwall.bam.process.extract
-import akka.actor.Actor
+
+import akka.actor.{Actor, ActorLogging, ActorRef}
 import grizzled.slf4j.Logging
 import se.aorwall.bam.model.attributes.HasMessage
 import se.aorwall.bam.model.events.Event
-import akka.actor.ActorRef
-import se.aorwall.bam.process.Processor
-import se.aorwall.bam.process.CheckEventName
-import akka.actor.ActorLogging
-import se.aorwall.bam.process.ProcessorEventBus
-import se.aorwall.bam.process.Publisher
+import se.aorwall.bam.process._
 
 /**
  * Extract information from messages
@@ -19,7 +15,8 @@ class Extractor(
     extract: (Event with HasMessage) => Option[Event]) 
   extends Processor(name) 
   with CheckEventName 
-  with Publisher 
+  with Monitored
+  with Publisher
   with ActorLogging {
          
   type T = Event with HasMessage
@@ -30,7 +27,7 @@ class Extractor(
     case msg => log.debug("can't handle " + msg )
   }
   
-  protected def process(event: Event with HasMessage) {
+  override protected def process(event: Event with HasMessage) {
     
 	 log.debug("will extract values from " + event )
 	  
