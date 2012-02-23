@@ -19,10 +19,10 @@ object TestKernel {
 
   val businessProcesses = 
     new SimpleProcess("process1", List("component1_1", "component1_2"), 2000) :: 
-    new SimpleProcess("process2", List("component2_1", "component2_2", "component2_3", "component2_4", "component2_5"), 20000) :: 
+    new SimpleProcess("process2", List("component2_1", "component2_2", "component2_3", "component2_4", "component2_5"), 2000) :: 
     new SimpleProcess("process3", List("component3_1", "component3_2", "component3_3"), 1000) :: 
     new SimpleProcess("process4", List("component4_1"), 3000) :: 
-    new SimpleProcess("process5", List("component5_1", "component5_2", "component5_3", "component5_4"), 10000) :: 
+    new SimpleProcess("process5", List("component5_1", "component5_2", "component5_3", "component5_4"), 1000) :: 
     new SimpleProcess("process6", List("component6_1", "component6_2", "component6_3"), 1000) :: 
     new SimpleProcess("process7", List("component7_1", "component7_2", "component7_3", "component7_4"), 1000) :: 
     new SimpleProcess("process8", List("component8_1", "component8_2"), 2000) :: 
@@ -57,6 +57,3 @@ class TestKernel extends Bootable {
   }
 
 }
-
-
-

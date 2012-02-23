@@ -1,26 +1,16 @@
 package se.aorwall.bam.test.local
 
-import se.aorwall.bam.process.build.simpleprocess.SimpleProcess
-import scala.util.Random
-import java.util.UUID
-import se.aorwall.bam.test.RequestGenerator
-import akka.actor.ActorSystem
-import akka.actor.Props
-import se.aorwall.bam.collect.Collector
-import se.aorwall.bam.process.ProcessorHandler
-import se.aorwall.bam.process.build.request.Request
-import se.aorwall.bam.model.events.SimpleProcessEvent
-import se.aorwall.bam.process.ProcessorEventBusExtension
-import akka.testkit.TestProbe
-import akka.testkit.TestKit
+import org.junit.runner.RunWith
 import org.scalatest.matchers.MustMatchers
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.FunSuite
+import akka.actor.ActorSystem
+import akka.actor.Props
+import akka.testkit.TestKit
 import grizzled.slf4j.Logging
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import akka.util.duration._
+import se.aorwall.bam.test.RequestGenerator
 import se.aorwall.bam.test.TestKernel
+import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class LocalTest(_system: ActorSystem) extends TestKit(_system) with FunSuite with MustMatchers with BeforeAndAfterAll with Logging {
@@ -38,7 +28,7 @@ class LocalTest(_system: ActorSystem) extends TestKit(_system) with FunSuite wit
 	  
 	  val noOfRequestsPerProcess: Int = 10
 	  	  
-	  val collector = remote !!
+	  val collector = system.actorFor("akka://test@darkthrone:2552/user/collect")
 	  
 	  Thread.sleep(100)
 	  

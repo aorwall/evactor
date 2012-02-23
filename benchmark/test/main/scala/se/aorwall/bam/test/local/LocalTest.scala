@@ -20,6 +20,7 @@ import grizzled.slf4j.Logging
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import akka.util.duration._
+import se.aorwall.bam.test.TestKernel.businessProcesses
 
 @RunWith(classOf[JUnitRunner])
 class RemoteTest(_system: ActorSystem) extends TestKit(_system) with FunSuite with MustMatchers with BeforeAndAfterAll with Logging {
@@ -32,10 +33,11 @@ class RemoteTest(_system: ActorSystem) extends TestKit(_system) with FunSuite wi
 
   test("Load test") {   
 	  
-	  val noOfProcesses: Int = 100
+	  //val noOfProcesses: Int = 100
+     val noOfProcesses: Int = businessProcesses.size
 	  val noOfRequestsPerProcess: Int = 10
-	  val businessProcesses = 0 until noOfProcesses map (x => new SimpleProcess("process" + x, 0 until Random.nextInt(4)+1 map (x => UUID.randomUUID().toString) toList, 1000L))
-	  
+	  //val businessProcesses = 0 until noOfProcesses map (x => new SimpleProcess("process" + x, 0 until Random.nextInt(4)+1 map (x => UUID.randomUUID().toString) toList, 1000L))
+	  	  
 	  // initiate local environment
 	  val collector = system.actorOf(Props[Collector], name = "collect")
 	  val processor = system.actorOf(Props[ProcessorHandler], name = "process")
