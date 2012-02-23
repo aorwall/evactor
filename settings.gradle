@@ -1,1 +1,1 @@
-include "core", "storage-cassandra", "api", "example"
+include "core", "storage-cassandra", "api", "example", "benchmark"

@@ -1,0 +1,21 @@
+apply plugin: 'scala'
+//apply plugin: 'war'
+
+ideaModule {
+    beforeConfigured { module ->
+        module.dependencies.clear()
+    }
+    whenConfigured { module ->
+        module.dependencies*.exported = true
+    }
+}
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+
+dependencies {
+    compile project(':core')
+}
