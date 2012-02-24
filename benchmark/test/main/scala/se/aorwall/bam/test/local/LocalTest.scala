@@ -35,7 +35,7 @@ class RemoteTest(_system: ActorSystem) extends TestKit(_system) with FunSuite wi
 	  
 	  //val noOfProcesses: Int = 100
      val noOfProcesses: Int = businessProcesses.size
-	  val noOfRequestsPerProcess: Int = 10
+	  val noOfRequestsPerProcess: Int = 2
 	  //val businessProcesses = 0 until noOfProcesses map (x => new SimpleProcess("process" + x, 0 until Random.nextInt(4)+1 map (x => UUID.randomUUID().toString) toList, 1000L))
 	  	  
 	  // initiate local environment
@@ -59,6 +59,8 @@ class RemoteTest(_system: ActorSystem) extends TestKit(_system) with FunSuite wi
 	  
 	  // verify that all processes were created
 	  probe.receiveN(noOfProcesses * noOfRequestsPerProcess, 10 seconds)
+	  
+	  Thread.sleep(3000)
 	  
   }
 }

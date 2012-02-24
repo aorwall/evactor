@@ -1,4 +1,4 @@
-package se.aorwall.bam.test.local
+package se.aorwall.bam.test.remote
 
 import org.junit.runner.RunWith
 import org.scalatest.matchers.MustMatchers
@@ -11,9 +11,12 @@ import grizzled.slf4j.Logging
 import se.aorwall.bam.test.RequestGenerator
 import se.aorwall.bam.test.TestKernel
 import org.scalatest.junit.JUnitRunner
+import se.aorwall.bam.model.events.LogEvent
+import se.aorwall.bam.model.Start
 
 @RunWith(classOf[JUnitRunner])
-class LocalTest(_system: ActorSystem) extends TestKit(_system) with FunSuite with MustMatchers with BeforeAndAfterAll with Logging {
+class RemoteTest(_system: ActorSystem) extends TestKit(_system) with FunSuite with MustMatchers with BeforeAndAfterAll with Logging {
+  import TestKernel._
   
   def this() = this(ActorSystem("RemoteTest"))
 
@@ -26,16 +29,19 @@ class LocalTest(_system: ActorSystem) extends TestKit(_system) with FunSuite wit
    */
   test("Load test") {   
 	  
-	  val noOfRequestsPerProcess: Int = 10
-	  	  
+	  val noOfRequestsPerProcess: Int = 1000
+	  
 	  val collector = system.actorFor("akka://test@darkthrone:2552/user/collect")
+	  val timer = system.actorFor("akka://test@darkthrone:2552/user/timer")
+	  val requestGen = system.actorOf(Props(new RequestGenerator(businessProcesses, noOfRequestsPerProcess, collector)), name = "requestGen")
 	  
-	  Thread.sleep(100)
+	  Thread.sleep(300)
+  
+	  val count: Int = businessProcesses.size * noOfRequestsPerProcess
 	  
-	  val requestGen = system.actorOf(Props(new RequestGenerator(TestKernel.businessProcesses, noOfRequestsPerProcess, collector)), name = "requestGen")   
+	  timer ! count
+	  requestGen ! None
 	  
-	  Thread.sleep(100)
-	  
-	  
+	  Thread.sleep(60000)
   }
 }

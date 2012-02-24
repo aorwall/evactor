@@ -35,17 +35,18 @@ class RequestActor(process: SimpleProcess, collector: ActorRef) extends Actor wi
       collector ! start
       val state: State = if (Random.nextInt(5) > 3) Failure else Success
 
-      Thread.sleep(Random.nextInt(3) + 1L)
+      Thread.sleep(Random.nextInt(2) + 1L)
       val stop = new LogEvent(component, correlationId, System.currentTimeMillis, correlationId, "client", "server", state, "goodbye")
       			  
       log.debug("send: " + stop)
       collector ! stop
-      Thread.sleep(Random.nextInt(3) + 1L)
+      Thread.sleep(Random.nextInt(2) + 1L)
       
       // abort requester on failure
       state match {
         case Failure => return
-        case _ => if (Random.nextInt(25) == 1) return   //TIMEOUT on one of 25
+        case _ =>
+   //     case _ => if (Random.nextInt(25) == 1) return   //TIMEOUT on one of 25
       }      
     }
   }
