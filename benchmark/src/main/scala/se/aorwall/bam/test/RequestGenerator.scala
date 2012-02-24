@@ -10,9 +10,9 @@ import akka.actor.ActorLogging
 import se.aorwall.bam.model._
 import se.aorwall.bam.model.events.LogEvent
 
-class RequestGenerator (val businessProcesses: Seq[SimpleProcess], val noOfRequests: Int = 100000, val collector: ActorRef) extends Actor {
+class RequestGenerator (val businessProcesses: Seq[SimpleProcess], val noOfRequests: Int = 100000, val collector: ActorRef, val counter: ActorRef) extends Actor {
   
-  val requestActorList = businessProcesses map { process => context.actorOf(Props(new RequestActor(process, collector)), name = "request"+process.name) }  
+  val requestActorList = businessProcesses map { process => context.actorOf(Props(new RequestActor(process, collector, counter)), name = "request"+process.name) }  
   
   def receive = {
     case _ => for(x <- 0 until noOfRequests) requestActorList.foreach(_ ! None)
@@ -20,10 +20,10 @@ class RequestGenerator (val businessProcesses: Seq[SimpleProcess], val noOfReque
   
 }
 
-class RequestActor(process: SimpleProcess, collector: ActorRef) extends Actor with ActorLogging {
+class RequestActor(process: SimpleProcess, collector: ActorRef, val counter: ActorRef) extends Actor with ActorLogging {
 
   def receive = {
-    case _ => sendRequests()
+    case _ => { sendRequests(); counter ! 1 }
   }
 
   def sendRequests() {
@@ -45,9 +45,9 @@ class RequestActor(process: SimpleProcess, collector: ActorRef) extends Actor wi
       // abort requester on failure
       state match {
         case Failure => return
-        case _ =>
-   //     case _ => if (Random.nextInt(25) == 1) return   //TIMEOUT on one of 25
-      }      
+        case _ => if (Random.nextInt(50) == 1) return //TIMEOUT on one of 50
+      }    
     }
   }
+  
 }
