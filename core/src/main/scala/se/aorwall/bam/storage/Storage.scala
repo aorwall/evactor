@@ -14,13 +14,11 @@ trait Storage extends Actor with ActorLogging {
   /**
    * Store an event and returns true if successful.
    */
-  def storeEvent(event: Event): Unit = {	  
-    storage.getEventStorage(event) match {
-      case Some(storageImpl) => Stats.time("store_%s".format(event.getClass.getName)) { storageImpl.storeEvent(event) }
-      case None => log.info("No storage implementation found for event: " + event) 
-    }
+  def storeEvent(event: Event): Unit = storage.getEventStorage(event) match {
+    case Some(storageImpl) => Stats.time("store_%s".format(event.getClass.getName)) { storageImpl.storeEvent(event) }
+    case None => log.info("No storage implementation found for event: " + event) 
   }
-
+  
   def readEvents(name: String, from: Date, to: Date, count: Int, start: Int): List[Event] = List[Event]() //TODO
    	
   def eventExists(event: Event): Boolean = storage.getEventStorage(event) match {
