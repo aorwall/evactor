@@ -22,7 +22,7 @@ object EventStorageFactory {
     import config._
 
     val StorageImplementations: Map[String, String] =
-      getConfig("akka.bam.storage.implementations").root.unwrapped.asScala.toMap.map { case (k, v) ⇒ (k, v.toString) }
+      getConfig("akka.bam.storage.implementations").root.unwrapped.asScala.toMap.map { case (k, v) => (k, v.toString) }
 
     val StorageBindings: Map[String, Seq[String]] = {
       val configPath = "akka.bam.storage.storage-bindings"
@@ -65,9 +65,9 @@ class EventStorageFactory(val system: ExtendedActorSystem) extends Extension wit
     settings.StorageBindings.foldLeft(Map[String, String]()) {
       // All keys which are lists, take the Strings from them and Map them
       case (result, (k: String, vs: Seq[_])) => 
-        result ++ (vs collect { case v: String ⇒ (v, k) })
+        result ++ (vs collect { case v: String => (v, k) })
       // For any other values, just skip them
-      case (result, _) ⇒ result
+      case (result, _) => result
     }
   }
 
