@@ -49,7 +49,7 @@ class FailureAnalyserSpec(_system: ActorSystem)
      failureActor ! new LogEvent(eventName, correlationid, 3L, "329380921309", "client", "server", Failure, "hello") //  trig alert!
 
      //probe.expectMsg(100 millis, new AlertEvent(eventName, "3 failed events with name " + eventName + " is more than allowed (2)", true)) TODO FIX!
-     probe.expectMsgAllClassOf(200 millis, classOf[AlertEvent])
+     probe.expectMsgAllClassOf(400 millis, classOf[AlertEvent])
 
      failureActor.stop()
    }
@@ -68,7 +68,7 @@ class FailureAnalyserSpec(_system: ActorSystem)
      failureActor ! new LogEvent(eventName, correlationid, currentTime-1000, "329380921309", "client", "server", Failure, "hello") // to old, nothing happens
      failureActor ! new LogEvent(eventName, correlationid, currentTime-30, "329380921309", "client", "server", Failure, "hello")
      //  probe.expectMsg(time*2 millis, new Alert(eventName, "3 failed events with name " + eventName + " is more than allowed (2)", true)) TODO FIX!
-     probe.expectMsgAllClassOf(200 millis, classOf[AlertEvent])
+     probe.expectMsgAllClassOf(400 millis, classOf[AlertEvent])
 
      failureActor.stop
    }

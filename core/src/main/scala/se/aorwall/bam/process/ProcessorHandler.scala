@@ -9,6 +9,7 @@ import se.aorwall.bam.model.events.Event
 import akka.util.Index
 import akka.actor.ActorLogging
 import se.aorwall.bam.storage.StorageProcessor
+import se.aorwall.bam.storage.StorageProcessorRouter
 
 class ProcessorHandler extends Actor with ActorLogging  {
   
@@ -20,7 +21,7 @@ class ProcessorHandler extends Actor with ActorLogging  {
   
   override def preStart = {
     log.debug("starting and creating new Storage Processor")
-    context.actorOf(Props[StorageProcessor], name = "storageProcessor")
+    context.actorOf(Props[StorageProcessorRouter], name = "storageProcessor")
   }
   
   def receive = {
