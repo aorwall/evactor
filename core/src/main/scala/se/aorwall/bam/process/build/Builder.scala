@@ -13,9 +13,9 @@ abstract class Builder (override val name: String)
   
   type T <: Event
   
-  val strategy = OneForOneStrategy(maxNrOfRetries = 10, withinTimeRange = 60 seconds) {
-	 case _: EventCreationException => Stop
-	 case _: Exception => Restart
+  override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries = 5, withinTimeRange = 60 seconds) {
+	 case e: EventCreationException => log.warning(name + ": stopping on exception!"); Stop
+	 case e: Exception => Restart
   }
 
   override protected def process(event: T) {
@@ -23,21 +23,19 @@ abstract class Builder (override val name: String)
 
     val eventId = getEventId(event)    
     log.debug("looking for active event builder with id: " + eventId)
-    val runningActivity = getBuildActor(eventId)
+    val actor = getBuildActor(eventId)
     
-    runningActivity ! event    
+    actor ! event    
   }
 
   def getEventId(event: T): String
   
   def createBuildActor(id: String): BuildActor
   
-  def getBuildActor(eventId: String): ActorRef = context.actorFor(eventId) match {
-    case notRunning: ActorRef if(notRunning.isTerminated) => context.actorOf(Props(createBuildActor(eventId)), eventId)
-    case actor: ActorRef => {
-     log.debug("found: " + actor)
-     actor
-    }
+  def getBuildActor(eventId: String): ActorRef = {
+    val runningActor = context.actorFor(eventId) 
+    if(runningActor.isTerminated) context.actorOf(Props(createBuildActor(eventId)), eventId)
+    else runningActor
   }
   
 }

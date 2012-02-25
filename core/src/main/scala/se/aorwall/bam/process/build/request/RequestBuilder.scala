@@ -75,21 +75,21 @@ trait RequestEventBuilder extends EventBuilder with ActorLogging {
 	   case Start => startEvent = Some(logevent)
 	   case Success => endEvent = Some(logevent)
 	   case Failure => endEvent = Some(logevent)
-	   case _ =>
+	   case state => log.warning("Unknown state on log event: " + state)
 	 }
   }
 
   def isFinished(): Boolean = startEvent != None && endEvent != None
 
-  def createEvent(): RequestEvent = (startEvent, endEvent) match {
+  def createEvent(): Either[Throwable, RequestEvent] = (startEvent, endEvent) match {
     case (Some(start: LogEvent), Some(end: LogEvent)) =>
-      new RequestEvent(end.name, end.correlationId, end.timestamp, Some(EventRef(start)), Some(EventRef(end)), end.state, end.timestamp - start.timestamp )
+      Right(new RequestEvent(end.name, end.correlationId, end.timestamp, Some(EventRef(start)), Some(EventRef(end)), end.state, end.timestamp - start.timestamp ))
     case (Some(start: LogEvent), _) =>
-      new RequestEvent(start.name, start.correlationId, System.currentTimeMillis, Some(EventRef(start)), None, Timeout, 0L)
+      Right(new RequestEvent(start.name, start.correlationId, System.currentTimeMillis, Some(EventRef(start)), None, Timeout, 0L))
     case (_, end: LogEvent) =>
-       throw new EventCreationException("RequestProcessor was trying to create an event with only an end log event. End event: " + end)
+      Left(new EventCreationException("RequestProcessor was trying to create an event with only an end log event. End event: " + end))
     case (_, _) =>
-       throw new EventCreationException("RequestProcessor was trying to create an event without either a start or an end log event.")
+      Left(new EventCreationException("RequestProcessor was trying to create an event without either a start or an end log event."))
   }
 
   def clear() {

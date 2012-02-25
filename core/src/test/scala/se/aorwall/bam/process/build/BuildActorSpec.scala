@@ -26,7 +26,7 @@ trait TestEventBuilder extends EventBuilder  {
 
   def isFinished = true
 
-  def createEvent() = new Event("name", "id", 0L)
+  def createEvent() = Right(new Event("name", "id", 0L))
 
   def clear() {}
     
@@ -75,7 +75,7 @@ class BuildActorSpec(_system: ActorSystem)
       val actor = TestActorRef(new BuildActor("correlationId", 1000)
       		with TestEventBuilder { 
       				override def isFinished = true 
-      				override def createEvent = reqEvent
+      				override def createEvent = Right(reqEvent)
       				def timeout = None
       		})
 
@@ -96,7 +96,7 @@ class BuildActorSpec(_system: ActorSystem)
 
       val timeoutEventActor = TestActorRef(new BuildActor("329380921309", 100) with TestEventBuilder { 
       				override def isFinished = true 
-      				override def createEvent = timedoutEvent
+      				override def createEvent = Right(timedoutEvent)
       		})
 
       

@@ -52,7 +52,7 @@ class RequestBuilderSpec(_system: ActorSystem)
       eventBuilder.isFinished must be === true
 
       eventBuilder.createEvent() match {
-        case r: RequestEvent => r.state must be(Success)
+        case Right(r: RequestEvent) => r.state must be(Success)
         case _ => fail()
       }     
     }
@@ -70,11 +70,12 @@ class RequestBuilderSpec(_system: ActorSystem)
       eventBuilder.isFinished must be === true
       
       eventBuilder.createEvent() match {
-        case r: RequestEvent => r.state must be(Failure)
+        case Right(r: RequestEvent) => r.state must be(Failure)
         case _ => fail()
       }     
     }
 
+    
   }
 
 }

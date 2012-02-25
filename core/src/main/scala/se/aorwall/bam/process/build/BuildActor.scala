@@ -22,20 +22,20 @@ abstract class BuildActor(id: String, timeout: Long) extends EventBuilder with P
     log.debug("starting...")
     scheduledFuture = Some(context.system.scheduler.scheduleOnce(timeout milliseconds, self, Timeout))
   }
-    
+  
   override def postRestart(reason: Throwable) {
   
     // TODO: in case of a restart, read active events from db (CF: activeEvent/name/id/****
     //storedEvents.foreach(event => eventBuilder.addEvent(event))
     
     if(isFinished){
-      sendEvent(createEvent())
+      sendEvent(createEvent.fold(throw _, e => e))
     }
   }
 
   def receive = {
     case event: Event => process(event)
-    case Timeout => sendEvent(createEvent())
+    case Timeout => log.debug("%s: timeout!".format(id)); sendEvent(createEvent.fold(throw _, e => e))
     case actor: ActorRef => testAnalyser = Some(actor)
     case msg => log.info("can't handle: " + msg)
   }
@@ -50,7 +50,7 @@ abstract class BuildActor(id: String, timeout: Long) extends EventBuilder with P
 
     if(isFinished){
       log.debug("Finished!")
-      sendEvent(createEvent())
+      sendEvent(createEvent.fold(throw _, e => e))
     }
   }
 
@@ -83,10 +83,5 @@ abstract class BuildActor(id: String, timeout: Long) extends EventBuilder with P
     case None => 
   }
 
-  def preRestart(reason: Throwable) {  //TODO ???
-    log.warning("will be restarted because of an exception", reason)
-    clear()
-    preStart()
-  }
 }
 

@@ -44,7 +44,7 @@ class SimpleProcessSpec(_system: ActorSystem) extends TestKit(_system) with Word
 
   }
 
-  "A SimpleActivityBuilder" must {
+  "A SimpleProcessBuilder" must {
 
     "create an event with state SUCCESS when flow is succesfully processed" in {
       
@@ -62,7 +62,7 @@ class SimpleProcessSpec(_system: ActorSystem) extends TestKit(_system) with Word
       eventBuilder.isFinished must be === true
 
       eventBuilder.createEvent() match {
-        case r: SimpleProcessEvent => r.state must be(Success)
+        case Right(r: SimpleProcessEvent) => r.state must be(Success)
         case _ => fail()
       }  
     }
@@ -81,7 +81,7 @@ class SimpleProcessSpec(_system: ActorSystem) extends TestKit(_system) with Word
       eventBuilder.isFinished must be === true
 
        eventBuilder.createEvent() match {
-        case r: SimpleProcessEvent => r.state must be(Failure)
+        case Right(r: SimpleProcessEvent) => r.state must be(Failure)
         case _ => fail()
       }  
     }
@@ -100,7 +100,7 @@ class SimpleProcessSpec(_system: ActorSystem) extends TestKit(_system) with Word
       eventBuilder.isFinished must be === true
 
       eventBuilder.createEvent() match {
-        case r: SimpleProcessEvent => r.state must be(Success)
+        case Right(r: SimpleProcessEvent) => r.state must be(Success)
         case _ => fail()
       }  
     }

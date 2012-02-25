@@ -22,7 +22,7 @@ trait EventBuilder extends Actor {
   /**
    * Create activity with current state
    */
-  def createEvent(): Event 
+  def createEvent: Either[Throwable, Event] 
 
   /**
    * Clear state of activity builder

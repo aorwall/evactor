@@ -118,15 +118,15 @@ trait SimpleProcessEventBuilder extends EventBuilder with ActorLogging {
      case msg => false
   }
 
-  def createEvent(): SimpleProcessEvent = (startEvent, endEvent) match {
+  def createEvent(): Either[Throwable, SimpleProcessEvent] = (startEvent, endEvent) match {
     case (Some(start: RequestEvent), Some(end: RequestEvent)) =>
-      new SimpleProcessEvent(name, end.id, end.timestamp, requests.map(EventRef(_)), end.state, end.timestamp - start.timestamp + start.latency )
+      Right(new SimpleProcessEvent(name, end.id, end.timestamp, requests.map(EventRef(_)), end.state, end.timestamp - start.timestamp + start.latency ))
     case (Some(start: RequestEvent), _) => 
-      new SimpleProcessEvent(name, start.id, System.currentTimeMillis, requests.map(EventRef(_)), getState(start), 0L)
+      Right(new SimpleProcessEvent(name, start.id, System.currentTimeMillis, requests.map(EventRef(_)), getState(start), 0L))
     case (_, end: RequestEvent) =>
-       throw new EventCreationException("SimpleProcessEventBuilder was trying to create an event with only an end request event. End event: " + end)
+      Left(new EventCreationException("SimpleProcessEventBuilder was trying to create an event with only an end request event. End event: " + end))
     case (_, _) =>
-       throw new EventCreationException("SimpleProcessEventBuilder was trying to create an event without either a start or an end event.")
+      Left(new EventCreationException("SimpleProcessEventBuilder was trying to create an event without either a start or an end event."))
   }
 
   protected def getState(reqEvent: RequestEvent) = reqEvent.state match {
