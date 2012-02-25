@@ -22,16 +22,17 @@ import se.aorwall.bam.process._
 object TestKernel {  
 
   val businessProcesses = 
-    new SimpleProcess("process1", List("component1_1", "component1_2"), 2000) :: 
-    new SimpleProcess("process2", List("component2_1", "component2_2", "component2_3", "component2_4", "component2_5"), 2000) :: 
-    new SimpleProcess("process3", List("component3_1", "component3_2", "component3_3"), 1000) :: 
+    new SimpleProcess("process1", List("component1_1", "component1_2"), 12000) :: 
+    new SimpleProcess("process2", List("component2_1", "component2_2", "component2_3", "component2_4", "component2_5"), 10000) :: 
+    new SimpleProcess("process3", List("component3_1", "component3_2", "component3_3"), 15000) :: 
     new SimpleProcess("process4", List("component4_1"), 3000) :: 
-    new SimpleProcess("process5", List("component5_1", "component5_2", "component5_3", "component5_4"), 1000) :: 
-    new SimpleProcess("process6", List("component6_1", "component6_2", "component6_3"), 1000) :: 
-    new SimpleProcess("process7", List("component7_1", "component7_2", "component7_3", "component7_4"), 1000) :: 
-    new SimpleProcess("process8", List("component8_1", "component8_2"), 2000) :: 
-    new SimpleProcess("process9", List("component9_1", "component9_2", "component9_3"), 2000) :: Nil
+    new SimpleProcess("process5", List("component5_1", "component5_2", "component5_3", "component5_4"), 20000) :: 
+    new SimpleProcess("process6", List("component6_1", "component6_2", "component6_3"), 10000) :: 
+    new SimpleProcess("process7", List("component7_1", "component7_2", "component7_3", "component7_4"), 8000) :: 
+    new SimpleProcess("process8", List("component8_1", "component8_2"), 15000) :: 
+    new SimpleProcess("process9", List("component9_1", "component9_2", "component9_3"), 20000) :: Nil
 
+  val requestTimeout = 2000L  
 }
 
 class TestKernel extends Bootable {
@@ -44,7 +45,7 @@ class TestKernel extends Bootable {
 	 val processor = system.actorOf(Props[ProcessorHandler], name = "process") 
 	 val timer = system.actorOf(Props[TimerActor], name = "timer") 
     // set up processors
-    processor ! new Request("requestProcessor", 200L)
+    processor ! new Request("requestProcessor", requestTimeout)
     businessProcesses.foreach { processor ! _ }
         
   	 val classifier = classOf[SimpleProcessEvent].getSimpleName + "/*"
