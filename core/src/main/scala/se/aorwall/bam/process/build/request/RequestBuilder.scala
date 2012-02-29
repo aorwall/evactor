@@ -18,19 +18,21 @@ import akka.actor.ActorRef
 import se.aorwall.bam.process.ProcessorEventBus
 import akka.actor.ActorLogging
 import se.aorwall.bam.process.Subscriber
+import akka.actor.Props
+import scala.collection.mutable.HashMap
 
 /**
  * Handles LogEvent objects and creates a RequestEvent object. 
- * 
- * TODO: Implement some rules for which LogEvents a RequestProcessor should handle. Like regex and stuff...
  */
-class RequestBuilder (override val name: String, val timeout: Long) 
-  extends Builder(name) 
+class RequestBuilder (name: String, timeout: Long) 
+  extends Processor (name)
   with Subscriber 
   with ActorLogging {
   
   type T = LogEvent
      
+  val requestComponentBuilders = HashMap[String, ActorRef]()
+  
   override def preStart = {
     log.debug("subscribing to get all log events")
     subscribe(context.self, classOf[LogEvent].getSimpleName + "/*")
@@ -42,9 +44,39 @@ class RequestBuilder (override val name: String, val timeout: Long)
   }
    
   override def receive = {
-	    case event: LogEvent => process(event) // TODO: case event: T  doesn't work...
-	    case actor: ActorRef => testActor = Some(actor) 
-	    case _ => // skip
+    case event: LogEvent => process(event) // TODO: case event: T  doesn't work...
+    case msg => log.debug("can't handle: " + msg)
+  }
+    
+  override protected def process(event: LogEvent) {
+    if(log.isDebugEnabled) log.debug("about to process event: " + event)
+
+    val actor = getRequestComponentBuilder(event.name)
+    actor ! event
+  }
+  
+  def handlesEvent(event: LogEvent) = true
+
+  def getRequestComponentBuilder(eventName: String): ActorRef = {
+    requestComponentBuilders.getOrElseUpdate(eventName, context.actorOf(Props(new RequestComponentBuilder(eventName, timeout)), eventName))
+  }
+}
+
+/**
+ * Handles requests to one component.
+ * 
+ * TODO: Should terminate when no more build actors are active
+ */
+class RequestComponentBuilder (override val name: String, val timeout: Long) 
+  extends Builder(name) 
+  with ActorLogging {
+  
+  type T = LogEvent
+       
+  override def receive = {
+    case event: LogEvent => process(event) // TODO: case event: T  doesn't work...
+    case actor: ActorRef => testActor = Some(actor) 
+    case _ => // skip
   }
   
   /*
@@ -52,11 +84,11 @@ class RequestBuilder (override val name: String, val timeout: Long)
    */
   def handlesEvent(event: LogEvent) = true
 
-  def getEventId(logevent: LogEvent) = logevent.name + "_" + logevent.correlationId
+  def getEventId(logevent: LogEvent) = logevent.correlationId
 
   def createBuildActor(id: String): BuildActor = {
     new BuildActor(id, timeout) with RequestEventBuilder
-  } 
+  }
   
 }
 
