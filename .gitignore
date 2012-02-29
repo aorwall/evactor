@@ -7,5 +7,5 @@
 .gradle/
 .idea/
 out/
-build/
 bin/
+*/build/
