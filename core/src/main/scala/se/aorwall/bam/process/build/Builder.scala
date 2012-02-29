@@ -5,6 +5,7 @@ import akka.actor.SupervisorStrategy._
 import akka.util.duration._
 import se.aorwall.bam.model.events.Event
 import se.aorwall.bam.process.{Processor, Monitored}
+import scala.collection.mutable.HashMap
 
 abstract class Builder (override val name: String) 
   extends Processor (name) 
@@ -19,23 +20,19 @@ abstract class Builder (override val name: String)
   }
 
   override protected def process(event: T) {
-    log.debug("about to process event: " + event)
+    if(log.isDebugEnabled) log.debug("about to process event: " + event)
 
     val eventId = getEventId(event)    
-    log.debug("looking for active event builder with id: " + eventId)
+    if(log.isDebugEnabled) log.debug("looking for active event builder with id: " + eventId)
     val actor = getBuildActor(eventId)
     
-    actor ! event    
+    actor ! event
   }
 
   def getEventId(event: T): String
   
   def createBuildActor(id: String): BuildActor
   
-  def getBuildActor(eventId: String): ActorRef = {
-    val runningActor = context.actorFor(eventId) 
-    if(runningActor.isTerminated) context.actorOf(Props(createBuildActor(eventId)), eventId)
-    else runningActor
-  }
+  def getBuildActor(eventId: String): ActorRef = context.children.find(_.path.name == eventId).getOrElse(context.actorOf(Props(createBuildActor(eventId)), eventId))
   
 }

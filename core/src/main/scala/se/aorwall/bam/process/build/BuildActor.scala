@@ -43,13 +43,13 @@ abstract class BuildActor(id: String, timeout: Long) extends EventBuilder with P
   def process(event: Event) {
 
     //TODO: Save event to in activeEvents
-    
-    log.debug("received event : " + event )
+
+    if(log.isDebugEnabled) log.debug("received event : %s".format(event) )
 
     addEvent(event)
 
     if(isFinished){
-      log.debug("Finished!")
+      log.debug("finished!")
       sendEvent(createEvent.fold(throw _, e => e))
     }
   }
