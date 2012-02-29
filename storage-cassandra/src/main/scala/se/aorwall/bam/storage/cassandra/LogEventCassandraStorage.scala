@@ -18,9 +18,20 @@ class LogEventCassandraStorage(val system: ActorSystem) extends EventStorage {
   
   val LOG_EVENT_CF = "LogEvent";
   val NAMES_CF = "EventNames"
-  
-  def eventExists(event: Event) = false //TODO
     
+  def eventExists(event: Event): Boolean = {
+	 val key = "%s/%s".format(event.name, event.id)	    
+	 
+	 val existingEvent = HFactory.createStringColumnQuery(keyspace)
+            .setColumnFamily(LOG_EVENT_CF)
+            .setKey(key)
+            .setName("event")
+            .execute()
+            .get()
+	        
+    existingEvent != null
+  }
+  
   def storeEvent(event: Event): Unit = {
     
      val mutator = HFactory.createMutator(keyspace, StringSerializer.get);
@@ -30,7 +41,7 @@ class LogEventCassandraStorage(val system: ActorSystem) extends EventStorage {
      // row key: event.name
      // column key: event id
      // column value: event object
-     mutator.insert("%s/%s".format(event.name, event.id), LOG_EVENT_CF, HFactory.createColumn(event.id, event, StringSerializer.get, ObjectSerializer.get))
+     mutator.insert("%s/%s".format(event.name, event.id), LOG_EVENT_CF, HFactory.createColumn("event", event, StringSerializer.get, ObjectSerializer.get))
      
 	  mutator.incrementCounter(LOG_EVENT_CF, NAMES_CF, event.name, 1)
 
