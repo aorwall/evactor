@@ -7,6 +7,6 @@
 .gradle/
 .idea/
 out/
-build/
 bin/
 target/
+*/build/

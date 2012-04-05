@@ -20,6 +20,9 @@ import se.aorwall.bam.expression.MvelExpression
 import se.aorwall.bam.expression.XPathExpression
 import se.aorwall.bam.api.DataEventAPI
 import se.aorwall.bam.api.KpiEventAPI
+import com.twitter.ostrich.admin.RuntimeEnvironment
+import com.twitter.ostrich.admin.config.ServerConfig
+import com.twitter.ostrich.admin.config.AdminServiceConfig
 
 object ExampleKernel {
   
@@ -49,7 +52,7 @@ class ExampleKernel extends Bootable {
 	  	val akkaCommits = system.actorOf(Props(new AtomAgent("https://github.com/jboner/akka/commits/master.atom", "github/commits/akka", collector)), name = "akkaCommits")
 	  	val cassandraCommits = system.actorOf(Props(new AtomAgent("https://github.com/apache/cassandra/commits/trunk.atom", "github/commits/cassandra", collector)), name = "cassandraCommits")
 	  	val scalaCommits = system.actorOf(Props(new AtomAgent("https://github.com/scala/scala/commits/master.atom", "github/commits/scala", collector)), name = "scalaCommits")
-	  	val trv = system.actorOf(Props(new GetTrainReports(collector)), name = "trains")
+	  	val trv = system.actorOf(Props(new GetTrainReports(collector)), name = "trains") 
 	  	Thread.sleep(100)
 	  	
 		// Start and configure
@@ -67,8 +70,17 @@ class ExampleKernel extends Bootable {
 
 	  	// COMMITS
 	  	processor ! new Keyword("committer", Some(classOf[DataEvent].getSimpleName + "/github/commits/*"), new XPathExpression("//entry/author/name")) //TODO: Extract username!
-	  	
-		nettyServer.run()			
+	  			
+		// Start Ostrich admin web service
+		val adminConfig = new AdminServiceConfig {
+        httpPort = 8888
+		}
+	   
+		val runtime = RuntimeEnvironment(this, Array[String]())
+		val admin = adminConfig()(runtime)
+		
+	   // Start Netty HTTP server
+		nettyServer.run()
 	}
 
 	def shutdown = {
@@ -77,3 +89,4 @@ class ExampleKernel extends Bootable {
 	}
 
 }
+
