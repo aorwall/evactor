@@ -6,11 +6,15 @@ import se.aorwall.bam.model.events.Event
 import se.aorwall.bam.model.attributes.HasLatency
 import se.aorwall.bam.process.analyse.Analyser
 import se.aorwall.bam.process.analyse.window.Window
-import se.aorwall.bam.process.CheckEventName
 import akka.actor.ActorLogging
+import se.aorwall.bam.process.Subscription
 
-class LatencyAnalyser(name: String, eventName: Option[String], maxLatency: Long)
-  extends Analyser(name, eventName) with Window with CheckEventName with ActorLogging {
+class LatencyAnalyser(
+    override val subscriptions: List[Subscription], 
+    override val channel: String, 
+    override val category: Option[String],
+    val maxLatency: Long)
+  extends Analyser(subscriptions, channel, category) with Window with ActorLogging {
 
   type T = Event with HasLatency
   type S = Long
@@ -18,15 +22,15 @@ class LatencyAnalyser(name: String, eventName: Option[String], maxLatency: Long)
   var events = new TreeMap[Long, Long]()
   var sum = 0L
 
-	override def receive = {
-	    case event: Event with HasLatency => if (handlesEvent(event)) process(event) 
-	    case actor: ActorRef => testActor = Some(actor) 
-	    case _ => // skip
-	}
+  override def receive = {
+    case event: Event with HasLatency => process(event) 
+    case actor: ActorRef => testActor = Some(actor) 
+    case msg => log.warning("{} is not an event with a latency value", msg)
+  }
   
   override protected def process(event: T) {
 
-   log.debug("received: " + event)
+   log.debug("received: {}", event)
 	
 	// Add new
 	val latency = event.latency
@@ -47,12 +51,12 @@ class LatencyAnalyser(name: String, eventName: Option[String], maxLatency: Long)
 	  0
 	}
 	
-	log.debug("sum: " + sum + ", no of events: " + events.size + ", avgLatency: " + avgLatency)
+	log.debug("sum: {}, no of events: {}, avgLatency: {}", sum, events.size, avgLatency)
 	
 	if (avgLatency > maxLatency) {
-	  alert(event.name, "Average latency " + avgLatency + "ms is higher than the maximum allowed latency " + maxLatency + "ms")
+	  alert("Average latency %s ms is higher than the maximum allowed latency %s ms".format(avgLatency, maxLatency))
 	} else {
-	  backToNormal(event.name, "back to normal!")
+	  backToNormal()
 	}    
   }
 }

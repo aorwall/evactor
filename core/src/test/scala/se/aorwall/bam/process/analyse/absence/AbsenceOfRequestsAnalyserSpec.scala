@@ -12,13 +12,13 @@ import akka.util.duration.intToDurationInt
 import se.aorwall.bam.model.events.AlertEvent
 import se.aorwall.bam.model.events.Event
 import org.scalatest.junit.JUnitRunner
+import se.aorwall.bam.BamSpec
 
 @RunWith(classOf[JUnitRunner])
 class AbsenceOfRequestsAnalyserSpec(_system: ActorSystem) 
   extends TestKit(_system) 
-  with WordSpec 
-  with BeforeAndAfterAll 
-  with MustMatchers {
+  with BamSpec 
+  with BeforeAndAfterAll {
 
   def this() = this(ActorSystem("AbsenceOfRequestsAnalyserSpec"))
 
@@ -36,7 +36,7 @@ class AbsenceOfRequestsAnalyserSpec(_system: ActorSystem)
     "alert on timeout" in {
       val time = 100L
 
-      val actor = TestActorRef(new AbsenceOfRequestsAnalyser(name, eventName, time))
+      val actor = TestActorRef(new AbsenceOfRequestsAnalyser(Nil, "channel", None, time))
       val probe = TestProbe()
       actor ! probe.ref
 
@@ -47,13 +47,13 @@ class AbsenceOfRequestsAnalyserSpec(_system: ActorSystem)
     "alert on timeout from set timeframe plus the time when the latest event arrived " in {
       val time = 200L
 
-      val actor = TestActorRef(new AbsenceOfRequestsAnalyser(name, eventName, time))
+      val actor = TestActorRef(new AbsenceOfRequestsAnalyser(Nil, "channel", None, time))
       val probe = TestProbe()
       actor ! probe.ref
 
       Thread.sleep(100)
 
-      actor ! new Event(eventName.get, "329380921309", 0L)
+      actor ! createEvent()
 
       probe.expectMsgAllClassOf(1 second, classOf[AlertEvent])
       actor.stop()
@@ -62,33 +62,18 @@ class AbsenceOfRequestsAnalyserSpec(_system: ActorSystem)
     "alert on timeout, and send \"back to normal\" message when an event arrives" in {
       val time = 100L
 
-      val actor = TestActorRef(new AbsenceOfRequestsAnalyser(name, eventName, time))
+      val actor = TestActorRef(new AbsenceOfRequestsAnalyser(Nil, "channel", None, time))
       val probe = TestProbe()
       actor ! probe.ref
 
       probe.expectMsgAllClassOf(200 millis, classOf[AlertEvent])
 
-      actor ! new Event("eventName", "329380921309", System.currentTimeMillis)
+      actor ! createEvent()
       probe.expectMsgAllClassOf(1 second, classOf[AlertEvent]) // TODO: Need to check back to normal!
 
       actor.stop()
     }
         
-    "alert on timeout, and don't send \"back to normal\" message when a event with another name arrives" in {
-      val time = 100L
-
-      val actor = TestActorRef(new AbsenceOfRequestsAnalyser(name, eventName, time))
-      val probe = TestProbe()
-      actor ! probe.ref
-
-      probe.expectMsgAllClassOf(1 second, classOf[AlertEvent])
-
-      actor ! new Event("anotherEvent", "329380921309", 0L)
-      probe.expectNoMsg(1 second)
-
-      actor.stop()
-    }
-    
   }
 
 }

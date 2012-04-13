@@ -34,47 +34,54 @@ object ProcessorEventBusExtension extends ExtensionId[ProcessorEventBus] with Ex
   override def createExtension(system: ExtendedActorSystem) = new ProcessorEventBus
 }
 
+// TODO: Subclassifier or something...
 class ProcessorEventBus extends Extension with ActorEventBus with LookupClassification with Logging { 
     
   type Event = events.Event
-  type Classifier = String
+  type Classifier = Subscription
     
   val mapSize = 100
     
-  def classify(event: Event): Classifier = event.path
+  def classify(event: Event): Classifier = new Subscription(Some(event.getClass.getSimpleName), Some(event.channel), event.category)
     
-  protected def compareClassifiers(a: Classifier, b: Classifier): Int = a compareTo b
+  //protected def compareClassifiers(a: Classifier, b: Classifier): Int = a.channel compareTo b.channel
     
   protected def publish(event: events.Event, subscriber: Subscriber) {
-    trace("publishing event " + event.name + " to " + subscriber)
+    trace("publishing event {} to {}", event.toString, subscriber)
     subscriber ! event
   }
-    
-  override def publish(event: Event): Unit = {       
-    val name = classify(event)
+  
+  override def publish(event: Event): Unit = {     
+    val sub = classify(event)
        
-    // send to all subscribers who subscribed to this specific event name
-	 val i = subscribers.valueIterator(name)
-	    	    
-	 while (i.hasNext) { publish(event, i.next()) } 
-       
-	 // send to all subscribers who subscribed to all events at this path
-    val slashIndex = name.lastIndexOf("/")
-    if(slashIndex > 0) {         
-      val path = name.substring(0, slashIndex+1) + "*"
-      val j = subscribers.valueIterator(path)
-                  
-      while (j.hasNext) {
-        publish(event, j.next())
-      } 
+    // send to all subscribers who has this specific event subscription if a category is specified
+    if(sub.category.isDefined){
+      val i = subscribers.valueIterator(sub)
+      while (i.hasNext) { publish(event, i.next()) } 
     }
-
-    // and send to all subscribers that hasn't specified a event name at all in the subscription
-    val k = subscribers.valueIterator("")
+       
+	// send to all subscribers who subscribed to all events on this channel
+    if(sub.channel.isDefined){
+      val channelSub = new Subscription(sub.eventType, sub.channel, None)
+      val j = subscribers.valueIterator(channelSub)
+      while (j.hasNext) { publish(event, j.next()) } 
+    }
+    
+    // and send to all subscribers that hasn't specified 
+    val k = subscribers.valueIterator(new Subscription(None, None, None))
     while (k.hasNext) { publish(event, k.next()) }
   }
 }
 
+case class Subscription(
+    val eventType: Option[String],
+    val channel: Option[String],
+    val category: Option[String]) {
+  
+ 
+}
+    
+    
 trait UseProcessorEventBus extends Actor {
 
   private[process] val bus = ProcessorEventBusExtension(context.system)
@@ -97,12 +104,16 @@ trait Publisher extends UseProcessorEventBus {
  */
 trait Subscriber extends UseProcessorEventBus {
 
-  def subscribe(subscriber: ActorRef, classifier: String) {
-    bus.subscribe(subscriber, classifier)
+  def subscribe(subscriber: ActorRef, subscriptions: List[Subscription]) {
+    for(sub <- subscriptions){
+      bus.subscribe(subscriber, sub)
+    }
   }
 
-  def unsubscribe(subscriber: ActorRef, classifier: String) {
-    bus.unsubscribe(subscriber, classifier)
+  def unsubscribe(subscriber: ActorRef, subscriptions: List[Subscription]) {
+    for(sub <- subscriptions){
+      bus.unsubscribe(subscriber, sub)
+    }
   }
 
 }

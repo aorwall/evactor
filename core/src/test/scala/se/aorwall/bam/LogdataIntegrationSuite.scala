@@ -26,13 +26,16 @@ import se.aorwall.bam.process.ProcessorHandler
 import se.aorwall.bam.storage.EventStorageSpec
 import se.aorwall.bam.process.ProcessorEventBusExtension
 import akka.util.duration._
+import se.aorwall.bam.process.build.simpleprocess.SimpleProcessBuilder
+import se.aorwall.bam.process.Subscription
 
 /**
  * Testing the whole log data flow.
  *
  */
 @RunWith(classOf[JUnitRunner])
-class LogdataIntegrationSuite(_system: ActorSystem) extends TestKit(_system) with FunSuite with MustMatchers with BeforeAndAfterAll with Logging {
+class LogdataIntegrationSuite(_system: ActorSystem) 
+	extends TestKit(_system) with FunSuite with MustMatchers with BeforeAndAfterAll with Logging {
   
   def this() = this(ActorSystem("LogdataIntegrationSuite", EventStorageSpec.storageConf))
 
@@ -53,24 +56,26 @@ class LogdataIntegrationSuite(_system: ActorSystem) extends TestKit(_system) wit
     val processor = system.actorOf(Props[ProcessorHandler].withDispatcher(CallingThreadDispatcher.Id), name = "process")
           
     // start the processors
-    processor ! new Request("requestProcessor", 120000L)
-    processor ! new SimpleProcess(processId, List("startComponent", "endComponent"), 120000l)  
-    processor ! new Latency("latency", Some(classOf[SimpleProcessEvent].getSimpleName + "/" + processId), 2000, Some(new LengthWindowConf(2)))
+    val reqSubscriptions = List(new Subscription(Some("RequestEvent"), Some("startComponent"), None), new Subscription(Some("RequestEvent"), Some("endComponent"), None))  
 
-  	 val classifier = classOf[AlertEvent].getSimpleName + "/" + processId + "/latency"
-  	 ProcessorEventBusExtension(system).subscribe(probe.ref, classifier)
+    processor ! new Request("startComponent", List(new Subscription(Some("LogEvent"), Some("startComponent"), None)), 120000L)
+  	processor ! new Request("endComponent", List(new Subscription(Some("LogEvent"), Some("endComponent"), None)), 120000L)
+    processor ! new SimpleProcess("simpleProcess", reqSubscriptions, processId, None, 120000l)  
+    processor ! new Latency("latency", List(new Subscription(Some("SimpleProcessEvent"), Some(processId), None)), "latency", None, 2000, Some(new LengthWindowConf(2)))
+
+  	 ProcessorEventBusExtension(system).subscribe(probe.ref, new Subscription(Some("AlertEvent"), Some("latency"), None))
         
     // Collect logs
     val currentTime = System.currentTimeMillis
 
     Thread.sleep(400)
 
-    collector ! new LogEvent("startComponent", "329380921309", currentTime, "329380921309", "client", "server", Start, "hello")
-    collector ! new LogEvent("startComponent", "329380921309", currentTime+1000, "329380921309", "client", "server" , Success, "") // success
-    collector ! new LogEvent("endComponent", "329380921309", currentTime+2000, "329380921309", "client", "server", Start, "")
-    collector ! new LogEvent("endComponent", "329380921309",  currentTime+3000, "329380921309", "client", "server", Success, "") // success
+    collector ! new LogEvent("startComponent", None, "329380921309", currentTime, "329380921309", "client", "server", Start, "hello")
+    collector ! new LogEvent("startComponent", None, "329380921309", currentTime+1000, "329380921309", "client", "server" , Success, "") // success
+    collector ! new LogEvent("endComponent", None, "329380921309", currentTime+2000, "329380921309", "client", "server", Start, "")
+    collector ! new LogEvent("endComponent", None, "329380921309",  currentTime+3000, "329380921309", "client", "server", Success, "") // success
 
-    Thread.sleep(400)
+    Thread.sleep(1000)
     
   	 probe.expectMsgAllClassOf(1 seconds, classOf[AlertEvent]) // the latency alert
   }

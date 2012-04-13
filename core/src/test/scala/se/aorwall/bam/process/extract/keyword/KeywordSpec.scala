@@ -8,15 +8,16 @@ import se.aorwall.bam.model.events.Event
 import se.aorwall.bam.model.attributes.HasMessage
 import se.aorwall.bam.model.events.DataEvent
 import se.aorwall.bam.expression.MvelExpression
+import se.aorwall.bam.BamSpec
 
 @RunWith(classOf[JUnitRunner])
-class KeywordSpec extends WordSpec with MustMatchers with Logging{
+class KeywordSpec extends BamSpec with Logging{
 
-	val event = new Event("eventName", "id", 0L) with HasMessage {
+	val event = new Event("channel", None, "id", 0L) with HasMessage {
 		val message = "{ \"field\": \"field2\", \"field2\": \"anothervalue\"}"
 	}
 
-	val keyword = new Keyword("keyword", None, new MvelExpression("message.field2"))
+	val keyword = new Keyword("name", Nil, "channel", new MvelExpression("message.field2"))
 
 	"Keyword" must {
 
@@ -24,7 +25,7 @@ class KeywordSpec extends WordSpec with MustMatchers with Logging{
 			val newEvent = keyword.extract(event)
 
 			newEvent match {
-				case Some(e: Event) => e.name must be ("eventName/keyword/anothervalue")
+				case Some(e: Event) => e.category must be (Some("anothervalue"))
 				case e => fail("expected an instance of se.aorwall.bam.model.events.Event but found: " + e)
 			}		
 			

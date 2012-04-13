@@ -8,53 +8,33 @@ import akka.actor.InternalActorRef
 import se.aorwall.bam.model.events.Event
 import com.twitter.ostrich.stats.Stats
 
-abstract class Processor (val name: String) extends Actor with ActorLogging {
+abstract class Processor (
+    val subscriptions: List[Subscription]) 
+  extends Actor
+  with Subscriber 
+  with ActorLogging {
+  
   type T <: Event
   
   protected var testActor: Option[ActorRef] = None // actor used for testing
   
   def receive = {
-    case event: T => if (handlesEvent(event)) process(event) // TODO: case event: T  doesn't work...
+    case event: T => process(event) // TODO: case event: T  doesn't work...
     case actor: ActorRef => testActor = Some(actor) 
     case _ => // skip
   }
 
   protected def process(event: T)
   
-  protected def handlesEvent(event: T): Boolean
-  
   override def preStart = {
-    log.debug("starting...")
+    log.debug("subscribing to get all log events")
+    subscribe(context.self, subscriptions)
   }
-
+  
   override def postStop = {
-    log.debug("stopping...")
+    log.debug("unsubscribing")
+    unsubscribe(context.self, subscriptions)
   }
-}
-
-trait CheckEventName extends Processor with Subscriber with ActorLogging {
-  val eventName: Option[String]
-  
-  protected def handlesEvent(event: T) = eventName match {
-    case Some(e) => {
-      if(e.endsWith("*")) e.substring(0, e.lastIndexOf("*")-1) == event.path.substring(0, event.path.lastIndexOf("/")) //TODO: Regex?
-      else e == event.path
-    }
-    case None => true
-  }
-  
-  abstract override def preStart = {
-    log.debug("subscribing to: \"" + eventName.getOrElse("") + "\"")
-    subscribe(context.self, eventName.getOrElse(""))
-    super.preStart()
-  }
-  
-  abstract override def postStop = {
-    log.debug("unsubscribing to: \"" + eventName.getOrElse("") + "\"")
-    unsubscribe(context.self, eventName.getOrElse(""))
-    super.postStop()
-  }
-  
 }
 
 /**

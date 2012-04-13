@@ -9,6 +9,7 @@ import grizzled.slf4j.Logging
 import se.aorwall.bam.model.attributes.HasMessage
 import se.aorwall.bam.model.events.Event
 import scala.Double._
+import scala.collection.JavaConversions.asJavaSet
 
 /**
  * Evaluate MVEL Expressions. Supports JSON and strings in message. XML to come...?
@@ -37,17 +38,18 @@ class MvelExpressionEvaluator (expression: String) extends ExpressionEvaluator w
       None
     }
               
-    obj.put("name", event.name);
-    obj.put("id", event.id);
-    obj.put("timestamp", event.timestamp);
+    obj.put("channel", event.channel)
+    obj.put("category", event.category.getOrElse(""))
+    obj.put("id", event.id)
+    obj.put("timestamp", event.timestamp)
     
     msg match {
-      case Some(map) => obj.put("message", map);
+      case Some(map) => obj.put("message", map)
       case _ => obj.put("message", event.message)
     }
     
     val result = try {
-      MVEL.executeExpression(compiledExp, obj); 
+      MVEL.executeExpression(compiledExp, obj)
     } catch {
       case e => warn("Failed to execute expression", e); None
     }

@@ -16,18 +16,20 @@ import se.aorwall.bam.expression.Expression
 import se.aorwall.bam.expression.MvelExpression
 import se.aorwall.bam.expression.XPathExpression
 import se.aorwall.bam.expression.XPathExpressionEvaluator
+import se.aorwall.bam.process.Subscription
 
 /**
- * Extracts a path from a message and creates a new event object of the same type
- * with the event name: [eventName]/[keyword]
+ * Extracts a expression from a message and creates a new event object of the same type
+ * with that expression as category.
  * 
  * Uses MVEL to evaluate expressions, will be extended later...
  */
 class Keyword (
-    override val name: String, 
-    val eventName: Option[String], 
+    override val name: String,
+    override val subscriptions: List[Subscription], 
+    val channel: String, 
     val expression: Expression) 
-  extends ProcessorConfiguration(name: String){
+  extends ProcessorConfiguration(name, subscriptions){
 
   val eval = expression match {
     case MvelExpression(expr) => new MvelExpressionEvaluator(expr)
@@ -36,16 +38,16 @@ class Keyword (
       throw new IllegalArgumentException("Not a valid expression: " + other)
   }
     
-  def extract (event: Event with HasMessage): Option[Event] = {	  	    
+  def extract (event: Event with HasMessage): Option[Event] = {   
     eval.execute(event) match {
       case Some(keyword) => 
-        Some(event.clone("%s/%s/%s".format(event.name, name, keyword)))
+        Some(event.clone(channel, Some(keyword)))
       case _ => None
     }	  
   }
 
   override def processor: Processor = {
-    new Extractor(name, eventName, extract)
+    new Extractor(subscriptions, channel, extract)
   }
 
 }

@@ -6,50 +6,49 @@ import se.aorwall.bam.model.events.{Event, AlertEvent}
 import se.aorwall.bam.process._
 
 /**
- * Need support for wildcards in eventName.
- * 
- * if eventName = type/name/* and name = test and the new eventname should be
- * the event.name + /name"... Doesn't work for AbsenceOfRequestsAnalyser though...
- */*/
+ * Analyses event flows and creates alert events.
+ */
 abstract class Analyser(
-    name: String, 
-    val eventName: Option[String]) 
-  extends Processor(name) 
+    override val subscriptions: List[Subscription], 
+    val channel: String, 
+    val category: Option[String]) 
+  extends Processor(subscriptions) 
   with Publisher
   with Monitored
   with ActorLogging  {
 
   var triggered = false 
   
-  protected def alert(eventName: String, message: String) {
+  protected def alert(message: String) {
     if (!triggered) {
       log.warning("Alert: " + message)
 
       triggered = true
-      sendAlert(eventName, message)
+      sendAlert( message)
     }
   }
 
-  protected def backToNormal(eventName: String, message: String) {
+  protected def backToNormal() {
     if (triggered) {
-      log.info("Back to normal: " + message)
+      log.info("Back to normal")
 
       triggered = false
-      sendAlert(eventName, message)
+      sendAlert("Back to normal")
     }
   }
 
-  def sendAlert(eventName: String, message: String) {
+  def sendAlert(message: String) {
     val currentTime = System.currentTimeMillis
     val alert = 
       new AlertEvent(
-        "%s/%s".format(eventName, name), 
+        channel,
+        category,
         currentTime.toString, 
         currentTime, 
         triggered, 
         message)
     
-    log.info(alert.path)
+    log.info(alert.toString)
     publish(alert)
 
     // If a test actor exists
@@ -59,15 +58,4 @@ abstract class Analyser(
     }
   }
 
-  override def preStart() {
-    log.debug("Starting analyser for events with name: " + name)
-	    
-	  /**
-	   * Initialize analyser with activities from db?
-	   */
-  }
-
-  override def postStop() {
-    log.debug("Stopping analyser for events with name: " + name)
-  }
 }

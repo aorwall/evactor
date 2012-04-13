@@ -6,7 +6,9 @@ import akka.actor.Actor
  * 
  * name is the name that will be set to the new event
  */
-abstract class ProcessorConfiguration (val name: String) {
+abstract class ProcessorConfiguration (
+    val name: String,
+    val subscriptions: List[Subscription]) {
   
   def processor: Processor
   

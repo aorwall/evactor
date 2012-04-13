@@ -20,55 +20,15 @@ import akka.actor.ActorLogging
 import se.aorwall.bam.process.Subscriber
 import akka.actor.Props
 import scala.collection.mutable.HashMap
+import se.aorwall.bam.process.Subscription
 
 /**
  * Handles LogEvent objects and creates a RequestEvent object. 
  */
-class RequestBuilder (name: String, timeout: Long) 
-  extends Processor (name)
-  with Subscriber 
-  with ActorLogging {
-  
-  type T = LogEvent
-     
-  val requestComponentBuilders = HashMap[String, ActorRef]()
-  
-  override def preStart = {
-    log.debug("subscribing to get all log events")
-    subscribe(context.self, classOf[LogEvent].getSimpleName + "/*")
-  }
-  
-  override def postStop = {
-    log.debug("unsubscribing")
-    unsubscribe(context.self, classOf[LogEvent].getSimpleName + "/*")
-  }
-   
-  override def receive = {
-    case event: LogEvent => process(event) // TODO: case event: T  doesn't work...
-    case msg => log.debug("can't handle: " + msg)
-  }
-    
-  override protected def process(event: LogEvent) {
-    if(log.isDebugEnabled) log.debug("about to process event: " + event)
-
-    val actor = getRequestComponentBuilder(event.name)
-    actor ! event
-  }
-  
-  def handlesEvent(event: LogEvent) = true
-
-  def getRequestComponentBuilder(eventName: String): ActorRef = {
-    requestComponentBuilders.getOrElseUpdate(eventName, context.actorOf(Props(new RequestComponentBuilder(eventName, timeout)), eventName))
-  }
-}
-
-/**
- * Handles requests to one component.
- * 
- * TODO: Should terminate when no more build actors are active
- */
-class RequestComponentBuilder (override val name: String, val timeout: Long) 
-  extends Builder(name) 
+class RequestBuilder (
+    override val subscriptions: List[Subscription], 
+    val timeout: Long) 
+  extends Builder(subscriptions) 
   with ActorLogging {
   
   type T = LogEvent
@@ -115,9 +75,9 @@ trait RequestEventBuilder extends EventBuilder with ActorLogging {
 
   def createEvent(): Either[Throwable, RequestEvent] = (startEvent, endEvent) match {
     case (Some(start: LogEvent), Some(end: LogEvent)) =>
-      Right(new RequestEvent(end.name, end.correlationId, end.timestamp, Some(EventRef(start)), Some(EventRef(end)), end.state, end.timestamp - start.timestamp ))
+      Right(new RequestEvent(end.channel, end.category, end.correlationId, end.timestamp, Some(EventRef(start)), Some(EventRef(end)), end.state, end.timestamp - start.timestamp ))
     case (Some(start: LogEvent), _) =>
-      Right(new RequestEvent(start.name, start.correlationId, System.currentTimeMillis, Some(EventRef(start)), None, Timeout, 0L))
+      Right(new RequestEvent(start.channel, start.category, start.correlationId, System.currentTimeMillis, Some(EventRef(start)), None, Timeout, 0L))
     case (_, end: LogEvent) =>
       Left(new EventCreationException("RequestProcessor was trying to create an event with only an end log event. End event: " + end))
     case (_, _) =>

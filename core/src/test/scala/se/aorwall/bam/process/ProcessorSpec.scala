@@ -1,32 +1,32 @@
 package se.aorwall.bam.process
 
 import org.junit.runner.RunWith
-import org.scalatest.matchers.MustMatchers
+import org.scalatest.junit.JUnitRunner
+import org.scalatest.BeforeAndAfterAll
 import org.scalatest.WordSpec
-import akka.actor.actorRef2Scala
-import akka.actor.ActorSystem
 import akka.testkit.TestActorRef
 import akka.testkit.TestKit
 import akka.testkit.TestProbe
-import akka.util.duration.intToDurationInt
-import se.aorwall.bam.model.events.Event
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.BeforeAndAfterAll
 import akka.actor.ActorRef
+import akka.actor.ActorSystem
+import akka.actor.actorRef2Scala
+import akka.testkit.TestKit
+import akka.util.duration.intToDurationInt
+import se.aorwall.bam.model.events.DataEvent
+import se.aorwall.bam.BamSpec
 
-class TestProcessor (name: String, val eventName: Option[String]) 
-  extends Processor (name) 
-  with CheckEventName {
+class TestProcessor (override val subscriptions: List[Subscription]) 
+  extends Processor (subscriptions)  {
   
-  type T = TestEvent
+  type T = DataEvent
     
   override def receive = {
-    case event: TestEvent if(handlesEvent(event)) =>  process(event)
+    case event: DataEvent => process(event)
     case actor: ActorRef => testActor = Some(actor) 
     case _ => // skip
   }
   
-  protected def process(event: TestEvent) {
+  protected def process(event: DataEvent) {
     testActor match {
       case Some(actor) => actor ! event
       case None => 
@@ -34,25 +34,27 @@ class TestProcessor (name: String, val eventName: Option[String])
   }  
 }
 
-case class TestEvent (override val name: String, override val id: String, override val timestamp: Long) extends Event(name, id, timestamp)
-
-case class OtherEvent (override val name: String, override val id: String, override val timestamp: Long) extends Event(name, id, timestamp)
-
 @RunWith(classOf[JUnitRunner])
-class ProcessorSpec(_system: ActorSystem) extends TestKit(_system) with WordSpec with MustMatchers {
+class ProcessorSpec(_system: ActorSystem) 
+  extends TestKit(_system) 
+  with BamSpec   
+  with BeforeAndAfterAll {
 
   def this() = this(ActorSystem("ProcessorSpec"))
 
+  override protected def afterAll(): scala.Unit = {
+    _system.shutdown()
+  }
   
   "A Processor" must {
 
     "process valid event types" in {
       
-      val processor = TestActorRef(new TestProcessor("329380921309", None))
+      val processor = TestActorRef(new TestProcessor(Nil))
       val testProbe = TestProbe()
       processor ! testProbe.ref
       
-      val testEvent = new TestEvent("name", "id", System.currentTimeMillis)
+      val testEvent = createDataEvent("")
       
       processor ! testEvent
       
@@ -60,9 +62,9 @@ class ProcessorSpec(_system: ActorSystem) extends TestKit(_system) with WordSpec
     }
 
     "process valid event types with the right name" in {
-      val testEvent = new TestEvent("name", "id", System.currentTimeMillis)
+      val testEvent = createDataEvent("")
       
-      val processor = TestActorRef(new TestProcessor("329380921309", Some(testEvent.path)))
+      val processor = TestActorRef(new TestProcessor(Nil))
       val testProbe = TestProbe()
       processor ! testProbe.ref
       
@@ -72,28 +74,16 @@ class ProcessorSpec(_system: ActorSystem) extends TestKit(_system) with WordSpec
     }
 
     "not process invalid event types" in {
-      val processor = TestActorRef(new TestProcessor("329380921309", Some("name")))
+      val processor = TestActorRef(new TestProcessor(Nil))
       val testProbe = TestProbe()
       processor ! testProbe.ref
       
-      val testEvent = new OtherEvent("name", "id", System.currentTimeMillis)
+      val testEvent = createEvent()
       
       processor ! testEvent
       
       testProbe.expectNoMsg(1 seconds)
     }    
-    
-    "not process valid event types with invalid name" in {
-      val processor = TestActorRef(new TestProcessor("329380921309", Some("name")))
-      val testProbe = TestProbe()
-      processor ! testProbe.ref
-      
-      val testEvent = new TestEvent("otherName", "id", System.currentTimeMillis)
-      
-      processor ! testEvent
-      
-      testProbe.expectNoMsg(1 seconds)
-    }
 
   }
 }

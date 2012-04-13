@@ -14,25 +14,25 @@ import akka.testkit.TestKit
 import akka.actor.ActorSystem
 import akka.testkit.TestActorRef
 import se.aorwall.bam.process.build.BuildActor
+import se.aorwall.bam.BamSpec
 
 @RunWith(classOf[JUnitRunner])
 class RequestBuilderSpec(_system: ActorSystem) 
   extends TestKit(_system)
-  with WordSpec
-  with MustMatchers
+  with BamSpec
   with Logging {
 
   def this() = this(ActorSystem("RequestBuilderSpec"))
   
   val compId = "startComponent"
   
-  val actor = TestActorRef(new RequestBuilder("processor", 0L))
+  val actor = TestActorRef(new RequestBuilder(Nil, 0L))
   val processor = actor.underlyingActor
 
   "A RequestProcessor" must {
 
     "should always return true when handlesEvent is called " in {
-      processor.handlesEvent(new LogEvent("startComponent", "329380921309", 0L, "329380921309", "client", "server", Start, "hello")) must be === true
+      processor.handlesEvent(createLogEvent(0L, Start)) must be === true
     }
 
   }
@@ -47,8 +47,8 @@ class RequestBuilderSpec(_system: ActorSystem)
       	
       val eventBuilder = buildActor.underlyingActor
       		
-      eventBuilder.addEvent(new LogEvent("startComponent", "329380921309", 0L, "329380921309", "client", "server", Start, "hello"))
-      eventBuilder.addEvent(new LogEvent("startComponent", "329380921309", 0L, "329380921309", "client", "server", Success, "hello"))
+      eventBuilder.addEvent(createLogEvent(0L, Start))
+      eventBuilder.addEvent(createLogEvent(0L, Success))
       eventBuilder.isFinished must be === true
 
       eventBuilder.createEvent() match {
@@ -65,8 +65,8 @@ class RequestBuilderSpec(_system: ActorSystem)
       	
       val eventBuilder = buildActor.underlyingActor
       
-      eventBuilder.addLogEvent(new LogEvent("startComponent", "329380921309", 0L, "329380921309", "client", "server", Start, "hello"))
-      eventBuilder.addLogEvent(new LogEvent("startComponent", "329380921309", 0L, "329380921309", "client", "server", Failure, "hello"))
+      eventBuilder.addLogEvent(createLogEvent(0L, Start))
+      eventBuilder.addLogEvent(createLogEvent(0L, Failure))
       eventBuilder.isFinished must be === true
       
       eventBuilder.createEvent() match {

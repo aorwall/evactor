@@ -5,27 +5,28 @@ import org.scalatest.matchers.MustMatchers
 import org.scalatest.WordSpec
 import se.aorwall.bam.model.events.DataEvent
 import org.scalatest.junit.JUnitRunner
+import se.aorwall.bam.BamSpec
 
 @RunWith(classOf[JUnitRunner])
-class XPathExpressionEvaluatorSpec  extends WordSpec with MustMatchers {
+class XPathExpressionEvaluatorSpec extends BamSpec {
   
   "A XPathExpressionEvaluator" must {
      
     "evaluate xpath expressions and return strings" in {
       val evaluator = new XPathExpressionEvaluator("//test")
-      val event = new DataEvent("name", "id", 0L, "<test>foo</test>")
+      val event = createDataEvent("<test>foo</test>")
       evaluator.execute(event) must be (Some("foo"))
     }
      
     "not evaluate empty xpath expressions" in {
       val evaluator = new XPathExpressionEvaluator("//fail")
-      val event = new DataEvent("name", "id", 0L, "<test>foo</test>")
+      val event = createDataEvent("<test>foo</test>")
       evaluator.execute(event) must be (None)
     }
      
     "not evaluate invalid xml" in {
       val evaluator = new XPathExpressionEvaluator("//fail")
-      val event = new DataEvent("name", "id", 0L, "<test>foo")
+      val event = createDataEvent("<test>foo")
       evaluator.execute(event) must be (None)
     }
      

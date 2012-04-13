@@ -8,18 +8,19 @@ import se.aorwall.bam.model.State
  * Represents a completed request to a component 
  */
 case class RequestEvent (
-    override val name: String, 
+    override val channel: String, 
+    override val category: Option[String],
     override val id: String, 
     override val timestamp: Long, 
     val inboundRef: Option[EventRef],
     val outboundRef: Option[EventRef],
     val state: State,
     val latency: Long) 
-  extends Event(name, id, timestamp)
+  extends Event(channel, category, id, timestamp)
   with HasLatency 
   with HasState {
 
-  override def clone(newName: String): Event = 
-    new RequestEvent(newName, id, timestamp, inboundRef, outboundRef, state, latency)
+  override def clone(newChannel: String, newCategory: Option[String]): Event = 
+    new RequestEvent(newChannel, newCategory, id, timestamp, inboundRef, outboundRef, state, latency)
   
 }

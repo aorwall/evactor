@@ -20,13 +20,18 @@ import org.mockito.Mockito._
 import se.aorwall.bam.model.attributes.HasMessage
 import se.aorwall.bam.model.events.Event
 import se.aorwall.bam.model.events.DataEvent
+import se.aorwall.bam.BamSpec
 
 @RunWith(classOf[JUnitRunner])
-class ExtractorSpec(_system: ActorSystem) extends TestKit(_system) with WordSpec with BeforeAndAfterAll with MustMatchers with BeforeAndAfter{
+class ExtractorSpec(_system: ActorSystem) 
+  extends TestKit(_system) 
+  with BamSpec 
+  with BeforeAndAfterAll 
+  with BeforeAndAfter{
 
   def this() = this(ActorSystem("ExtractorSpec"))
 
-  val extractedEvent = new Event("eventName", "id", 0L)
+  val extractedEvent = createEvent()
   
   def extract (event: Event with HasMessage): Option[Event] = Some(extractedEvent)   
   
@@ -34,13 +39,13 @@ class ExtractorSpec(_system: ActorSystem) extends TestKit(_system) with WordSpec
      _system.shutdown()
   }
   
-  val event = new DataEvent("eventName", "id", 0L, "stuff")
+  val event = createDataEvent("stuff")
 	   
   "An Extractor" must {
 
     "extract stuff from an events message and send to collector " in {
              
-      val actor = TestActorRef(new Extractor("name", Some(event.path), extract))
+      val actor = TestActorRef(new Extractor(Nil, "channel", extract))
       
       val eventPrope = TestProbe()
       actor ! eventPrope.ref
@@ -52,27 +57,14 @@ class ExtractorSpec(_system: ActorSystem) extends TestKit(_system) with WordSpec
       actor.stop      
     }
     
-    "abort if event with wrong name arrives " in {
-             
-      val actor = TestActorRef(new Extractor("name", Some("foo/bar"), extract))
-      
-      val eventPrope = TestProbe()
-      actor ! eventPrope.ref
-      	  
-      actor ! event 
-      
-      eventPrope.expectNoMsg(1 seconds)
-      actor.stop      
-    }
-    
     "abort if event doesn't extend the HasMessage trait " in {
              
-      val actor = TestActorRef(new Extractor("name", None, extract))
+      val actor = TestActorRef(new Extractor(Nil, "channel", extract))
       
       val eventPrope = TestProbe()
       actor ! eventPrope.ref
       
-	   val event = new Event("eventName", "id", 0L)
+	   val event = createEvent()
 	  
       actor ! event 
       

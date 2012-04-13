@@ -7,16 +7,17 @@ import grizzled.slf4j.Logging
 import se.aorwall.bam.model.events.Event
 import org.scalatest.junit.JUnitRunner
 import se.aorwall.bam.model.events.KpiEvent
+import se.aorwall.bam.BamSpec
 
 @RunWith(classOf[JUnitRunner])
-class KpiSpec extends WordSpec with MustMatchers with Logging{
+class KpiSpec extends BamSpec with Logging{
 
-	val event = new DataEvent("eventName", "id", 0L, "{ \"doubleField\": \"123.42\", \"intField\": \"123\", \"anotherField\": \"anothervalue\"}");
+	val event = createDataEvent("{ \"doubleField\": \"123.42\", \"intField\": \"123\", \"anotherField\": \"anothervalue\"}");
 
 	"Kpi" must {
 
 		"extract float from json messages" in {
-			val kpi = new Kpi("keyword", None, "message.doubleField")
+			val kpi = new Kpi("name", Nil, "channel", "message.doubleField")
 			val kpiEvent = kpi.extract(event)
 
 			kpiEvent match {
@@ -27,7 +28,7 @@ class KpiSpec extends WordSpec with MustMatchers with Logging{
 		}
 				
 		"extract int (as float from json messages" in {
-		   val kpi = new Kpi("keyword", None, "message.intField")
+		   val kpi = new Kpi("name", Nil, "channel",  "message.intField")
 			val kpiEvent = kpi.extract(event)
 
 			kpiEvent match {
@@ -37,7 +38,7 @@ class KpiSpec extends WordSpec with MustMatchers with Logging{
 		}
 				
 		"send None when a non-numeric value is provided" in {
-		   val kpi = new Kpi("keyword", None, "message.anotherField")
+		   val kpi = new Kpi("name", Nil, "channel", "message.anotherField")
 			val kpiEvent = kpi.extract(event)
 
 			kpiEvent match {

@@ -10,20 +10,28 @@ import se.aorwall.bam.process.extract.Extractor
 import se.aorwall.bam.process.Processor
 import se.aorwall.bam.process.ProcessorConfiguration
 import se.aorwall.bam.expression.MvelExpressionEvaluator
+import se.aorwall.bam.process.Subscription
 
 /**
- * Extracts a value from a message and creates a KPI Event object.
+ * Extracts a value from a message and creates a KPI Event object. Using a specified
+ * channel and the same category as the provided event if one exists
  * 
  * Uses MVEL to evaluate expressions and must return a float value, will be extended later...
  */
-class Kpi (override val name: String, val eventName: Option[String], val expression: String) extends ProcessorConfiguration(name: String) with Logging {
+class Kpi (
+    override val name: String,
+    override val subscriptions: List[Subscription], 
+    val channel: String, 
+    val expression: String) 
+  extends ProcessorConfiguration(name, subscriptions) 
+  with Logging {
    
   val eval = new MvelExpressionEvaluator(expression) // Must fix so MvelExpressionEvaluator always returns a double
    
   def extract (event: Event with HasMessage): Option[Event] = 
     eval.execute(event) match {
       case Some(value: String) => try {
-        Some(new KpiEvent("%s/%s".format(event.name, name), event.id, event.timestamp, value.toDouble)) 
+        Some(new KpiEvent(channel, event.category, event.id, event.timestamp, value.toDouble)) 
       } catch {
         case _ => None
       }
@@ -31,5 +39,5 @@ class Kpi (override val name: String, val eventName: Option[String], val express
     }
   
   override def processor: Processor = 
-    new Extractor(name, eventName, extract)
+    new Extractor(subscriptions, channel, extract)
 }

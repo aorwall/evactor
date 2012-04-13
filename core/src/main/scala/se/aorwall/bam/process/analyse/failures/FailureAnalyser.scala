@@ -8,13 +8,16 @@ import se.aorwall.bam.model.State
 import se.aorwall.bam.process.analyse.window.Window
 import se.aorwall.bam.process.analyse.Analyser
 import akka.actor.ActorRef
-import se.aorwall.bam.process.CheckEventName
 import akka.actor.ActorLogging
+import se.aorwall.bam.process.Subscription
 
-class FailureAnalyser (name: String, eventName: Option[String], maxOccurrences: Long)
-  extends Analyser(name, eventName) 
+class FailureAnalyser (
+    override val subscriptions: List[Subscription], 
+    override val channel: String, 
+    override val category: Option[String],
+    val maxOccurrences: Long)
+  extends Analyser(subscriptions, channel, category) 
   with Window 
-  with CheckEventName 
   with ActorLogging {
 
   type T = Event with HasState
@@ -23,15 +26,15 @@ class FailureAnalyser (name: String, eventName: Option[String], maxOccurrences: 
   var failedEvents = new TreeMap[Long, State] ()
 
   override def receive = {
-    case event: Event with HasState => if (handlesEvent(event)) process(event) // TODO: case event: T  doesn't work...
+    case event: Event with HasState => process(event) 
     case actor: ActorRef => testActor = Some(actor) 
-    case _ => // skip
+    case msg => log.warning("{} is not an event with a state", msg)
   }
 
   override protected def process(event: T) {
     event.state match {
       case model.Failure => {
-				// Add new
+        // Add new
         failedEvents += (event.timestamp -> event.state)  // TODO: What if two activites have the same timestamp?
 	
         // Remove old
@@ -39,15 +42,15 @@ class FailureAnalyser (name: String, eventName: Option[String], maxOccurrences: 
 	
         failedEvents = failedEvents.drop(inactiveEvents.size)
 	
-        log.debug("no of failed events with name " + eventName.get + ": " + failedEvents.size)
+        log.debug("no of failed events from subscriptions {}: {}", subscriptions, failedEvents.size)
 	
         if(failedEvents.size > maxOccurrences) {
-          alert(event.name, failedEvents.size + " failed events with name " + eventName.get + " is more than allowed (" + maxOccurrences + ")")
+          alert("%s failed events from subscriptions %s is more than allowed (%s)".format(failedEvents.size, subscriptions, maxOccurrences))
         } else {
-          backToNormal(event.name, "Back to normal!")
+          backToNormal()
         }
       }
-			
+
       case _ => 
     }
   }

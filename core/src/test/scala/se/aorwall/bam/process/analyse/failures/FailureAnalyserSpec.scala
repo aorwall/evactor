@@ -16,13 +16,13 @@ import se.aorwall.bam.model.events.LogEvent
 import se.aorwall.bam.model.Failure
 import se.aorwall.bam.model.Success
 import se.aorwall.bam.process.analyse.window.TimeWindow
+import se.aorwall.bam.BamSpec
 
 @RunWith(classOf[JUnitRunner])
 class FailureAnalyserSpec(_system: ActorSystem) 
   extends TestKit(_system) 
-  with WordSpec 
-  with BeforeAndAfterAll 
-  with MustMatchers {
+  with BamSpec 
+  with BeforeAndAfterAll {
 
   def this() = this(ActorSystem("FailureAnalyserSpec"))
 
@@ -38,15 +38,15 @@ class FailureAnalyserSpec(_system: ActorSystem)
 
     "alert when the number of failed incoming events exceeds max allowed failures" in {
 
-     val failureActor = TestActorRef(new FailureAnalyser(name, Some(classOf[LogEvent].getSimpleName() + "/" + eventName), 2))
+     val failureActor = TestActorRef(new FailureAnalyser(Nil, "channel", None, 2))
      val probe = TestProbe()
      failureActor ! probe.ref
 
-     failureActor ! new LogEvent(eventName, correlationid, 0L, "329380921309", "client", "server", Success, "hello") 
-     failureActor ! new LogEvent(eventName, correlationid, 1L, "329380921309", "client", "server", Failure, "hello")
-     failureActor ! new LogEvent(eventName, correlationid, 2L, "329380921309", "client", "server", Failure, "hello")
+     failureActor ! createLogEvent(0L, Success) 
+     failureActor ! createLogEvent(1L, Failure)
+     failureActor ! createLogEvent(2L, Failure)
      probe.expectNoMsg // nothing happens
-     failureActor ! new LogEvent(eventName, correlationid, 3L, "329380921309", "client", "server", Failure, "hello") //  trig alert!
+     failureActor ! createLogEvent(3L, Failure) //  trig alert!
 
      //probe.expectMsg(100 millis, new AlertEvent(eventName, "3 failed events with name " + eventName + " is more than allowed (2)", true)) TODO FIX!
      probe.expectMsgAllClassOf(400 millis, classOf[AlertEvent])
@@ -59,14 +59,14 @@ class FailureAnalyserSpec(_system: ActorSystem)
      val time = 100L
      val currentTime = System.currentTimeMillis()
 
-     val failureActor = TestActorRef(new FailureAnalyser(name, Some(classOf[LogEvent].getSimpleName() + "/" + eventName), 2) with TimeWindow {override val timeframe = time} )
+     val failureActor = TestActorRef(new FailureAnalyser(Nil, "channel", None, 2) with TimeWindow {override val timeframe = time} )
      val probe = TestProbe()
      failureActor ! probe.ref
 
-     failureActor ! new LogEvent(eventName, correlationid, currentTime-50, "329380921309", "client", "server", Failure, "hello")
-     failureActor ! new LogEvent(eventName, correlationid, currentTime-40, "329380921309", "client", "server", Failure, "hello")
-     failureActor ! new LogEvent(eventName, correlationid, currentTime-1000, "329380921309", "client", "server", Failure, "hello") // to old, nothing happens
-     failureActor ! new LogEvent(eventName, correlationid, currentTime-30, "329380921309", "client", "server", Failure, "hello")
+     failureActor ! createLogEvent(currentTime-50, Failure)
+     failureActor ! createLogEvent(currentTime-40, Failure)
+     failureActor ! createLogEvent(currentTime-1000, Failure) // to old, nothing happens
+     failureActor ! createLogEvent(currentTime-30, Failure)
      //  probe.expectMsg(time*2 millis, new Alert(eventName, "3 failed events with name " + eventName + " is more than allowed (2)", true)) TODO FIX!
      probe.expectMsgAllClassOf(400 millis, classOf[AlertEvent])
 

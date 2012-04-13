@@ -6,22 +6,25 @@ import se.aorwall.bam.process.analyse.window.TimeWindow
 import se.aorwall.bam.process.analyse.window.TimeWindowConf
 import se.aorwall.bam.process.analyse.window.WindowConf
 import se.aorwall.bam.process.ProcessorConfiguration
+import se.aorwall.bam.process.Subscription
 
 class Failure (
-    name: String, 
-    eventName: Option[String], 
-    maxOccurrences: Long, 
-    window: Option[WindowConf])
-  extends ProcessorConfiguration(name) {
+    override val name: String,
+    override val subscriptions: List[Subscription], 
+    val channel: String, 
+    val category: Option[String],
+    val maxOccurrences: Long, 
+    val window: Option[WindowConf])
+  extends ProcessorConfiguration(name, subscriptions) {
 
   def processor = window match {
     case Some(length: LengthWindowConf) => 
-      new FailureAnalyser(name, eventName, maxOccurrences) 
+      new FailureAnalyser(subscriptions, channel, category, maxOccurrences) 
         with LengthWindow { override val noOfRequests = length.noOfRequests }
     case Some(time: TimeWindowConf) => 
-      new FailureAnalyser(name, eventName, maxOccurrences) 
-        with TimeWindow {override val timeframe = time.timeframe}
+      new FailureAnalyser(subscriptions, channel, category, maxOccurrences) 
+        with TimeWindow { override val timeframe = time.timeframe }
     case None => 
-      new FailureAnalyser(name, eventName, maxOccurrences)
+      new FailureAnalyser(subscriptions, channel, category, maxOccurrences)
   }
 }

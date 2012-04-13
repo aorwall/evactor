@@ -16,33 +16,26 @@ import org.scalatest.BeforeAndAfterAll
 import se.aorwall.bam.process.build.simpleprocess.SimpleProcessBuilder
 import se.aorwall.bam.process.build.simpleprocess.SimpleProcessEventBuilder
 import se.aorwall.bam.process.build.BuildActor
+import se.aorwall.bam.BamSpec
+import se.aorwall.bam.process.Subscription
 
 @RunWith(classOf[JUnitRunner])
-class SimpleProcessSpec(_system: ActorSystem) extends TestKit(_system) with WordSpec with MustMatchers with Logging {
+class SimpleProcessSpec(_system: ActorSystem) 
+  extends TestKit(_system) 
+  with BamSpec
+  with Logging {
 
   def this() = this(ActorSystem("SimpleProcessSpec"))
-  
   
   val processId = "process"
   val startCompId = "startComponent"
   val endCompId = "endComponent"
 
-  val actor = TestActorRef(new SimpleProcessBuilder(processId, List("startComponent", "endComponent"), 120000L))
+  val subscriptions = List(new Subscription(Some("RequestEvent"), Some(startCompId), None), new Subscription(Some("RequestEvent"), Some(startCompId), None))  
+    
+  val actor = TestActorRef(new SimpleProcessBuilder(subscriptions, processId, None, 120000L))
   val processor = actor.underlyingActor
 
-  "A SimpleProcess" must {
-
-    "return true when it contains a component" in {
-      processor.handlesEvent(new RequestEvent(startCompId, "329380921309", 0L, None, None, Success, 0L)) must be === true
-      processor.handlesEvent(new RequestEvent(endCompId, "329380921309", 0L, None, None, Success, 0L)) must be === true
-    }
-
-    "return false when doesn't contain a component" in {
-      processor.handlesEvent(new RequestEvent("anotherComponent", "329380921309", 0L, None, None, Success, 0L)) must be === false
-    }
-
-
-  }
 
   "A SimpleProcessBuilder" must {
 
@@ -50,15 +43,15 @@ class SimpleProcessSpec(_system: ActorSystem) extends TestKit(_system) with Word
       
       val buildActor = TestActorRef(new BuildActor("329380921309", 1000) 
       		with SimpleProcessEventBuilder { 
-      			def name = processId
-      			def components = List(startCompId, endCompId)
-      			def timeout = Some(1000L)
+      			val channel = processId
+      			val category = None
+      			val steps = 2
       		})
       
       val eventBuilder = buildActor.underlyingActor
-      eventBuilder.addEvent(new RequestEvent(startCompId, "329380921309", 0L, None, None, Success, 0L))
+      eventBuilder.addEvent(new RequestEvent(startCompId, None, "329380921309", 0L, None, None, Success, 0L))
       eventBuilder.isFinished must be === false
-      eventBuilder.addEvent(new RequestEvent(endCompId, "329380921309", 0L, None, None, Success, 0L))
+      eventBuilder.addEvent(new RequestEvent(endCompId, None, "329380921309", 1L, None, None, Success, 0L))
       eventBuilder.isFinished must be === true
 
       eventBuilder.createEvent() match {
@@ -71,13 +64,13 @@ class SimpleProcessSpec(_system: ActorSystem) extends TestKit(_system) with Word
       
       val buildActor = TestActorRef(new BuildActor("329380921309", 1000) 
       		with SimpleProcessEventBuilder { 
-      			def name = processId
-      			def components = List(startCompId, endCompId)
-      			def timeout = Some(1000L)
+      			val channel = processId
+      			val category = None
+      			val steps = 2
       		})
       
       val eventBuilder = buildActor.underlyingActor      
-      eventBuilder.addEvent(new RequestEvent(startCompId, "329380921309", 0L, None, None, Failure, 0L))
+      eventBuilder.addEvent(new RequestEvent(startCompId, None, "329380921309", 0L, None, None, Failure, 0L))
       eventBuilder.isFinished must be === true
 
        eventBuilder.createEvent() match {
@@ -90,13 +83,13 @@ class SimpleProcessSpec(_system: ActorSystem) extends TestKit(_system) with Word
       
       val buildActor = TestActorRef(new BuildActor("329380921309", 1000) 
       		with SimpleProcessEventBuilder { 
-      			def name = processId
-      			def components = List(startCompId)
-      			def timeout = Some(1000L)
+      			val channel = processId
+      			val category = None
+      			val steps = 1
       		})
       
       val eventBuilder = buildActor.underlyingActor
-      eventBuilder.addEvent(new RequestEvent(startCompId, "329380921309", 0L, None, None, Success, 0L))
+      eventBuilder.addEvent(new RequestEvent(startCompId, None, "329380921309", 0L, None, None, Success, 0L))
       eventBuilder.isFinished must be === true
 
       eventBuilder.createEvent() match {

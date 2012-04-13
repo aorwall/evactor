@@ -19,6 +19,7 @@ import se.aorwall.bam.model.events.RequestEvent
 import org.mockito.Mockito._
 import se.aorwall.bam.process.ProcessorEventBus
 import se.aorwall.bam.model.events.Event
+import se.aorwall.bam.BamSpec
 
 trait TestEventBuilder extends EventBuilder  {  
 
@@ -26,7 +27,7 @@ trait TestEventBuilder extends EventBuilder  {
 
   def isFinished = true
 
-  def createEvent() = Right(new Event("name", "id", 0L))
+  def createEvent() = Right(new Event("channel", Some("category"), "id", 0L))
 
   def clear() {}
     
@@ -35,9 +36,8 @@ trait TestEventBuilder extends EventBuilder  {
 @RunWith(classOf[JUnitRunner])
 class BuildActorSpec(_system: ActorSystem) 
   extends TestKit(_system)
-  with WordSpec
+  with BamSpec
   with BeforeAndAfterAll
-  with MustMatchers
   with BeforeAndAfter {
 
   def this() = this(ActorSystem("BuildActorSpec"))  
@@ -59,7 +59,7 @@ class BuildActorSpec(_system: ActorSystem)
       				def timeout = None
       		})
 
-      val logEvent = new LogEvent("startComponent", "329380921309", 0L, "329380921309", "client", "server", Start, "hello")
+      val logEvent = createLogEvent(0L, Start)
 
       actor ! logEvent
       added must be (true)
@@ -69,8 +69,8 @@ class BuildActorSpec(_system: ActorSystem)
     "send the activity to analyser when it's finished " in {
       val probe = TestProbe()
       
-      val logEvent = new LogEvent("startComponent", "329380921309", 0L, "329380921309", "client", "server", Start, "hello")
-      val reqEvent = new RequestEvent("startComponent", "329380921309", 0L, None, None, Success, 0L)
+      val logEvent = new LogEvent("channel", Some("category"), "329380921309", 0L, "329380921309", "client", "server", Start, "hello")
+      val reqEvent = new RequestEvent("channel", Some("category"), "329380921309", 0L, None, None, Success, 0L)
       
       val actor = TestActorRef(new BuildActor("correlationId", 1000)
       		with TestEventBuilder { 
@@ -92,7 +92,7 @@ class BuildActorSpec(_system: ActorSystem)
     "send an activity with status TIMEOUT to analyser when timed out" in {
       val probe = TestProbe()
 
-      val timedoutEvent = new RequestEvent("startComponent", "329380921309", 0L, None, None, Timeout, 0L)
+      val timedoutEvent = new RequestEvent("channel", Some("category"), "329380921309", 0L, None, None, Timeout, 0L)
 
       val timeoutEventActor = TestActorRef(new BuildActor("329380921309", 100) with TestEventBuilder { 
       				override def isFinished = true 
@@ -100,7 +100,7 @@ class BuildActorSpec(_system: ActorSystem)
       		})
 
       
-      val logEvent = new LogEvent("startComponent", "329380921309", 0L, "329380921309", "client", "server", Start, "hello")
+      val logEvent = new LogEvent("channel", Some("category"), "329380921309", 0L, "329380921309", "client", "server", Start, "hello")
       timeoutEventActor ! probe.ref
       timeoutEventActor ! logEvent
 

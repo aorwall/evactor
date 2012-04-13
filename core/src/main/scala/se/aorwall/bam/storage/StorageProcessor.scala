@@ -7,13 +7,14 @@ import se.aorwall.bam.process.Subscriber
 import com.twitter.ostrich.stats.Stats
 import akka.actor.Props
 import akka.routing.RoundRobinRouter
+import se.aorwall.bam.process.Subscription
 
 /**
  * Stores events
  */
 class StorageProcessorRouter extends Actor with Subscriber with ActorLogging {
   
-  val router = context.actorOf(Props[StorageProcessor].withRouter(RoundRobinRouter(nrOfInstances = 10))) //TODO: Should be configured in akka conf
+  val router = context.actorOf(Props[StorageProcessor].withRouter(RoundRobinRouter(nrOfInstances = 30))) //TODO: Should be configured in akka conf
   
   override def receive = {
     case event: Event => router ! event
@@ -22,13 +23,13 @@ class StorageProcessorRouter extends Actor with Subscriber with ActorLogging {
   
   override def preStart = {
     log.debug("subscribing to all events")
-    subscribe(context.self, "")
+    subscribe(context.self, List(new Subscription(None, None, None)))
     Stats.setLabel(context.self.toString, "running")
   }
   
   override def postStop = {
     log.debug("unsubscribing to all events")
-    unsubscribe(context.self, "")
+    unsubscribe(context.self, List(new Subscription(None, None, None)))
     Stats.setLabel(context.self.toString, "stopped")
   }
   

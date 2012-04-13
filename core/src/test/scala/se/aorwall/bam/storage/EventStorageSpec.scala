@@ -11,6 +11,7 @@ import grizzled.slf4j.Logging
 import se.aorwall.bam.model.events.Event
 import se.aorwall.bam.model.events.LogEvent
 import se.aorwall.bam.model.Start
+import se.aorwall.bam.BamSpec
 
 class TestEventStorage(system: ActorSystem) extends EventStorage {
  
@@ -57,13 +58,13 @@ object EventStorageSpec {
 }
 
 @RunWith(classOf[JUnitRunner])
-class EventStorageSpec(system: ActorSystem) extends WordSpec with MustMatchers with Logging {
+class EventStorageSpec(system: ActorSystem) extends BamSpec with Logging {
 
   def this() = this( ActorSystem("EventStorageSpec", EventStorageSpec.storageConf) )
   
   val store = EventStorageExtension(system)
     
-  val logEvent = new LogEvent("startComponent", "329380921309", 0L, "329380921309", "client", "server", Start, "hello")
+  val logEvent = createLogEvent(0L, Start)
   
   "EventStorage" must {
 

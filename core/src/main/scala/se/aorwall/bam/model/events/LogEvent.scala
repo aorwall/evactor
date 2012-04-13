@@ -8,7 +8,8 @@ import se.aorwall.bam.model.State
  * Represents a simple log event from a component
  */
 case class LogEvent(
-    override val name: String,
+    override val channel: String, 
+    override val category: Option[String],
     override val id: String,
     override val timestamp: Long,
     val correlationId: String,
@@ -16,11 +17,11 @@ case class LogEvent(
     val server: String,
     val state: State,
     val message: String) 
-  extends Event(name, id, timestamp) 
+  extends Event(channel, category, id, timestamp) 
   with HasMessage 
   with HasState {
 
-  override def clone(newName: String): Event = 
-    new LogEvent(newName, id, timestamp, correlationId, client, server, state, message)
+  override def clone(newChannel: String, newCategory: Option[String]): Event = 
+    new LogEvent(newChannel, newCategory, id, timestamp, correlationId, client, server, state, message)
   
 }
