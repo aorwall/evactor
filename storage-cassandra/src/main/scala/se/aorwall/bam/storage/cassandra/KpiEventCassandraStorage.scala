@@ -20,7 +20,7 @@ class KpiEventCassandraStorage(system: ActorSystem, cfPrefix: String) extends Ca
 
 	def this(system: ActorSystem) = this(system, "KpiEvent")
 			
-   override val columnNames = List("id", "timestamp", "message")
+   override val columnNames = List("id", "timestamp", "value")
 	   
    val SUM_CF = "KpiEventSum"
      
@@ -78,8 +78,8 @@ class KpiEventCassandraStorage(system: ActorSystem, cfPrefix: String) extends Ca
             .execute()
             .get()
          
-     if(currentCountCol != null) currentCountCol.getValue()
-     else 0.0
+    if(currentCountCol != null) currentCountCol.getValue()
+    else 0.0
 	}
 	
   /**
@@ -99,7 +99,7 @@ class KpiEventCassandraStorage(system: ActorSystem, cfPrefix: String) extends Ca
   protected def getSumStatisticsFromInterval(key: String, from: Long, to: Long, interval: String): (Long, List[(Long, Double)]) = {
 	  val stats = readStatisticsFromInterval(key, from, to, interval)
 	  	  
-     val period = interval match {
+    val period = interval match {
     	case YEAR => Years.ONE
     	case MONTH => Months.ONE
     	case DAY => Days.ONE
@@ -125,8 +125,8 @@ class KpiEventCassandraStorage(system: ActorSystem, cfPrefix: String) extends Ca
 	}
 	
    def columnsToEvent(columns: ColumnSlice[String, String]): Event = {
-	 val get = getValue(columns) _	
-	 new KpiEvent("", None,
+     val get = getValue(columns) _	
+	   new KpiEvent("", None,
 			 			get("id"),
 			 			get("timestamp").toLong,
 			 			get("value").toDouble)

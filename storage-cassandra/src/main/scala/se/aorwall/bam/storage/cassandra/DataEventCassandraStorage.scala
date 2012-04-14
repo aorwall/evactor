@@ -13,16 +13,16 @@ class DataEventCassandraStorage(system: ActorSystem, cfPrefix: String) extends C
 
 	def this(system: ActorSystem) = this(system, "DataEvent")
 			
-   override val columnNames = List("id", "timestamp", "message")
+  override val columnNames = List("id", "timestamp", "message")
 	   
-   def eventToColumns(event: Event): List[(String, String)] = event match {  
-	  case dataEvent: DataEvent => ("id", event.id) :: ("timestamp", event.timestamp.toString) :: ("message", dataEvent.message) :: Nil
-	  case _ => throw new RuntimeException("Type not supported: " + event.getClass().getName()) // TODO: Fix some kind of storage exception...
+  def eventToColumns(event: Event): List[(String, String)] = event match {  
+	    case dataEvent: DataEvent => ("id", event.id) :: ("timestamp", event.timestamp.toString) :: ("message", dataEvent.message) :: Nil
+	    case _ => throw new RuntimeException("Type not supported: " + event.getClass().getName()) // TODO: Fix some kind of storage exception...
 	}
 	
-   def columnsToEvent(columns: ColumnSlice[String, String]): Event = {
-	 val get = getValue(columns) _	
-	 new DataEvent(
+  def columnsToEvent(columns: ColumnSlice[String, String]): Event = {
+	  val get = getValue(columns) _	
+	  new DataEvent(
 		        "",
 		        None,
 			 			get("id"),

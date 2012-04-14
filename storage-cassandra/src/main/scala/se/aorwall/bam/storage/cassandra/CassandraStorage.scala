@@ -35,11 +35,12 @@ abstract class CassandraStorage(val system: ActorSystem, prefix: String) extends
   
   type EventType <: Event
   
+  val CHANNEL_CF = "EventChannel"
   val TIMELINE_CF = "%sTimeline".format(prefix)
   val EVENT_CF = prefix
   val STATE_CF = "%sState".format(prefix)
   val COUNT_CF = "%sCount".format(prefix)
-  val CATEGORY_CF = "EventCategory"
+  val CATEGORY_CF = "%sCategory".format(prefix)
 
   val HOUR = "hour"
   val DAY = "day"
@@ -72,7 +73,7 @@ abstract class CassandraStorage(val system: ActorSystem, prefix: String) extends
             .execute()
             .get()
             
-  // TODO: Consistency level should be set to ONE for all writes
+  // TODO: Consistency level should be set to ONE for all writes and there should be some kind of rollback?            
   def storeEvent(event: Event): Unit = {
     val mutator = HFactory.createMutator(keyspace, StringSerializer.get)
  
@@ -86,33 +87,36 @@ abstract class CassandraStorage(val system: ActorSystem, prefix: String) extends
       // row key: event.id
       for(column <- eventToColumns(event)) {
         mutator.addInsertion(event.id, EVENT_CF, column match {
-        	case (k, v) => HFactory.createStringColumn(k, v)
+        	case (k: String, v: String) => HFactory.createStringColumn(k, v)
         })
       }
     }
     
-    storeEventTimeline(event, event.channel, timeuuid)
-    storeEventCounters(event, event.channel)
+    storeEventTimeline(mutator, event, event.channel, timeuuid)
+    storeEventCounters(mutator, event, event.channel)
      
     event.category match {
       case Some(category) => {
-        storeEventTimeline(event, createKey(event.channel, event.category), timeuuid)
-        storeEventCounters(event, createKey(event.channel, event.category))
+        storeEventTimeline(mutator, event, createKey(event.channel, event.category), timeuuid)
+        storeEventCounters(mutator, event, createKey(event.channel, event.category))
         mutator.incrementCounter(event.channel, CATEGORY_CF, category, 1)
       }
       case _ =>
     }    
+    
+    mutator.incrementCounter(prefix, CHANNEL_CF, event.channel, 1)
+    
+    mutator.execute()
   }
   
-  protected def storeEventTimeline(event: Event, key: String, timeuuid: UUID): Unit = {
-    val mutator = HFactory.createMutator(keyspace, StringSerializer.get)
+  protected def storeEventTimeline(mutator: Mutator[String], event: Event, key: String, timeuuid: UUID): Unit = {
     
     // column family: EventTimeline
     // row key: event channel (+category)
     // column key: event timestamp
     // value: event name / event id
     // TODO: Add expiration time?
-    mutator.addInsertion(key, TIMELINE_CF, HFactory.createColumn(timeuuid, key, UUIDSerializer.get, StringSerializer.get))
+    mutator.addInsertion(key, TIMELINE_CF, HFactory.createColumn(timeuuid, event.id, UUIDSerializer.get, StringSerializer.get))
     
     // column family: EventState
     // row key: event name + state
@@ -122,12 +126,10 @@ abstract class CassandraStorage(val system: ActorSystem, prefix: String) extends
       case hasState: HasState => mutator.addInsertion("%s/%s".format(key, hasState.state.name), STATE_CF, HFactory.createColumn(timeuuid, "", UUIDSerializer.get, StringSerializer.get))
       case _ =>
     }	    
-    mutator.execute()
     
   }
   
-  protected def storeEventCounters(event: Event, key: String): Unit = {
-    val mutator = HFactory.createMutator(keyspace, StringSerializer.get)
+  protected def storeEventCounters(mutator: Mutator[String], event: Event, key: String): Unit = {
     
     // column family: EventCount
     // row key: event name + state + ["year";"month":"day":"hour"]
@@ -175,20 +177,20 @@ abstract class CassandraStorage(val system: ActorSystem, prefix: String) extends
             .map { _.getValue match {
                     case s:String => s
                  }}.toList
-                      
+                 
      val queryResult = HFactory.createMultigetSliceQuery(keyspace, StringSerializer.get, StringSerializer.get, StringSerializer.get)
      		.setColumnFamily(EVENT_CF)
      		.setColumnNames(columnNames: _*)
      		.setKeys(eventIds)
      		.execute()
-     		     		
+     		
      val multigetSlice: Map[String, Event] = 
        queryResult
        	.get().iterator().map { 
           columns => columnsToEvent(columns.getColumnSlice()) match {
         	case event:Event => (event.id -> event)
        }}.toMap	
-     
+
      for(eventId <- eventIds) yield multigetSlice(eventId)                      
   }
 
