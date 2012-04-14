@@ -19,12 +19,10 @@ class LogEventCassandraStorage(val system: ActorSystem) extends EventStorage {
   val LOG_EVENT_CF = "LogEvent";
   val NAMES_CF = "EventNames"
     
-  def eventExists(event: Event): Boolean = {
-	 val key = "%s/%s".format(event.name, event.id)	    
-	 
+  def eventExists(event: Event): Boolean = {	 
 	 val existingEvent = HFactory.createStringColumnQuery(keyspace)
             .setColumnFamily(LOG_EVENT_CF)
-            .setKey(key)
+            .setKey(event.id)
             .setName("event")
             .execute()
             .get()
@@ -41,22 +39,19 @@ class LogEventCassandraStorage(val system: ActorSystem) extends EventStorage {
      // row key: event.name
      // column key: event id
      // column value: event object
-     mutator.insert("%s/%s".format(event.name, event.id), LOG_EVENT_CF, HFactory.createColumn("event", event, StringSerializer.get, ObjectSerializer.get))
-     
-	  mutator.incrementCounter(LOG_EVENT_CF, NAMES_CF, event.name, 1)
-
+     mutator.insert(event.id, LOG_EVENT_CF, HFactory.createColumn("event", event, StringSerializer.get, ObjectSerializer.get))
   }
   
-  def getEvents(eventName: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], count: Int, start: Int): List[Event] = {
+  def getEvents(channel: String, category: Option[String], fromTimestamp: Option[Long], toTimestamp: Option[Long], count: Int, start: Int): List[Event] = {
     List[LogEvent]() // TODO
   }
   
-  def getEventNames(parent: Option[String], count: Int): Map[String, Long] = {
-    Map[String, Long]() //TODO
+  def getEventCategories(channel: String, count: Int): Map[String, Long] = {
+    Map[String, Long]() //Not implemented for log events
   }
   
-  def getStatistics(name: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], interval: String): (Long, List[Long]) = {
-    (0L, List[Long]())
+  def getStatistics(channel: String, category: Option[String], fromTimestamp: Option[Long], toTimestamp: Option[Long], interval: String): (Long, List[Long]) = {
+    (0L, List[Long]()) //Not implemented for log events
   }
   
 }

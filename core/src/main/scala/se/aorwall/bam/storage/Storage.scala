@@ -19,7 +19,7 @@ trait Storage extends Actor with ActorLogging {
     case None => log.debug("No storage implementation found for event: " + event) 
   }
   
-  def readEvents(name: String, from: Date, to: Date, count: Int, start: Int): List[Event] = List[Event]() //TODO
+  def readEvents(channel: String, category: Option[String], from: Date, to: Date, count: Int, start: Int): List[Event] = List[Event]() //TODO
    	
   def eventExists(event: Event): Boolean = storage.getEventStorage(event) match {
     case Some(storageImpl) => Stats.time("check_%s".format(event.getClass.getName)) { storageImpl.eventExists(event) }

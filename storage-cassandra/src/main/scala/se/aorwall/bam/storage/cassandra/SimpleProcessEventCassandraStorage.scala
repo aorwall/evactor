@@ -18,22 +18,21 @@ class SimpleProcessEventCassandraStorage(system: ActorSystem, cfPrefix: String) 
 	
    def this(system: ActorSystem) = this(system, "SimpleProcessEvent")
    
-	override val columnNames = List("name", "id", "timestamp", "requests", "state", "latency")
+	override val columnNames = List("id", "timestamp", "requests", "state", "latency")
 
    def columnsToEvent(columns: ColumnSlice[String, String]): Event = {
 	 val get = getValue(columns) _	
-	 new SimpleProcessEvent(get("name"), 
-			 			get("id"),
-			 			get("timestamp").toLong,
-			 			getEventRefs(columns, "requests"),
-			 			State(get("state")),
-			 			java.lang.Long.parseLong(get("latency")))
+	 new SimpleProcessEvent("", None,
+	 	    get("id"),
+	 	    get("timestamp").toLong,
+	 	    getEventRefs(columns, "requests"),
+	 		  State(get("state")),
+	 		  java.lang.Long.parseLong(get("latency")))
 	}
 	
   	def eventToColumns(event: Event): List[(String, String)] = {		  
 		event match {  
 			case requestEvent: SimpleProcessEvent => 
-				("name", event.name) :: 
 				("id", event.id) ::
 				("timestamp", event.timestamp.toString) ::
 				("requests", requestEvent.requests.map(_.toString()).mkString(",")) ::

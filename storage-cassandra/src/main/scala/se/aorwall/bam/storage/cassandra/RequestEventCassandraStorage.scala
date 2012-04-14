@@ -17,11 +17,13 @@ class RequestEventCassandraStorage(system: ActorSystem, cfPrefix: String) extend
 
 	def this(system: ActorSystem) = this(system, "RequestEvent")
 	
-	override val columnNames = List("name", "id", "timestamp", "inboundRef", "outboundRef", "state", "latency")
+	override val columnNames = List("id", "timestamp", "inboundRef", "outboundRef", "state", "latency")
 
    def columnsToEvent(columns: ColumnSlice[String, String]): Event = {
 	 val get = getValue(columns) _	
-	 new RequestEvent(get("name"), 
+	 new RequestEvent(
+	     			"", // No channel returned from db
+	     			None,	 		
 			 			get("id"),
 			 			get("timestamp").toLong,
 			 			getEventRef(columns, "inboundRef"),
@@ -33,7 +35,6 @@ class RequestEventCassandraStorage(system: ActorSystem, cfPrefix: String) extend
   	def eventToColumns(event: Event): List[(String, String)] = {	
 		event match {  
 			case requestEvent: RequestEvent => 
-				("name", event.name) :: 
 				("id", event.id) ::
 				("timestamp", event.timestamp.toString) ::
 				getEventRefCol("inboundRef", requestEvent.inboundRef) :::

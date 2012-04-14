@@ -19,15 +19,15 @@ class TestEventStorage(system: ActorSystem) extends EventStorage {
 
   }
   
-  def getEvents(eventName: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], count: Int, start: Int): List[Event] = {
+  def getEvents(channel: String, category: Option[String], fromTimestamp: Option[Long], toTimestamp: Option[Long], count: Int, start: Int): List[Event] = {
     List[Event]()
   }
     
-  def getStatistics(name: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], interval: String): (Long, List[Long]) = {
+  def getStatistics(channel: String, category: Option[String], fromTimestamp: Option[Long], toTimestamp: Option[Long], interval: String): (Long, List[Long]) = {
     (0L, List[Long]())
   }
   
-  def getEventNames(parent: Option[String], count: Int): Map[String, Long] = {
+  def getEventCategories(channel: String, count: Int): Map[String, Long] = {
     Map[String, Long]()
   }
   

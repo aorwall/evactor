@@ -43,24 +43,15 @@ object Test extends Logging {
   def main(args: Array[String]): Unit = {
     val system = ActorSystem("EventStorageSpec", conf)
 
-    val data1 = new DataEvent("irc/##skip", "329380921316", System.currentTimeMillis, "message1")
-    val data2 = new DataEvent("irc/##skip/nick/foo", "329380921316", System.currentTimeMillis+1, "message2")
-    val data3 = new DataEvent("irc/##skip/nick/bar", "329380921318", System.currentTimeMillis+1, "message2")
-    val data4 = new DataEvent("irc/##skip/nick/foo/test", "329380921316", System.currentTimeMillis+1, "message2")
+    val data1 = new DataEvent("irc", Some("#scala"), "329380921316", System.currentTimeMillis, "message1")
+    val data2 = new DataEvent("irc",Some("#scala"), "329380921316", System.currentTimeMillis+1, "message2")
     val dataStorage = new DataEventCassandraStorage(system)    
     dataStorage.storeEvent(data1)
     dataStorage.storeEvent(data2)
-    dataStorage.storeEvent(data3)
-    dataStorage.storeEvent(data4)
-    info("DataEventStorage 1: " + dataStorage.getEvents("irc/##skip", None, None, 10, 0))
-    info("DataEventStorage 2: " + dataStorage.getEvents("irc/##skip/nick/foo/test", None, None, 10, 0))
-    info("DataEventStorage 3: " + dataStorage.getStatistics("irc/##skip", None, None, "hour"))
+    info("DataEventStorage 1: " + dataStorage.getEvents("irc", None, None, None, 10, 0))
+    info("DataEventStorage 2: " + dataStorage.getEvents("irc", Some("##skip"), None, None, 10, 0))
     
-    info("DataEventStorage 1: " + dataStorage.getEventNames(None, 10))
-    info("DataEventStorage 2: " + dataStorage.getEventNames(Some("irc"), 10))
-    info("DataEventStorage 3: " + dataStorage.getEventNames(Some("irc/##skip"), 10))
-    info("DataEventStorage 4: " + dataStorage.getEventNames(Some("irc/##skip/nick"), 10))
-    info("DataEventStorage 5: " + dataStorage.getEventNames(Some("irc/##skip/nick/foo"), 10))
+    info("DataEventStorage 2: " + dataStorage.getEventCategories("irc", 10))
         
     /*
     val kpi1 = new KpiEvent("name", "329380921316", System.currentTimeMillis, 5.0)

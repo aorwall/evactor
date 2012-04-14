@@ -20,37 +20,40 @@ class KpiEventCassandraStorage(system: ActorSystem, cfPrefix: String) extends Ca
 
 	def this(system: ActorSystem) = this(system, "KpiEvent")
 			
-   override val columnNames = List("name", "id", "timestamp", "message")
+   override val columnNames = List("id", "timestamp", "message")
 	   
    val SUM_CF = "KpiEventSum"
      
    override def storeEvent(event: Event): Unit = event match {
-	  case kpiEvent: KpiEvent => {
-	    
-		 super.storeEvent(event)
+	  case kpiEvent: KpiEvent => { 
+		  super.storeEvent(event)
 		  
-		 // save sum
-	  
-	    // column family: KpiEventCountSum
-	    // row key: event name + state + ["year";"month":"day":"hour"]
-	    // column key: timestamp
-	    // value: counter
-	    val time = new DateTime(event.timestamp)
-	    val count = new java.lang.Long(1L)
-	    val year = new java.lang.Long(new DateTime(time.getYear, 1, 1, 0, 0).toDate.getTime)
-	    val month = new java.lang.Long(new DateTime(time.getYear, time.getMonthOfYear, 1, 0, 0).toDate.getTime)
-	    val dayDate = new DateTime(time.getYear, time.getMonthOfYear, time.getDayOfMonth, 0, 0)
-	    val day = new java.lang.Long(dayDate.toDate.getTime)
-	    val hour = new java.lang.Long(new DateTime(time.getYear, time.getMonthOfYear, time.getDayOfMonth, time.getHourOfDay, 0).toDate.getTime)
-	    
-	  	 sum("%s/%s".format(event.name, YEAR), year, kpiEvent)
-	  	 sum("%s/%s".format(event.name, MONTH), month, kpiEvent)
-	  	 sum("%s/%s".format(event.name, DAY), day, kpiEvent)
-	  	 sum("%s/%s".format(event.name, HOUR), hour, kpiEvent)
-		  
+		  // store sum
+		  storeSum(event.channel, kpiEvent)
+		  storeSum(createKey(event.channel, event.category), kpiEvent)  
 	  }
 	  case msg => warn("not a KpiEvent: " + msg); false
 	  
+	}
+	
+	protected def storeSum(key: String, event: KpiEvent) {
+  
+    // column family: KpiEventCountSum
+    // row key: event name + state + ["year";"month":"day":"hour"]
+    // column key: timestamp
+    // value: counter
+    val time = new DateTime(event.timestamp)
+    val count = new java.lang.Long(1L)
+    val year = new java.lang.Long(new DateTime(time.getYear, 1, 1, 0, 0).toDate.getTime)
+    val month = new java.lang.Long(new DateTime(time.getYear, time.getMonthOfYear, 1, 0, 0).toDate.getTime)
+    val dayDate = new DateTime(time.getYear, time.getMonthOfYear, time.getDayOfMonth, 0, 0)
+    val day = new java.lang.Long(dayDate.toDate.getTime)
+    val hour = new java.lang.Long(new DateTime(time.getYear, time.getMonthOfYear, time.getDayOfMonth, time.getHourOfDay, 0).toDate.getTime)
+    
+  	 sum("%s/%s".format(key, YEAR), year, event)
+  	 sum("%s/%s".format(key, MONTH), month, event)
+  	 sum("%s/%s".format(key, DAY), day, event)
+  	 sum("%s/%s".format(key, HOUR), hour, event)
 	}
    
 	/**
@@ -82,16 +85,19 @@ class KpiEventCassandraStorage(system: ActorSystem, cfPrefix: String) extends Ca
   /**
    * Read kpi statistics within a time span from fromTimestamp to toTimestamp
    */
-  def getSumStatistics(eventName: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], interval: String): (Long, List[(Long, Double)]) =
+  def getSumStatistics(channel: String, category: Option[String], fromTimestamp: Option[Long], toTimestamp: Option[Long], interval: String): (Long, List[(Long, Double)]) = {    
+    val key = createKey(channel, category)
+  
     (fromTimestamp, toTimestamp) match {
-      case (None, None) => getSumStatisticsFromInterval(eventName, 0, System.currentTimeMillis, interval)
-      case (Some(from), None) => getSumStatisticsFromInterval(eventName, from, System.currentTimeMillis, interval)
+      case (None, None) => getSumStatisticsFromInterval(key, 0, System.currentTimeMillis, interval)
+      case (Some(from), None) => getSumStatisticsFromInterval(key, from, System.currentTimeMillis, interval)
       case (None, Some(to)) => throw new IllegalArgumentException("Reading statistics with just a toTimestamp provided isn't implemented yet") //TODO
-      case (Some(from), Some(to)) => getSumStatisticsFromInterval(eventName, from, to, interval)
+      case (Some(from), Some(to)) => getSumStatisticsFromInterval(key, from, to, interval)
+    }
   }
   
-  protected def getSumStatisticsFromInterval(eventName: String, from: Long, to: Long, interval: String): (Long, List[(Long, Double)]) = {
-	  val stats = readStatisticsFromInterval(eventName, from, to, interval)
+  protected def getSumStatisticsFromInterval(key: String, from: Long, to: Long, interval: String): (Long, List[(Long, Double)]) = {
+	  val stats = readStatisticsFromInterval(key, from, to, interval)
 	  	  
      val period = interval match {
     	case YEAR => Years.ONE
@@ -104,7 +110,7 @@ class KpiEventCassandraStorage(system: ActorSystem, cfPrefix: String) extends Ca
 	  var fromDate = new DateTime(stats._1) 
 	  
 	  val sumList = stats._2.map { count =>
-	     val sum = getSum("%s/%s".format(eventName, interval), fromDate.toDate.getTime)
+	     val sum = getSum("%s/%s".format(key, interval), fromDate.toDate.getTime)
 	     fromDate = fromDate.plus(period)
 	     (count, sum)
 	  } 
@@ -114,13 +120,13 @@ class KpiEventCassandraStorage(system: ActorSystem, cfPrefix: String) extends Ca
   
   
    def eventToColumns(event: Event): List[(String, String)] = event match {  
-	  case kpiEvent: KpiEvent => ("name", event.name) :: ("id", event.id) :: ("timestamp", event.timestamp.toString) :: ("value", kpiEvent.value.toString) :: Nil
+	  case kpiEvent: KpiEvent => ("id", event.id) :: ("timestamp", event.timestamp.toString) :: ("value", kpiEvent.value.toString) :: Nil
 	  case _ => throw new RuntimeException("Type not supported: " + event.getClass().getName()) // TODO: Fix some kind of storage exception...
 	}
 	
    def columnsToEvent(columns: ColumnSlice[String, String]): Event = {
 	 val get = getValue(columns) _	
-	 new KpiEvent(get("name"), 
+	 new KpiEvent("", None,
 			 			get("id"),
 			 			get("timestamp").toLong,
 			 			get("value").toDouble)
