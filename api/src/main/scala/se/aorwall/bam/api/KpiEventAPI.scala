@@ -26,35 +26,50 @@ class KpiEventAPI(system: ActorSystem) extends NettyPlan {
   def now = System.currentTimeMillis
     
   def intent = {
-    case req @ Path(Seg("kpi" :: "names" :: path)) => try {
+    case req @ Path(Seg("kpi" :: "categories" :: channel :: Nil)) => try {
    	   val Params(params) = req      
-   	 	ResponseString(generate(storage.getEventNames(getPath(path), getCount(params.get("count"), 100))))
+   	 	ResponseString(generate(storage.getEventCategories(channel, getCount(params.get("count"), 100))))
     	} catch { case _ => BadRequest }
 
-    case req @ Path(Seg("kpi" :: "stats" :: path)) => try {
+    case req @ Path(Seg("kpi" :: "stats" :: channel :: Nil)) => try {
 	      val Params(params) = req       
 	      //TODO: Extract parameters
-	   	ResponseString(generate(storage.getStatistics(decode(path.mkString("/")), Some(0L), Some(now), "hour")))
-      } catch { case _ => BadRequest }      
-    case req @ Path(Seg("kpi" :: "avg" :: path)) => try {
+	   	ResponseString(generate(storage.getStatistics(channel, None, Some(0L), Some(now), "hour")))
+      } catch { case _ => BadRequest }   
+    case req @ Path(Seg("kpi" :: "stats" :: channel :: category :: Nil)) => try {
 	      val Params(params) = req       
 	      //TODO: Extract parameters
-	      val sum = storage.getSumStatistics(decode(path.mkString("/")), Some(0L), Some(now), "hour")
-	      
-	      val avg = (sum._1, sum._2.map { 
-	        case (x,y) => if(x > 0) y/x
-	        					 else 0
-	      })
-	      
-	   	ResponseString(generate(avg))
+	   	ResponseString(generate(storage.getStatistics(channel, Some(category), Some(0L), Some(now), "hour")))
+      } catch { case _ => BadRequest }         
+    case req @ Path(Seg("kpi" :: "avg" :: channel :: Nil)) => try {
+	      val Params(params) = req       
+	      //TODO: Extract parameters
+	      val avg = average(storage.getSumStatistics(channel, None, Some(0L), Some(now), "hour"))
+	   	  ResponseString(generate(avg))
       } catch { case _ => BadRequest }
-    case req @ Path(Seg("kpi" :: "events" :: path)) =>  try {
+    case req @ Path(Seg("kpi" :: "avg" :: channel :: category :: Nil)) => try {
+	      val Params(params) = req       
+	      //TODO: Extract parameters
+	      val avg = average(storage.getSumStatistics(channel, Some(category), Some(0L), Some(now), "hour"))
+	   	  ResponseString(generate(avg))
+      } catch { case _ => BadRequest }
+    case req @ Path(Seg("kpi" :: "events" :: channel :: Nil)) =>  try {
    	 	val Params(params) = req       
    	 	//TODO: Extract parameters
-   	 	ResponseString(generate(storage.getEvents(decode(path.mkString("/")), None, None, 10, 0)))
+   	 	ResponseString(generate(storage.getEvents(channel, None, None, None, 10, 0)))
+    	} catch { case _ => BadRequest }
+    case req @ Path(Seg("kpi" :: "events" :: channel :: category :: Nil)) =>  try {
+   	 	val Params(params) = req       
+   	 	//TODO: Extract parameters
+   	 	ResponseString(generate(storage.getEvents(channel, Some(category), None, None, 10, 0)))
     	} catch { case _ => BadRequest }
     case _ => ResponseString("Couldn't handle request (data)")
   }
+  
+  protected def average ( sum: (Long, List[(Long, Double)])) = (sum._1, sum._2.map { 
+	        case (x,y) => if(x > 0) y/x
+	        					 else 0
+	      })
   
   private def getPath(pathlist: List[String]): Option[String] = 
     if (pathlist.size == 0) None

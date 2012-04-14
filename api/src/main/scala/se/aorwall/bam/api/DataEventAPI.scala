@@ -24,19 +24,29 @@ class DataEventAPI(system: ActorSystem) extends NettyPlan {
   def now = System.currentTimeMillis
     
   def intent = {
-    case req @ Path(Seg("data" :: "names" :: path)) => try {
+    case req @ Path(Seg("data" :: "categories" :: channel :: Nil)) => try {
    	   val Params(params) = req      
-   	 	ResponseString(generate(storage.getEventNames(getPath(path), getCount(params.get("count"), 20))))
+   	 	ResponseString(generate(storage.getEventCategories(channel, getCount(params.get("count"), 20))))
     	} catch { case _ => BadRequest }
-    case req @ Path(Seg("data" :: "stats" :: path)) => try {
+    case req @ Path(Seg("data" :: "stats" :: channel :: Nil)) => try {
 	      val Params(params) = req       
 	      //TODO: Extract parameters
-	   	ResponseString(generate(storage.getStatistics(decode(path.mkString("/")), Some(0L), Some(now), "hour")))
+	   	ResponseString(generate(storage.getStatistics(channel, None, Some(0L), Some(now), "hour")))
       } catch { case _ => BadRequest }
-    case req @ Path(Seg("data" :: "events" :: path)) => try {
+    case req @ Path(Seg("data" :: "stats" :: channel :: category :: Nil)) => try {
+      val Params(params) = req       
+      //TODO: Extract parameters
+	   	ResponseString(generate(storage.getStatistics(channel, Some(category), Some(0L), Some(now), "hour")))
+	    } catch { case _ => BadRequest }
+    case req @ Path(Seg("data" :: "events" :: channel :: Nil)) => try {
    	 	val Params(params) = req       
    	 	//TODO: Extract parameters
-   	 	ResponseString(generate(storage.getEvents(decode(path.mkString("/")), None, None, 10, 0)))
+   	 	ResponseString(generate(storage.getEvents(channel, None, None, None, 10, 0)))
+    	} catch { case _ => BadRequest }
+    case req @ Path(Seg("data" :: "events" :: channel :: category :: Nil)) => try {
+   	 	val Params(params) = req       
+   	 	//TODO: Extract parameters
+   	 	ResponseString(generate(storage.getEvents(channel, Some(category), None, None, 10, 0)))
     	} catch { case _ => BadRequest }
    // case _ => ResponseString("Couldn't handle request (data)")
   }
