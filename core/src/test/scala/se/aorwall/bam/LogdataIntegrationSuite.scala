@@ -43,7 +43,7 @@ class LogdataIntegrationSuite(_system: ActorSystem)
     system.shutdown()
   }
 
-  test("Recieve a logdata objects and send an alert") {    
+  test("Recieve log events and send an alert") {    
     
   	 val probe = TestProbe()
   	 
@@ -75,7 +75,7 @@ class LogdataIntegrationSuite(_system: ActorSystem)
     collector ! new LogEvent("endComponent", None, "329380921309", currentTime+2000, "329380921309", "client", "server", Start, "")
     collector ! new LogEvent("endComponent", None, "329380921309",  currentTime+3000, "329380921309", "client", "server", Success, "") // success
 
-    Thread.sleep(1000)
+    Thread.sleep(400)
     
   	 probe.expectMsgAllClassOf(1 seconds, classOf[AlertEvent]) // the latency alert
   }

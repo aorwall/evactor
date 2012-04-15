@@ -37,7 +37,7 @@ abstract class BuildActor(id: String, timeout: Long) extends EventBuilder with P
     case event: Event => process(event)
     case Timeout => log.debug("%s: timeout!".format(id)); sendEvent(createEvent.fold(throw _, e => e))
     case actor: ActorRef => testAnalyser = Some(actor)
-    case msg => log.info("can't handle: " + msg)
+    case msg => log.info("can't handle: {}", msg)
   }
 
   def process(event: Event) {

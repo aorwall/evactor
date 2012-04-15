@@ -14,7 +14,7 @@ class LogAlerter (
   type T = Event
     
   protected def process(event: Event) {
-    log.error("ALERT: " + event)
+    log.error("ALERT: {}", event)
   }
 
 }

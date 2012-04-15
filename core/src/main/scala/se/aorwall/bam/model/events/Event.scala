@@ -18,6 +18,8 @@ class Event (
     val timestamp: Long) 
   extends Serializable {
   
+  private val serialVersionUID = 0L
+  
   /**
    * Clones the event but change the channel
    */

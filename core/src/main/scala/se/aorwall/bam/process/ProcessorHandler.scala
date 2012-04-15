@@ -20,18 +20,18 @@ class ProcessorHandler extends Actor with ActorLogging  {
   val processorsWithEventName = new Index[String, ActorRef](100, _ compareTo _)
   
   override def preStart = {
-    log.debug("starting and creating new Storage Processor")
+    log.debug("starting and creating a new Storage Processor")
     context.actorOf(Props[StorageProcessorRouter], name = "storageProcessor")
   }
   
   def receive = {
     case configuration: ProcessorConfiguration => setProcessor(configuration)
     case processorId: String => removeProcessor(processorId)
-    case msg => log.info("can't handle: " + msg)
+    case msg => log.info("can't handle: {}", msg)
   }
   
   def setProcessor(configuration: ProcessorConfiguration) {
-    log.debug("setting processor for configuration: " + configuration)
+    log.debug("setting processor for configuration: {}", configuration)
 
     // stopping previous actor if one exists
     val runningActor = context.actorFor(configuration.name)
@@ -40,7 +40,7 @@ class ProcessorHandler extends Actor with ActorLogging  {
   }
 
   def removeProcessor(processorId: String) {
-    log.debug("stopping processor for process: " + processorId)
+    log.debug("stopping processor for process: {}", processorId)
     val runningActor = context.actorFor(processorId)
     context.stop(runningActor)    
   }

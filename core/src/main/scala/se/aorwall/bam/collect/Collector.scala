@@ -17,17 +17,17 @@ class Collector extends Actor with Publisher with Storage with ActorLogging {
 
   def receive = {
     case event: Event => collect(event)
-    case msg => log.debug("can't handle " + msg)
+    case msg => log.debug("can't handle {}", msg)
   }
 
   def collect(event: Event) {
    
-    log.debug("collecting: " + event)
+    log.debug("collecting: {}", event)
 
     if(!eventExists(event)) {
       publish(event)
     } else {
-      log.warning("The event is already processed: " + event) 
+      log.warning("The event is already processed: {}", event) 
     }
     
   }
@@ -38,12 +38,10 @@ class Collector extends Actor with Publisher with Storage with ActorLogging {
   }
   
   override def preStart = {
-    log.debug("starting...")    
     Stats.setLabel(context.self.toString, "running")
   }
 
   override def postStop = {
-    log.debug("stopping...")    
     Stats.setLabel(context.self.toString, "stopped")
   }
 }

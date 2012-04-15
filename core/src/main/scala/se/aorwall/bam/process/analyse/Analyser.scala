@@ -21,7 +21,7 @@ abstract class Analyser(
   
   protected def alert(message: String) {
     if (!triggered) {
-      log.warning("Alert: " + message)
+      log.info("Alert: {}", message)
 
       triggered = true
       sendAlert( message)
@@ -48,7 +48,6 @@ abstract class Analyser(
         triggered, 
         message)
     
-    log.info(alert.toString)
     publish(alert)
 
     // If a test actor exists

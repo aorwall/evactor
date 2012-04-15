@@ -67,7 +67,7 @@ trait RequestEventBuilder extends EventBuilder with ActorLogging {
 	   case Start => startEvent = Some(logevent)
 	   case Success => endEvent = Some(logevent)
 	   case Failure => endEvent = Some(logevent)
-	   case state => log.warning("Unknown state on log event: " + state)
+	   case state => log.warning("Unknown state on log event: {}", state)
 	 }
   }
 

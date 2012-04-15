@@ -49,7 +49,7 @@ class AbsenceOfRequestsAnalyser (
   }
   
   override def preStart() {
-    log.debug("Starting with timeframe: " + timeframe)
+    log.debug("Starting with timeframe: {}", timeframe)
     startScheduler()
   }
 

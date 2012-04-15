@@ -18,7 +18,7 @@ class StorageProcessorRouter extends Actor with Subscriber with ActorLogging {
   
   override def receive = {
     case event: Event => router ! event
-    case msg => log.info("Can't handle: " + msg)
+    case msg => log.info("can't handle: {}", msg)
   }
   
   override def preStart = {
@@ -28,7 +28,7 @@ class StorageProcessorRouter extends Actor with Subscriber with ActorLogging {
   }
   
   override def postStop = {
-    log.debug("unsubscribing to all events")
+    log.debug("unsubscribing from all events")
     unsubscribe(context.self, List(new Subscription(None, None, None)))
     Stats.setLabel(context.self.toString, "stopped")
   }
@@ -38,8 +38,8 @@ class StorageProcessorRouter extends Actor with Subscriber with ActorLogging {
 class StorageProcessor extends Actor with Storage with ActorLogging {
   
   override def receive = {
-    case event: Event => log.debug("Storing: " + event); storeEvent(event) 
-    case msg => log.info("Can't handle: " + msg)
+    case event: Event => log.debug("storing: {}", event); storeEvent(event) 
+    case msg => log.info("can't handle: {}", msg)
   }
   
 }

@@ -27,7 +27,7 @@ abstract class Processor (
   protected def process(event: T)
   
   override def preStart = {
-    log.debug("subscribing to get all log events")
+    log.debug("subscribing to: {}", subscriptions)
     subscribe(context.self, subscriptions)
   }
   
@@ -48,14 +48,12 @@ abstract class Processor (
 trait Monitored extends Processor with ActorLogging {
   
   abstract override def preStart = {
-    log.debug("setting processor status to \"running\"")
     // set label context.self + running
     Stats.setLabel(context.self.toString, "running")
     super.preStart()
   }
 
   abstract override def postStop = {
-    log.debug("setting processor status to \"stopped\"")
     // set label context.self + stopped
     Stats.setLabel(context.self.toString, "stopped")
     super.postStop()
