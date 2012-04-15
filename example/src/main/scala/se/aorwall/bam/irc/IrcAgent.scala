@@ -17,7 +17,7 @@ class IrcAgent(val nick: String, val server: String, val ircChannels: String, va
   val camelContext = new DefaultCamelContext(jndiContext);	
   
   def receive () = {
-    case d: DataEvent => collector ! DataEvent
+    case d: DataEvent => collector ! d
     case _ => 
   }
   

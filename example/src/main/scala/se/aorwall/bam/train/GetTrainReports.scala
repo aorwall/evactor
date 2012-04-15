@@ -57,7 +57,7 @@ class GetTrainReports(val collector: ActorRef) extends Actor with ActorLogging {
 			    case m: HashMap[String, Object] => {			      
 			      val trainNo = if( m.containsKey("AnnonseratTagId")) m.get("AnnonseratTagId")
 			      				  else m.get("TeknisktTagId")			      
-			      new DataEvent("train/arrival", trainNo + "-" + m.get("Utgangsdatum") + "-" + m.get("TrafikplatsSignatur").toString.toLowerCase, System.currentTimeMillis(), mapper.writeValueAsString(m) )
+			      new DataEvent("train/arrival", None, trainNo + "-" + m.get("Utgangsdatum") + "-" + m.get("TrafikplatsSignatur").toString.toLowerCase, System.currentTimeMillis(), mapper.writeValueAsString(m) )
 			    }
 			    case _ => List()
 			  })

@@ -47,7 +47,7 @@ class SendToAkka (val actor: ActorRef, val eventName: String)  {
 	def send(exchange: Exchange){	  
 	  val entry = exchange.getIn().getBody(classOf[Entry]);	  	
 	   
-	  actor ! new DataEvent(eventName, entry.getId().toASCIIString(), entry.getUpdated().getTime(), entry.toString());
+	  actor ! new DataEvent(eventName, None, entry.getId().toASCIIString(), entry.getUpdated().getTime(), entry.toString());
 	}
 
 }

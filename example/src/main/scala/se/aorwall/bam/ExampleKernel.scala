@@ -23,12 +23,13 @@ import se.aorwall.bam.api.KpiEventAPI
 import com.twitter.ostrich.admin.RuntimeEnvironment
 import com.twitter.ostrich.admin.config.ServerConfig
 import com.twitter.ostrich.admin.config.AdminServiceConfig
+import se.aorwall.bam.process.Subscription
 
 object ExampleKernel {
-  
+  //test
   def main(args: Array[String]){	
-	  val hej = new ExampleKernel 
-	  hej.startup()  
+    val hej = new ExampleKernel 
+    hej.startup()  
   }
 }
 
@@ -45,48 +46,49 @@ class ExampleKernel extends Bootable {
 	
 	lazy val nettyServer = unfiltered.netty.Http(8080).plan(new DataEventAPI(system)).plan(new KpiEventAPI(system))
 	
-	def startup = {    
-		// Start and configure 
-	   val irc = system.actorOf(Props(new IrcAgent(nick, server, ircChannels, collector)), name = "irc")
-	  	val bamCommits = system.actorOf(Props(new AtomAgent("https://github.com/aorwall/bam/commits/master.atom", "github/commits/bam", collector)), name = "bamCommits")
-	  	val akkaCommits = system.actorOf(Props(new AtomAgent("https://github.com/jboner/akka/commits/master.atom", "github/commits/akka", collector)), name = "akkaCommits")
-	  	val cassandraCommits = system.actorOf(Props(new AtomAgent("https://github.com/apache/cassandra/commits/trunk.atom", "github/commits/cassandra", collector)), name = "cassandraCommits")
-	  	val scalaCommits = system.actorOf(Props(new AtomAgent("https://github.com/scala/scala/commits/master.atom", "github/commits/scala", collector)), name = "scalaCommits")
-	  	val trv = system.actorOf(Props(new GetTrainReports(collector)), name = "trains") 
-	  	Thread.sleep(100)
+  def startup = {    
+    // Start and configure 
+		val irc = system.actorOf(Props(new IrcAgent(nick, server, ircChannels, collector)), name = "irc")
+//    val bamCommits = system.actorOf(Props(new AtomAgent("https://github.com/aorwall/bam/commits/master.atom", "github/commits/bam", collector)), name = "bamCommits")
+//    val akkaCommits = system.actorOf(Props(new AtomAgent("https://github.com/jboner/akka/commits/master.atom", "github/commits/akka", collector)), name = "akkaCommits")
+//    val cassandraCommits = system.actorOf(Props(new AtomAgent("https://github.com/apache/cassandra/commits/trunk.atom", "github/commits/cassandra", collector)), name = "cassandraCommits") 
+//    val scalaCommits = system.actorOf(Props(new AtomAgent("https://github.com/scala/scala/commits/master.atom", "github/commits/scala", collector)), name = "scalaCommits")
+    val trv = system.actorOf(Props(new GetTrainReports(collector)), name = "trains") 
+    Thread.sleep(100)
 	  	
 		// Start and configure
-	  	
-	  	// TRAINS
-	  	// categorize train arrivals by station
-	  	processor ! new Keyword("station", Some(classOf[DataEvent].getSimpleName + "/train/arrival"), new MvelExpression("message.TrafikplatsSignatur"))
-	  	
-	  	// check delay 
-		processor ! new Kpi("delay", Some(classOf[DataEvent].getSimpleName + "/train/arrival/station/*"), "(new java.text.SimpleDateFormat(\"yyyy-MM-dd'T'HH:mm:ss\").parse(message.AnnonseradTidpunktAnkomst).getTime() - new java.text.SimpleDateFormat(\"yyyy-MM-dd'T'HH:mm:ss\").parse(message.VerkligTidpunktAnkomst).getTime()) / 1000 / 60")
-	  	
-	  	// IRC
-	  	// categorize messages to irc by nick
-	  	processor ! new Keyword("nick", Some(classOf[DataEvent].getSimpleName + "/irc/*"), new MvelExpression("message.nick"))	  	  	
+  	
+    // TRAINS
+    // categorize train arrivals by station
+    processor ! new Keyword("station", List(new Subscription(Some("DataEvent"), Some("train/arrival"), None)), "train/arrival/station", new MvelExpression("message.TrafikplatsSignatur"))
+  	
+  	// check delay 
+    processor ! new Kpi("delay", List(new Subscription(Some("DataEvent"), Some("train/arrival/station"), None)), "train/arrival/delay", "(new java.text.SimpleDateFormat(\"yyyy-MM-dd'T'HH:mm:ss\").parse(message.AnnonseradTidpunktAnkomst).getTime() - new java.text.SimpleDateFormat(\"yyyy-MM-dd'T'HH:mm:ss\").parse(message.VerkligTidpunktAnkomst).getTime()) / 1000 / 60")
+  	
+  	// IRC
+  	// categorize messages to the irc channel #scala by nick
+  	processor ! new Keyword("nick", List(new Subscription(Some("DataEvent"), Some("irc/#scala"), None)), "irc/nick", new MvelExpression("message.nick"))	  	  	
 
-	  	// COMMITS
-	  	processor ! new Keyword("committer", Some(classOf[DataEvent].getSimpleName + "/github/commits/*"), new XPathExpression("//entry/author/name")) //TODO: Extract username!
-	  			
-		// Start Ostrich admin web service
-		val adminConfig = new AdminServiceConfig {
-        httpPort = 8888
-		}
-	   
-		val runtime = RuntimeEnvironment(this, Array[String]())
-		val admin = adminConfig()(runtime)
+  	// COMMITS 
+		// categorized by committer
+  	//processor ! new Keyword("committer", List(new Subscription(Some("DataEvent"), Some("github/commits"), None)), "github/commits/committer", new XPathExpression("//entry/author/name")) //TODO: Extract username!
+  			
+    // Start Ostrich admin web service
+    val adminConfig = new AdminServiceConfig {
+      httpPort = 8888
+    }
+ 
+    val runtime = RuntimeEnvironment(this, Array[String]())
+    val admin = adminConfig()(runtime)
 		
-	   // Start Netty HTTP server
-		nettyServer.run()
-	}
+    // Start Netty HTTP server
+    nettyServer.run()
+  }
 
-	def shutdown = {
-		system.shutdown()
-		nettyServer.stop()
-	}
+  def shutdown = {
+    system.shutdown()
+    nettyServer.stop() 
+  }
 
 }
 

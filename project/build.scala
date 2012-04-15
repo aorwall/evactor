@@ -1,8 +1,14 @@
 import sbt._
 import Keys._
+import akka.sbt.AkkaKernelPlugin
+import akka.sbt.AkkaKernelPlugin.{ Dist, outputDirectory, distJvmOptions}
 
 object BamBuild extends Build {
   
+  val Organization = "Albert Örwall"
+  val Version      = "0.1"
+  val ScalaVersion = "2.9.1"
+    
   lazy val bam = Project(
     id = "bam",
     base = file(".")
@@ -35,7 +41,7 @@ object BamBuild extends Build {
   lazy val example = Project(
     id = "example",
     base = file("example"),
-    settings = Defaults.defaultSettings ++ Seq(
+    settings = Defaults.defaultSettings ++ AkkaKernelPlugin.distSettings ++ Seq(
       libraryDependencies ++= Dependencies.example
     )
   ) dependsOn (core, storageCassandra, api)
@@ -54,6 +60,20 @@ object BamBuild extends Build {
         resolvers += "Scala Tools" at "http://www.scala-tools.org/repo-releases/"
   )
   
+  lazy val buildSettings = Defaults.defaultSettings ++ Seq(
+    organization := Organization,
+    version      := Version,
+    scalaVersion := ScalaVersion,
+    crossPaths   := false,
+    organizationName := "Albert Örwall",
+    organizationHomepage := Some(url("https://github.com/aorwall")),
+    traceLevel := 0
+  )
+  
+  lazy val defaultSettings = buildSettings ++ Seq(
+	  scalacOptions ++= Seq("-encoding", "UTF-8", "-deprecation", "-unchecked"),
+	  javacOptions  ++= Seq("-Xlint:unchecked", "-Xlint:deprecation")
+  )  	
 }
 
 
