@@ -5,9 +5,9 @@ import akka.sbt.AkkaKernelPlugin.{ Dist, outputDirectory, distJvmOptions}
 
 object BamBuild extends Build {
   
-  val Organization = "Albert Örwall"
-  val Version      = "0.1"
-  val ScalaVersion = "2.9.1"
+  val Organization = "se.orwall.bam"
+  val Version      = "0.1-SNAPSHOT"
+  val ScalaVersion = "2.9.2"
     
   lazy val bam = Project(
     id = "bam",
@@ -17,7 +17,7 @@ object BamBuild extends Build {
   lazy val core = Project(
     id = "core",
     base = file("core"),
-    settings = Defaults.defaultSettings ++ Seq(
+    settings = defaultSettings ++ Seq(
       libraryDependencies ++= Dependencies.core
     )
   )
@@ -25,7 +25,7 @@ object BamBuild extends Build {
   lazy val storageCassandra = Project(
     id = "storage-cassandra",
     base = file("storage-cassandra"),
-    settings = Defaults.defaultSettings ++ Seq(
+    settings = defaultSettings ++ Seq(
       libraryDependencies ++= Dependencies.storageCassandra
     )
   ) dependsOn (core)
@@ -33,7 +33,7 @@ object BamBuild extends Build {
   lazy val api = Project(
     id = "api",
     base = file("api"),
-    settings = Defaults.defaultSettings ++ Seq(
+    settings = defaultSettings ++ Seq(
       libraryDependencies ++= Dependencies.api
     )
   ) dependsOn (core, storageCassandra)
@@ -41,7 +41,7 @@ object BamBuild extends Build {
   lazy val example = Project(
     id = "example",
     base = file("example"),
-    settings = Defaults.defaultSettings ++ AkkaKernelPlugin.distSettings ++ Seq(
+    settings = defaultSettings ++ AkkaKernelPlugin.distSettings ++ Seq(
       libraryDependencies ++= Dependencies.example
     )
   ) dependsOn (core, storageCassandra, api)
@@ -49,10 +49,10 @@ object BamBuild extends Build {
   lazy val benchmark = Project(
     id = "benchmark",
     base = file("benchmark"),
-    settings = Defaults.defaultSettings ++ Seq(
+    settings = defaultSettings ++ AkkaKernelPlugin.distSettings ++ Seq(
       libraryDependencies ++= Dependencies.benchmark
     )
-  ) dependsOn (core)
+  ) dependsOn (core, storageCassandra, api)
                             
   override lazy val settings = super.settings ++ Seq(
         resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/",
@@ -65,9 +65,7 @@ object BamBuild extends Build {
     version      := Version,
     scalaVersion := ScalaVersion,
     crossPaths   := false,
-    organizationName := "Albert Örwall",
-    organizationHomepage := Some(url("https://github.com/aorwall")),
-    traceLevel := 0
+    publishTo	   := Some(Resolver.file("file",  new File(Path.userHome.absolutePath+"/.m2/repository")))
   )
   
   lazy val defaultSettings = buildSettings ++ Seq(
@@ -94,7 +92,7 @@ object Dependency {
 
   // Versions
   object V {
-    val Akka = "2.0"
+    val Akka = "2.0.1"
     val Camel = "2.6.0"
     val Cassandra = "1.0.6"
     val Hector = "1.0-2"
