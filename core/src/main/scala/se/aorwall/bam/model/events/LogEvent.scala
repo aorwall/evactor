@@ -22,6 +22,11 @@ case class LogEvent(
   with HasState {
 
   private val serialVersionUID = 0L
+
+  // Java friendly constructor
+  def this(channel: String, category: String, id: String, timestamp: Long, correlationId: String, client: String, server: String, state: String, message: String) = {
+    this(channel, Some(category), id, timestamp, correlationId, client, server, State(state), message )
+  }
   
   override def clone(newChannel: String, newCategory: Option[String]): Event = 
     new LogEvent(newChannel, newCategory, id, timestamp, correlationId, client, server, state, message)

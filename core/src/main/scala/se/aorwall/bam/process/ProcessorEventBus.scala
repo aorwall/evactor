@@ -73,14 +73,24 @@ class ProcessorEventBus extends Extension with ActorEventBus with LookupClassifi
   }
 }
 
+object Subscriptions {
+  
+  def apply(eventType: String, channel: String): List[Subscription] = List(new Subscription(eventType, channel));
+  
+}
+
 case class Subscription(
     val eventType: Option[String],
     val channel: Option[String],
     val category: Option[String]) {
   
- 
+  def this(eventType: String) = this(Some(eventType), None, None)
+  
+  def this(eventType: String, channel: String) = this(Some(eventType), Some(channel), None)
+  
+  def this(eventType: String, channel: String, category: String) = this(Some(eventType), Some(channel), Some(category))
+   
 }
-    
     
 trait UseProcessorEventBus extends Actor {
 
