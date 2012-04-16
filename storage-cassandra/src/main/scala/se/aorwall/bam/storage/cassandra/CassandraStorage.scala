@@ -129,13 +129,23 @@ abstract class CassandraStorage(val system: ActorSystem, prefix: String) extends
     
   }
   
+  // TODO: Base64 here to...
   protected def storeEventCounters(mutator: Mutator[String], event: Event, key: String): Unit = {
-    
+    val time = new DateTime(event.timestamp)
+   
     // column family: EventCount
     // row key: event name + state + ["year";"month":"day":"hour"]
     // column key: timestamp
     // value: counter
-    val time = new DateTime(event.timestamp)
+    event match {
+      case hasState: HasState => storeEventCounters(mutator, "%s/%s".format(key, hasState.state.name), time)
+      case _ => 
+    }
+    storeEventCounters(mutator, key, time)
+  }
+   
+  protected def storeEventCounters(mutator: Mutator[String], key: String, time: DateTime): Unit = {
+    
     val count = new java.lang.Long(1L)
     val year = new java.lang.Long(new DateTime(time.getYear, 1, 1, 0, 0).toDate.getTime)
     val month = new java.lang.Long(new DateTime(time.getYear, time.getMonthOfYear, 1, 0, 0).toDate.getTime)
@@ -143,17 +153,13 @@ abstract class CassandraStorage(val system: ActorSystem, prefix: String) extends
     val day = new java.lang.Long(dayDate.toDate.getTime)
     val hour = new java.lang.Long(new DateTime(time.getYear, time.getMonthOfYear, time.getDayOfMonth, time.getHourOfDay, 0).toDate.getTime)
     
-    val name = event match {
-      case hasState: HasState => "%s/%s".format(key, hasState.state.name)
-      case _ => key
-    }
-    
-    mutator.incrementCounter("%s/%s".format(name, YEAR), COUNT_CF, year, count)
-    mutator.incrementCounter("%s/%s".format(name, MONTH), COUNT_CF, month, count)
-    mutator.incrementCounter("%s/%s".format(name, DAY), COUNT_CF, day, count)
-    mutator.incrementCounter("%s/%s".format(name, HOUR), COUNT_CF, hour, count)
+    mutator.incrementCounter("%s/%s".format(key, YEAR), COUNT_CF, year, count)
+    mutator.incrementCounter("%s/%s".format(key, MONTH), COUNT_CF, month, count)
+    mutator.incrementCounter("%s/%s".format(key, DAY), COUNT_CF, day, count)
+    mutator.incrementCounter("%s/%s".format(key, HOUR), COUNT_CF, hour, count)
   }
-   
+  
+  
   // TODO: Implement paging
   def getEvents(channel: String, category: Option[String], fromTimestamp: Option[Long], toTimestamp: Option[Long], count: Int, start: Int): List[Event] = {
     val fromTimeuuid = fromTimestamp match {
@@ -229,7 +235,7 @@ abstract class CassandraStorage(val system: ActorSystem, prefix: String) extends
    */
   def getStatistics(channel: String, category: Option[String], fromTimestamp: Option[Long], toTimestamp: Option[Long], interval: String): (Long, List[Long]) = {
     val key = createKey(channel, category)
-    
+
     (fromTimestamp, toTimestamp) match {
       case (None, None) => readStatisticsFromInterval(key, 0, System.currentTimeMillis, interval)
       case (Some(from), None) => readStatisticsFromInterval(key, from, System.currentTimeMillis, interval)
@@ -260,6 +266,7 @@ abstract class CassandraStorage(val system: ActorSystem, prefix: String) extends
           .execute()
           .get
           .getColumns
+          
                    
     val statsMap: Map[Long, Long] = columns.map {col => col.getName match {
             case k: java.lang.Long =>
