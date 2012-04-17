@@ -61,7 +61,7 @@ abstract class CassandraStorage(val system: ActorSystem, prefix: String) extends
   // TODO: Change to Base64
   protected def createKey(channel: String, category: Option[String]): String = {
     category match {
-      case Some(cat) => "%s/%s".format(channel, category)
+      case Some(cat) => "%s/%s".format(channel, cat)
       case None => channel
     }
   }
