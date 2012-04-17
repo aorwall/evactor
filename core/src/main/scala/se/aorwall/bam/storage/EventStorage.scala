@@ -1,10 +1,13 @@
 package se.aorwall.bam.storage
 
 import se.aorwall.bam.model.events.Event
+import se.aorwall.bam.model.State
 
 trait EventStorage {
   
   def storeEvent(event: Event): Unit
+  
+  def getEvent(id: String): Option[Event]
   
   def getEvents(channel: String, category: Option[String], fromTimestamp: Option[Long], toTimestamp: Option[Long], count: Int, start: Int): List[Event]
   
@@ -12,5 +15,7 @@ trait EventStorage {
   
   def eventExists(event: Event): Boolean
   
-  def getEventCategories(channel: String, count: Int): Map[String, Long]
+  def getEventChannels(count: Int): List[(String, Long)]
+  
+  def getEventCategories(channel: String, count: Int): List[(String, Long)]
 }

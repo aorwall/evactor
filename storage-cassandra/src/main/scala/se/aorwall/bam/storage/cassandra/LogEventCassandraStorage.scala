@@ -9,16 +9,31 @@ import se.aorwall.bam.storage.EventStorage
 import me.prettyprint.cassandra.service.CassandraHostConfigurator
 import akka.actor.ActorSystem
 import me.prettyprint.cassandra.serializers.LongSerializer
+import se.aorwall.bam.model.State
 
 class LogEventCassandraStorage(val system: ActorSystem) extends EventStorage {
 
   private val settings = CassandraStorageExtension(system)  
   val cluster = HFactory.getOrCreateCluster(settings.Clustername, new CassandraHostConfigurator(settings.Hostname + ":" + settings.Port))
   private val keyspace = HFactory.createKeyspace(settings.Keyspace, cluster)
-  
+    
   val LOG_EVENT_CF = "LogEvent";
   val NAMES_CF = "EventNames"
     
+  def getEvent(id: String): Option[Event] = {
+     val column = HFactory.createColumnQuery(keyspace, StringSerializer.get, StringSerializer.get, ObjectSerializer.get)
+     		.setColumnFamily(LOG_EVENT_CF)
+     		.setName("event")
+     		.setKey(id)
+     		.execute().get
+     		
+     column.getValue match {
+       case e: LogEvent => Some(e)
+       case _ => None
+     }
+
+  }
+  
   def eventExists(event: Event): Boolean = {	 
 	 val existingEvent = HFactory.createStringColumnQuery(keyspace)
             .setColumnFamily(LOG_EVENT_CF)
@@ -46,8 +61,12 @@ class LogEventCassandraStorage(val system: ActorSystem) extends EventStorage {
     List[LogEvent]() // TODO
   }
   
-  def getEventCategories(channel: String, count: Int): Map[String, Long] = {
-    Map[String, Long]() //Not implemented for log events
+  def getEventCategories(channel: String, count: Int): List[(String, Long)] = {
+    List[(String, Long)]() //Not implemented for log events
+  }
+  
+  def getEventChannels(count: Int): List[(String, Long)] = {
+    List[(String, Long)]() //Not implemented for log events
   }
   
   def getStatistics(channel: String, category: Option[String], fromTimestamp: Option[Long], toTimestamp: Option[Long], interval: String): (Long, List[Long]) = {

@@ -106,9 +106,9 @@ trait SimpleProcessEventBuilder extends EventBuilder with ActorLogging {
     val sortedRequests = requests.sortWith((e1, e2) => e1.timestamp < e2.timestamp)
 
     if (requests.size == steps){
-      Right(new SimpleProcessEvent(channel, category, sortedRequests.last.id, sortedRequests.last.timestamp, sortedRequests.map(EventRef(_)), sortedRequests.last.state, sortedRequests.last.timestamp - sortedRequests.first.timestamp + sortedRequests.first.latency ))
+      Right(new SimpleProcessEvent(channel, category, sortedRequests.last.id, sortedRequests.last.timestamp, sortedRequests.map(EventRef(_)), sortedRequests.last.state, sortedRequests.last.timestamp - sortedRequests.head.timestamp + sortedRequests.head.latency ))
     } else if (requests.size > 0){
-      Right(new SimpleProcessEvent(channel, category, sortedRequests.last.id, sortedRequests.last.timestamp, sortedRequests.map(EventRef(_)), getCauseOfFailure(sortedRequests.last), sortedRequests.last.timestamp - sortedRequests.first.timestamp + sortedRequests.first.latency ))
+      Right(new SimpleProcessEvent(channel, category, sortedRequests.last.id, sortedRequests.last.timestamp, sortedRequests.map(EventRef(_)), getCauseOfFailure(sortedRequests.last), sortedRequests.last.timestamp - sortedRequests.head.timestamp + sortedRequests.head.latency ))
     } else {
       Left(new EventCreationException("SimpleProcessEventBuilder was trying to create an event with no request events"))
     }

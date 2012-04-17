@@ -30,7 +30,9 @@ class KpiEventCassandraStorage(system: ActorSystem, cfPrefix: String) extends Ca
 		  
 		  // store sum
 		  storeSum(event.channel, kpiEvent)
-		  storeSum(createKey(event.channel, event.category), kpiEvent)  
+		  
+		  if(event.category.isDefined)
+		  	storeSum(createKey(event.channel, event.category), kpiEvent)  
 	  }
 	  case msg => warn("not a KpiEvent: " + msg); false
 	  
@@ -49,11 +51,11 @@ class KpiEventCassandraStorage(system: ActorSystem, cfPrefix: String) extends Ca
     val dayDate = new DateTime(time.getYear, time.getMonthOfYear, time.getDayOfMonth, 0, 0)
     val day = new java.lang.Long(dayDate.toDate.getTime)
     val hour = new java.lang.Long(new DateTime(time.getYear, time.getMonthOfYear, time.getDayOfMonth, time.getHourOfDay, 0).toDate.getTime)
-    
-  	 sum("%s/%s".format(key, YEAR), year, event)
-  	 sum("%s/%s".format(key, MONTH), month, event)
-  	 sum("%s/%s".format(key, DAY), day, event)
-  	 sum("%s/%s".format(key, HOUR), hour, event)
+
+  	sum("%s/%s".format(key, YEAR), year, event)
+  	sum("%s/%s".format(key, MONTH), month, event)
+  	sum("%s/%s".format(key, DAY), day, event)
+  	sum("%s/%s".format(key, HOUR), hour, event)
 	}
    
 	/**
@@ -64,10 +66,9 @@ class KpiEventCassandraStorage(system: ActorSystem, cfPrefix: String) extends Ca
 	def sum(rowKey: String, colKey: java.lang.Long, event: KpiEvent) = {	  
     val mutator = HFactory.createMutator(keyspace, StringSerializer.get)
     
-     val sum: java.lang.Double = getSum(rowKey, colKey) + event.value
+    val sum: java.lang.Double = getSum(rowKey, colKey) + event.value
      							                             
 	  mutator.insert(rowKey, SUM_CF, HFactory.createColumn(colKey, sum, LongSerializer.get, DoubleSerializer.get))
-	  
 	}
 	
 	protected def getSum(rowKey: String, colKey: Long): Double = {
@@ -86,19 +87,19 @@ class KpiEventCassandraStorage(system: ActorSystem, cfPrefix: String) extends Ca
    * Read kpi statistics within a time span from fromTimestamp to toTimestamp
    */
   def getSumStatistics(channel: String, category: Option[String], fromTimestamp: Option[Long], toTimestamp: Option[Long], interval: String): (Long, List[(Long, Double)]) = {    
-    val key = createKey(channel, category)
+    
   
     (fromTimestamp, toTimestamp) match {
-      case (None, None) => getSumStatisticsFromInterval(key, 0, System.currentTimeMillis, interval)
-      case (Some(from), None) => getSumStatisticsFromInterval(key, from, System.currentTimeMillis, interval)
+      case (None, None) => getSumStatisticsFromInterval(channel, category, 0, System.currentTimeMillis, interval)
+      case (Some(from), None) => getSumStatisticsFromInterval(channel, category, from, System.currentTimeMillis, interval)
       case (None, Some(to)) => throw new IllegalArgumentException("Reading statistics with just a toTimestamp provided isn't implemented yet") //TODO
-      case (Some(from), Some(to)) => getSumStatisticsFromInterval(key, from, to, interval)
+      case (Some(from), Some(to)) => getSumStatisticsFromInterval(channel, category, from, to, interval)
     }
   }
   
-  protected def getSumStatisticsFromInterval(key: String, from: Long, to: Long, interval: String): (Long, List[(Long, Double)]) = {
-	  val stats = readStatisticsFromInterval(key, from, to, interval)
-	  	  
+  protected def getSumStatisticsFromInterval(channel: String, category: Option[String], from: Long, to: Long, interval: String): (Long, List[(Long, Double)]) = {
+	  val stats = readStatisticsFromInterval(channel, category, None, from, to, interval)
+	  val key = createKey(channel, category)
     val period = interval match {
     	case YEAR => Years.ONE
     	case MONTH => Months.ONE

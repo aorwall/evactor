@@ -19,6 +19,8 @@ class TestEventStorage(system: ActorSystem) extends EventStorage {
 
   }
   
+  def getEvent(id: String): Option[Event] = None
+  
   def getEvents(channel: String, category: Option[String], fromTimestamp: Option[Long], toTimestamp: Option[Long], count: Int, start: Int): List[Event] = {
     List[Event]()
   }
@@ -27,11 +29,16 @@ class TestEventStorage(system: ActorSystem) extends EventStorage {
     (0L, List[Long]())
   }
   
-  def getEventCategories(channel: String, count: Int): Map[String, Long] = {
-    Map[String, Long]()
+  def getEventCategories(channel: String, count: Int): List[(String, Long)] = {
+    List[(String, Long)]()
   }
   
   def eventExists(event: Event) = false
+  
+  
+  def getEventChannels(count: Int): List[(String, Long)] = {
+    List[(String, Long)]() 
+  }
   
 }
 

@@ -10,7 +10,7 @@ import se.aorwall.bam.model.State
 case class RequestEvent (
     override val channel: String, 
     override val category: Option[String],
-    override val id: String, 
+    override val id: String,
     override val timestamp: Long, 
     val inboundRef: Option[EventRef],
     val outboundRef: Option[EventRef],
