@@ -13,20 +13,26 @@ import java.net.URLEncoder
 import java.net.URLDecoder
 import unfiltered.request.Params
 import unfiltered.response.BadRequest
+import se.aorwall.bam.model.events.AlertEvent
+import se.aorwall.bam.storage.EventStorage
+import grizzled.slf4j.Logging
 import se.aorwall.bam.model.events.Event
 
-class DataEventAPI(val system: ActorSystem) extends EventAPI {
+class AlertEventAPI(val system: ActorSystem) extends EventAPI {
     
-  val storage = EventStorageExtension(system).getEventStorage(classOf[DataEvent].getName) match {
-    case Some(s) => s
+  lazy val storage = EventStorageExtension(system).getEventStorage(classOf[AlertEvent].getName) match {
+    case Some(s: EventStorage) => s
     case None => throw new RuntimeException("No storage impl")
   }
-     
-  override implicit protected[api] def toMap(e: Event): Map[String, Any] = e match { 
-    case event: DataEvent =>  Map ("id" -> event.id, 
-         "timestamp" -> event.timestamp,
-         "message" -> event.message)
-  }
   
+  override implicit protected[api] def toMap(e: Event): Map[String, Any] = e match {
+    case event: AlertEvent =>  Map ("id" -> event.id, 
+         "timestamp" -> event.timestamp,
+         "triggered" -> event.triggered,
+         "eventRef" -> event.eventRef,
+         "message" -> event.message)   
+  }
+   
+   
 }
 

@@ -12,4 +12,3 @@ trait NettyPlan extends cycle.Plan
   }
   
 }
-					 

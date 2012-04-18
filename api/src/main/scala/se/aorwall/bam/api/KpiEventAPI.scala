@@ -15,69 +15,40 @@ import unfiltered.request.Params
 import unfiltered.response.BadRequest
 import se.aorwall.bam.model.events.KpiEvent
 import se.aorwall.bam.storage.KpiEventStorage
+import unfiltered.response.ResponseFunction
+import org.jboss.netty.handler.codec.http.HttpResponse
+import se.aorwall.bam.model.events.Event
 
-class KpiEventAPI(system: ActorSystem) extends NettyPlan {
+class KpiEventAPI (override val system: ActorSystem) extends EventAPI {
     
-  lazy val storage = EventStorageExtension(system).getEventStorage(classOf[KpiEvent].getName) match {
+  val storage = EventStorageExtension(system).getEventStorage(classOf[KpiEvent].getName) match {
     case Some(s: KpiEventStorage) => s
-    case None => throw new RuntimeException("No storage impl")
+    case Some(s) => throw new RuntimeException("Storage impl is of the wrong type: %s".format(s))
+    case None => throw new RuntimeException("No storage impl found for KPI Event")
   }
      
-  def now = System.currentTimeMillis
-    
-  def intent = {
-    case req @ Path(Seg("kpi" :: "categories" :: channel :: Nil)) => try {
-   	   val Params(params) = req      
-   	 	ResponseString(generate(storage.getEventCategories(channel, getCount(params.get("count"), 100))))
-    	} catch { case _ => BadRequest }
-
-    case req @ Path(Seg("kpi" :: "stats" :: channel :: Nil)) => try {
-	      val Params(params) = req       
-	      //TODO: Extract parameters
-	   	ResponseString(generate(storage.getStatistics(channel, None, Some(0L), Some(now), "hour")))
-      } catch { case _ => BadRequest }   
-    case req @ Path(Seg("kpi" :: "stats" :: channel :: category :: Nil)) => try {
-	      val Params(params) = req       
-	      //TODO: Extract parameters
-	   	ResponseString(generate(storage.getStatistics(channel, Some(category), Some(0L), Some(now), "hour")))
-      } catch { case _ => BadRequest }         
-    case req @ Path(Seg("kpi" :: "avg" :: channel :: Nil)) => try {
-	      val Params(params) = req       
-	      //TODO: Extract parameters
-	      val avg = average(storage.getSumStatistics(channel, None, Some(0L), Some(now), "hour"))
-	   	  ResponseString(generate(avg))
-      } catch { case _ => BadRequest }
-    case req @ Path(Seg("kpi" :: "avg" :: channel :: category :: Nil)) => try {
-	      val Params(params) = req       
-	      //TODO: Extract parameters
-	      val avg = average(storage.getSumStatistics(channel, Some(category), Some(0L), Some(now), "hour"))
-	   	  ResponseString(generate(avg))
-      } catch { case _ => BadRequest }
-    case req @ Path(Seg("kpi" :: "events" :: channel :: Nil)) =>  try {
-   	 	val Params(params) = req       
-   	 	//TODO: Extract parameters
-   	 	ResponseString(generate(storage.getEvents(channel, None, None, None, 10, 0)))
-    	} catch { case _ => BadRequest }
-    case req @ Path(Seg("kpi" :: "events" :: channel :: category :: Nil)) =>  try {
-   	 	val Params(params) = req       
-   	 	//TODO: Extract parameters
-   	 	ResponseString(generate(storage.getEvents(channel, Some(category), None, None, 10, 0)))
-    	} catch { case _ => BadRequest }
-    case _ => ResponseString("Couldn't handle request (data)")
+  override def doRequest(
+      path: Seq[String], 
+      params: Map[String, Seq[String]]): ResponseFunction[HttpResponse] = path match {
+    case "avg" :: channel :: Nil => getAverage(decode(channel), None, getInterval(params.get("interval")))
+    case "avg" :: channel :: category :: Nil => getAverage(decode(channel), Some(decode(category)), getInterval(params.get("interval")))
+    case _ => super.doRequest(path, params)
+  }
+  
+  protected def getAverage(channel: String, category: Option[String], interval: String) = {
+    average(storage.getSumStatistics(channel, category, Some(0L), Some(now), interval))
   }
   
   protected def average ( sum: (Long, List[(Long, Double)])) = (sum._1, sum._2.map { 
-	        case (x,y) => if(x > 0) y/x
-	        					 else 0
-	      })
-  
-  private def getPath(pathlist: List[String]): Option[String] = 
-    if (pathlist.size == 0) None
-    else Some(decode(pathlist.mkString("/")))
-  
-  private def getCount(count: Option[Seq[String]], default: Int): Int = count match {
-    case Some(s) => s.mkString.toInt 
-    case None => default
+	  case (x,y) => if(x > 0) y/x
+                  else 0
+	})
+	
+  override implicit protected[api] def toMap(e: Event): Map[String, Any] = e match {
+    case event: KpiEvent => Map ("id" -> event.id, 
+         "timestamp" -> event.timestamp,
+         "value" -> event.value)
   }
+  
 }
 
