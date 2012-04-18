@@ -5,6 +5,7 @@ import scala.Predef._
 import se.aorwall.bam.model.events.{Event, AlertEvent}
 import se.aorwall.bam.process._
 import se.aorwall.bam.model.events.EventRef
+import java.util.UUID
 
 /**
  * An analyser analyses event flows and creates alert events when 
@@ -51,11 +52,13 @@ abstract class Analyser(
       case None => None
     }
     
+    val uuid = UUID.randomUUID.toString
+    
     val alert = 
       new AlertEvent(
         channel,
         category,
-        currentTime.toString, 
+        uuid,
         currentTime, 
         triggered, 
         message,
