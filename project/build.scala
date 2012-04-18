@@ -84,7 +84,7 @@ object Dependencies {
   val api = Seq (jerkson, unfilteredFilter, unfilteredNetty, unfilteredNettyServer)
   val example = Seq (akkaKernel, camelCore, camelIrc, camelAtom, unfilteredNettyServer)
   val benchmark = Seq(akkaKernel, akkaRemote, netty, protobuf)
-  val storageCassandra = Seq(cassandraAll, cassandraThrift, guava, hector, hectorCore, jodaConvert, jodaTime, perf4j, thrift, uuid) //highScaleLib
+  val storageCassandra = Seq(cassandraAll, cassandraThrift, guava, hectorCore, jodaConvert, jodaTime, perf4j, thrift, uuid) //highScaleLib
   
 }
 
