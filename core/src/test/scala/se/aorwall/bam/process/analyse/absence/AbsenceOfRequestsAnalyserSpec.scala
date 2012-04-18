@@ -66,7 +66,7 @@ class AbsenceOfRequestsAnalyserSpec(_system: ActorSystem)
       val probe = TestProbe()
       actor ! probe.ref
 
-      probe.expectMsgAllClassOf(200 millis, classOf[AlertEvent])
+      probe.expectMsgAllClassOf(300 millis, classOf[AlertEvent])
 
       actor ! createEvent()
       probe.expectMsgAllClassOf(1 second, classOf[AlertEvent]) // TODO: Need to check back to normal!

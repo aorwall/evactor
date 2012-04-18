@@ -54,7 +54,7 @@ class LatencyAnalyser(
 	log.debug("sum: {}, no of events: {}, avgLatency: {}", sum, events.size, avgLatency)
 	
 	if (avgLatency > maxLatency) {
-	  alert("Average latency %s ms is higher than the maximum allowed latency %s ms".format(avgLatency, maxLatency))
+	  alert("Average latency %s ms is higher than the maximum allowed latency %s ms".format(avgLatency, maxLatency), Some(event))
 	} else {
 	  backToNormal()
 	}    

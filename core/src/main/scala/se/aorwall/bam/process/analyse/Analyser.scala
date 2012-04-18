@@ -4,9 +4,16 @@ import akka.actor.{Actor, ActorRef, ActorLogging}
 import scala.Predef._
 import se.aorwall.bam.model.events.{Event, AlertEvent}
 import se.aorwall.bam.process._
+import se.aorwall.bam.model.events.EventRef
 
 /**
- * Analyses event flows and creates alert events.
+ * An analyser analyses event flows and creates alert events when 
+ * triggered. It will only create an alert the first time it's 
+ * triggered and then wait until state is back to normal again.
+ * 
+ * TODO: Should do some kind of check on timestamp on events if
+ * events arrive in the wrong order.
+ * 
  */
 abstract class Analyser(
     override val subscriptions: List[Subscription], 
@@ -15,30 +22,35 @@ abstract class Analyser(
   extends Processor(subscriptions) 
   with Publisher
   with Monitored
-  with ActorLogging  {
+  with ActorLogging {
 
   var triggered = false 
   
-  protected def alert(message: String) {
+  protected def alert(message: String, event: Option[Event] = None) {
     if (!triggered) {
-      log.info("Alert: {}", message)
-
+      log.debug("Alert: {}", message)
       triggered = true
-      sendAlert( message)
+      sendAlert( message, event)
     }
   }
 
-  protected def backToNormal() {
+  protected def backToNormal(event: Option[Event] = None) {
     if (triggered) {
-      log.info("Back to normal")
+      log.debug("Back to normal")
 
       triggered = false
-      sendAlert("Back to normal")
+      sendAlert("Back to normal", event)
     }
   }
 
-  def sendAlert(message: String) {
+  def sendAlert(message: String, event: Option[Event]) {
     val currentTime = System.currentTimeMillis
+    
+    val eventRef = event match {
+      case Some(e) => Some(EventRef(e))
+      case None => None
+    }
+    
     val alert = 
       new AlertEvent(
         channel,
@@ -46,7 +58,8 @@ abstract class Analyser(
         currentTime.toString, 
         currentTime, 
         triggered, 
-        message)
+        message,
+        eventRef)
     
     publish(alert)
 
@@ -56,5 +69,5 @@ abstract class Analyser(
       case _ =>
     }
   }
-
+  
 }

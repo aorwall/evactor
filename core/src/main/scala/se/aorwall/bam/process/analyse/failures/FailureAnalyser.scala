@@ -45,7 +45,7 @@ class FailureAnalyser (
         log.debug("no of failed events from subscriptions {}: {}", subscriptions, failedEvents.size)
 	
         if(failedEvents.size > maxOccurrences) {
-          alert("%s failed events from subscriptions %s is more than allowed (%s)".format(failedEvents.size, subscriptions, maxOccurrences))
+          alert("%s failed events from subscriptions %s is more than allowed (%s)".format(failedEvents.size, subscriptions, maxOccurrences), Some(event))
         } else {
           backToNormal()
         }
