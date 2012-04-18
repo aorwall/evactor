@@ -10,6 +10,8 @@ import se.aorwall.bam.process.analyse.Analyser
 import akka.actor.ActorRef
 import akka.actor.ActorLogging
 import se.aorwall.bam.process.Subscription
+import scala.collection.immutable.TreeSet
+import se.aorwall.bam.model.Failure
 
 class FailureAnalyser (
     override val subscriptions: List[Subscription], 
@@ -23,8 +25,8 @@ class FailureAnalyser (
   type T = Event with HasState
   type S = State
 
-  var failedEvents = new TreeMap[Long, State] ()
-
+  var allEvents = new TreeMap[Long, State]
+  
   override def receive = {
     case event: Event with HasState => process(event) 
     case actor: ActorRef => testActor = Some(actor) 
@@ -32,26 +34,25 @@ class FailureAnalyser (
   }
 
   override protected def process(event: T) {
-    event.state match {
-      case model.Failure => {
-        // Add new
-        failedEvents += (event.timestamp -> event.state)  // TODO: What if two activites have the same timestamp?
+    allEvents += (event.timestamp -> event.state)
+      
+    // Remove old
+    val inactiveEvents = getInactive(allEvents)	
+    allEvents = allEvents.drop(inactiveEvents.size)
 	
-        // Remove old
-        val inactiveEvents = getInactive(failedEvents)
-	
-        failedEvents = failedEvents.drop(inactiveEvents.size)
-	
-        log.debug("no of failed events from subscriptions {}: {}", subscriptions, failedEvents.size)
-	
-        if(failedEvents.size > maxOccurrences) {
-          alert("%s failed events from subscriptions %s is more than allowed (%s)".format(failedEvents.size, subscriptions, maxOccurrences), Some(event))
-        } else {
-          backToNormal()
-        }
-      }
-
-      case _ => 
+    val failedEvents = allEvents.count { _._2 match {
+      case Failure => true
+      case _ => false
+   	 }
     }
+ 
+    log.debug("no of failed events from subscriptions {}: {}", subscriptions, failedEvents)
+
+    if(failedEvents > maxOccurrences) {
+      alert("%s failed events from subscriptions %s is more than allowed (%s)".format(failedEvents, subscriptions, maxOccurrences), Some(event))
+    } else {
+      backToNormal()
+    }
+  
   }
 }
