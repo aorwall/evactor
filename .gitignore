@@ -6,6 +6,7 @@
 .settings
 .gradle/
 .idea/
+.cache
 out/
 bin/
 target/
