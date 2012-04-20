@@ -17,20 +17,24 @@ import se.aorwall.bam.process.Processor
 
 class StorageProcessorConf (
     override val name: String, 
-    override val subscriptions: List[Subscription]) 
+    override val subscriptions: List[Subscription],
+    override val maxThreads: Int) 
   extends ProcessorConfiguration (name, subscriptions) {
   
-  def processor = new StorageProcessorRouter(subscriptions)
+  def processor = new StorageProcessorRouter(subscriptions, maxThreads)
   
 }
 
 class StorageProcessorRouter (
-    override val subscriptions: List[Subscription])  
-  extends Processor (subscriptions) with Subscriber with ActorLogging {
+    override val subscriptions: List[Subscription],
+    override val maxThreads: Int)  
+  extends Processor (subscriptions) 
+  with Subscriber 
+  with ActorLogging {
   
   type T = Event
   
-  val router = context.actorOf(Props[StorageProcessor].withRouter(RoundRobinRouter(nrOfInstances = 30))) //TODO: Should be configured in akka conf
+  val router = context.actorOf(Props[StorageProcessor].withRouter(RoundRobinRouter(nrOfInstances = maxThreads)))
   
   override def receive = {
     case event: Event => process(event)
