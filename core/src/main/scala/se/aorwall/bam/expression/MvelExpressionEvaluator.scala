@@ -1,15 +1,13 @@
 package se.aorwall.bam.expression
 
-import java.util.HashMap
-
-import org.codehaus.jackson.map.ObjectMapper
-import org.mvel2.MVEL
-
-import grizzled.slf4j.Logging
-import se.aorwall.bam.model.attributes.HasMessage
-import se.aorwall.bam.model.events.Event
 import scala.Double._
 import scala.collection.JavaConversions.asJavaSet
+import se.aorwall.bam.model.attributes.HasMessage
+import se.aorwall.bam.model.events.Event
+import akka.actor.ActorLogging
+import org.codehaus.jackson.map.ObjectMapper
+import org.mvel2.MVEL
+import java.util.HashMap
 
 /**
  * Evaluate MVEL Expressions. Supports JSON and strings in message. XML to come...?
@@ -17,11 +15,12 @@ import scala.collection.JavaConversions.asJavaSet
  * Maybe change so all events can be provided... and use abstract type instead of String
  * 
  */
-class MvelExpressionEvaluator (expression: String) extends ExpressionEvaluator with Logging {
-  
-  val compiledExp = MVEL.compileExpression(expression); 
+trait MvelExpressionEvaluator extends ExpressionEvaluator with ActorLogging {
 
-  def execute(event: Event with HasMessage): Option[String] = {
+  val expression: String
+  lazy val compiledExp = MVEL.compileExpression(expression); 
+
+  override def evaluate(event: Event with HasMessage): Option[String] = {
     
     val obj = new HashMap[String,Any]
     
@@ -32,7 +31,7 @@ class MvelExpressionEvaluator (expression: String) extends ExpressionEvaluator w
       try {
       	Some(mapper.readValue(event.message, classOf[HashMap[String,Object]]))
       } catch {
-        case _ => warn("Failed to map: " + event.message); None
+        case _ => log.warning("Failed to map: " + event.message); None
       }
     } else {
       None
@@ -48,19 +47,18 @@ class MvelExpressionEvaluator (expression: String) extends ExpressionEvaluator w
       case _ => obj.put("message", event.message)
     }
     
+    
     val result = try {
       MVEL.executeExpression(compiledExp, obj)
     } catch {
-      case e => warn("Failed to execute expression", e); None
+      case e => log.warning("Failed to execute expression", e); None
     }
     
     result match {
       case v: Any => Some(v.toString)
       case _ => None
-    }
-    
+    }    
   }
-
 }
 
 case class MvelExpression (val expression: String) extends Expression

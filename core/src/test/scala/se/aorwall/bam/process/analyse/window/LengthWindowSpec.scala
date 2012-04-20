@@ -3,9 +3,11 @@ package se.aorwall.bam.process.analyse.window
 import collection.immutable.TreeMap
 import org.scalatest.WordSpec
 import org.scalatest.matchers.MustMatchers
-
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
+import akka.testkit.TestActorRef
+import akka.actor.Actor
+import se.aorwall.bam.process.analyse.Analyser
 
 @RunWith(classOf[JUnitRunner])
 class LengthWindowSpec extends WordSpec with MustMatchers {
@@ -13,7 +15,7 @@ class LengthWindowSpec extends WordSpec with MustMatchers {
   val lengthWindow = new {
       type S = Int
       val noOfRequests = 3
-    } with LengthWindow
+    } with LengthWindow 
 
   "A LengthWindowConf" must {
 

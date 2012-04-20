@@ -5,7 +5,6 @@ import org.scalatest.junit.JUnitRunner
 import org.scalatest.matchers.MustMatchers
 import org.scalatest.WordSpec
 import akka.testkit.TestActorRef
-import grizzled.slf4j.Logging
 import se.aorwall.bam.model.events.RequestEvent
 import se.aorwall.bam.model.events.SimpleProcessEvent
 import se.aorwall.bam.model.Success
@@ -22,8 +21,7 @@ import se.aorwall.bam.process.Subscription
 @RunWith(classOf[JUnitRunner])
 class SimpleProcessSpec(_system: ActorSystem) 
   extends TestKit(_system) 
-  with BamSpec
-  with Logging {
+  with BamSpec {
 
   def this() = this(ActorSystem("SimpleProcessSpec"))
   

@@ -2,10 +2,6 @@ package se.aorwall.bam
 import org.scalatest.matchers.MustMatchers
 import org.scalatest.matchers.ShouldMatchers
 import org.scalatest.WordSpec
-import BamSpec.category
-import BamSpec.channel
-import BamSpec.id
-import BamSpec.timestamp
 import se.aorwall.bam.model.events._
 import se.aorwall.bam.model.State
 

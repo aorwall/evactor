@@ -1,14 +1,10 @@
 package se.aorwall.bam.process.analyse.window
 
-import grizzled.slf4j.Logging
-import akka.actor.{Scheduler, Actor}
-import java.util.concurrent.TimeUnit
-
-trait TimeWindow extends Window with Logging {
+trait TimeWindow extends Window {
 
   val timeframe: Long
 
-  override def getInactive(activities: Map[Long, S]): Map[Long, S] = {
+  override protected[analyse] def getInactive(activities: Map[Long, S]): Map[Long, S] = {
     activities.takeWhile( _._1 < System.currentTimeMillis - timeframe )
   }
 

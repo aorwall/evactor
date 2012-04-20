@@ -7,20 +7,16 @@ import org.scalatest.BeforeAndAfter
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.WordSpec
 import akka.actor.ActorSystem
-import akka.testkit.TestActorRef
 import akka.testkit.TestKit
+import se.aorwall.bam.model.attributes.HasMessage
+import se.aorwall.bam.model.events.DataEvent
+import se.aorwall.bam.model.events.Event
+import se.aorwall.bam.BamSpec
+import se.aorwall.bam.process.Subscription
+import akka.testkit.TestActorRef
 import akka.testkit.TestProbe
 import akka.util.duration._
-import se.aorwall.bam.model.Start
-import se.aorwall.bam.model.Success
-import se.aorwall.bam.model.Timeout
-import se.aorwall.bam.model.events.LogEvent
-import se.aorwall.bam.model.events.RequestEvent
-import org.mockito.Mockito._
-import se.aorwall.bam.model.attributes.HasMessage
-import se.aorwall.bam.model.events.Event
-import se.aorwall.bam.model.events.DataEvent
-import se.aorwall.bam.BamSpec
+
 
 @RunWith(classOf[JUnitRunner])
 class ExtractorSpec(_system: ActorSystem) 
@@ -29,15 +25,17 @@ class ExtractorSpec(_system: ActorSystem)
   with BeforeAndAfterAll 
   with BeforeAndAfter{
 
-  def this() = this(ActorSystem("ExtractorSpec"))
-
-  val extractedEvent = createEvent()
-  
-  def extract (event: Event with HasMessage): Option[Event] = Some(extractedEvent)   
+  def this() = this(ActorSystem("ExtractorSpec"))  
   
   override protected def afterAll(): scala.Unit = {
      _system.shutdown()
   }
+  
+  class TestExtractor (override val subscriptions: List[Subscription],
+        override val channel: String,
+        override val expression: String ) extends Extractor(subscriptions, channel, expression) with EventCreator {
+         def createBean(value: Option[Any], event: Event, newChannel: String) = Some(event)
+      } 
   
   val event = createDataEvent("stuff")
 	   
@@ -45,21 +43,20 @@ class ExtractorSpec(_system: ActorSystem)
 
     "extract stuff from an events message and send to collector " in {
              
-      val actor = TestActorRef(new Extractor(Nil, "channel", extract))
+      val actor = TestActorRef(new TestExtractor(Nil, "channel", "expr"))
       
       val eventPrope = TestProbe()
       actor ! eventPrope.ref
       
-	  
       actor ! event
       
-      eventPrope.expectMsg(1 seconds, extractedEvent)
+      eventPrope.expectMsg(1 seconds, event)
       actor.stop      
     }
     
     "abort if event doesn't extend the HasMessage trait " in {
              
-      val actor = TestActorRef(new Extractor(Nil, "channel", extract))
+      val actor = TestActorRef(new TestExtractor(Nil, "channel", "expr"))
       
       val eventPrope = TestProbe()
       actor ! eventPrope.ref

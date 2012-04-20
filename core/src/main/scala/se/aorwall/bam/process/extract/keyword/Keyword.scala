@@ -4,7 +4,6 @@ import org.codehaus.jackson.JsonFactory
 import org.codehaus.jackson.JsonParser
 import org.codehaus.jackson.JsonToken
 import akka.actor.Actor
-import grizzled.slf4j.Logging
 import se.aorwall.bam.model.attributes.HasMessage
 import se.aorwall.bam.model.events.Event
 import se.aorwall.bam.model.events.EventRef
@@ -17,6 +16,8 @@ import se.aorwall.bam.expression.MvelExpression
 import se.aorwall.bam.expression.XPathExpression
 import se.aorwall.bam.expression.XPathExpressionEvaluator
 import se.aorwall.bam.process.Subscription
+import se.aorwall.bam.expression.ExpressionEvaluator
+import se.aorwall.bam.process.extract.EventCreator
 
 /**
  * Extracts a expression from a message and creates a new event object of the same type
@@ -29,25 +30,32 @@ class Keyword (
     override val subscriptions: List[Subscription], 
     val channel: String, 
     val expression: Expression) 
-  extends ProcessorConfiguration(name, subscriptions){
+  extends ProcessorConfiguration(name, subscriptions) {
 
-  val eval = expression match {
-    case MvelExpression(expr) => new MvelExpressionEvaluator(expr)
-    case XPathExpression(expr) => new XPathExpressionEvaluator(expr)
-    case other => 
-      throw new IllegalArgumentException("Not a valid expression: " + other)
+  override def processor: Processor = expression match {
+	    case MvelExpression(expr) => new KeywordExtractor(subscriptions, channel, expr) 
+	      with MvelExpressionEvaluator
+	    case XPathExpression(expr) => new KeywordExtractor(subscriptions, channel, expr) 
+	      with XPathExpressionEvaluator
+	    case other => 
+	      throw new IllegalArgumentException("Not a valid expression: " + other)
   }
-    
-  def extract (event: Event with HasMessage): Option[Event] = {   
-    eval.execute(event) match {
-      case Some(keyword) => 
-        Some(event.clone(channel, Some(keyword)))
-      case _ => None
-    }	  
-  }
+}
 
-  override def processor: Processor = {
-    new Extractor(subscriptions, channel, extract)
-  }
+class KeywordExtractor(
+    override val subscriptions: List[Subscription], 
+    override val channel: String,
+    override val expression: String)
+  extends Extractor (subscriptions, channel, expression) with EventCloner {
+  
+}
 
+trait EventCloner extends EventCreator {
+  
+  def createBean(value: Option[Any], event: Event, newChannel: String): Option[Event] = value match {
+    case Some(keyword: String) => 
+    		   Some(event.clone(newChannel, Some(keyword)))
+    case _ => None
+  }
+  
 }

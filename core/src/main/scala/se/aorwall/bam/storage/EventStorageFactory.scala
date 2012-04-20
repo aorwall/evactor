@@ -4,7 +4,6 @@ import scala.util.DynamicVariable
 import com.typesafe.config.Config
 import akka.actor.Extension
 import akka.config.ConfigurationException
-import grizzled.slf4j.Logging
 import se.aorwall.bam.model.events.Event
 import akka.actor.ExtendedActorSystem
 import akka.actor.ActorSystem
@@ -37,7 +36,7 @@ object EventStorageFactory {
   }
 }
 
-class EventStorageFactory(val system: ExtendedActorSystem) extends Extension with Logging {
+class EventStorageFactory(val system: ExtendedActorSystem) extends Extension {
   
   import EventStorageFactory._
   

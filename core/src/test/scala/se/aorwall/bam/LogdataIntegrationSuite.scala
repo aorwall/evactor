@@ -5,29 +5,27 @@ import org.scalatest.junit.JUnitRunner
 import org.scalatest.matchers.MustMatchers
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.FunSuite
+
+import akka.actor.actorRef2Scala
 import akka.actor.ActorSystem
 import akka.actor.Props
-import akka.actor.TypedActor
 import akka.testkit.CallingThreadDispatcher
 import akka.testkit.TestKit
-import collect.Collector
 import akka.testkit.TestProbe
-import grizzled.slf4j.Logging
+import akka.util.duration.intToDurationInt
+import collect.Collector
 import se.aorwall.bam.model.events.AlertEvent
 import se.aorwall.bam.model.events.LogEvent
-import se.aorwall.bam.model.events.SimpleProcessEvent
 import se.aorwall.bam.model.Start
 import se.aorwall.bam.model.Success
 import se.aorwall.bam.process.analyse.latency.Latency
 import se.aorwall.bam.process.analyse.window.LengthWindowConf
 import se.aorwall.bam.process.build.request.Request
 import se.aorwall.bam.process.build.simpleprocess.SimpleProcess
-import se.aorwall.bam.process.ProcessorHandler
-import se.aorwall.bam.storage.EventStorageSpec
 import se.aorwall.bam.process.ProcessorEventBusExtension
-import akka.util.duration._
-import se.aorwall.bam.process.build.simpleprocess.SimpleProcessBuilder
+import se.aorwall.bam.process.ProcessorHandler
 import se.aorwall.bam.process.Subscription
+import se.aorwall.bam.storage.EventStorageSpec
 
 /**
  * Testing the whole log data flow.
@@ -35,7 +33,7 @@ import se.aorwall.bam.process.Subscription
  */
 @RunWith(classOf[JUnitRunner])
 class LogdataIntegrationSuite(_system: ActorSystem) 
-	extends TestKit(_system) with FunSuite with MustMatchers with BeforeAndAfterAll with Logging {
+	extends TestKit(_system) with FunSuite with MustMatchers with BeforeAndAfterAll {
   
   def this() = this(ActorSystem("LogdataIntegrationSuite", EventStorageSpec.storageConf))
 

@@ -13,7 +13,7 @@ import akka.util.duration.intToDurationInt
 import akka.util.duration.longToDurationLong
 import se.aorwall.bam.model.events.AlertEvent
 import se.aorwall.bam.model.events.LogEvent
-import se.aorwall.bam.model.Failure
+import se.aorwall.bam.model
 import se.aorwall.bam.model.Success
 import se.aorwall.bam.process.analyse.window.TimeWindow
 import se.aorwall.bam.BamSpec
@@ -44,10 +44,10 @@ class FailureAnalyserSpec(_system: ActorSystem)
       failureActor ! probe.ref
 
       failureActor ! createLogEvent(0L, Success) 
-      failureActor ! createLogEvent(1L, Failure)
-      failureActor ! createLogEvent(2L, Failure)
+      failureActor ! createLogEvent(1L, model.Failure)
+      failureActor ! createLogEvent(2L, model.Failure)
       probe.expectNoMsg // nothing happens
-      failureActor ! createLogEvent(3L, Failure) //  trig alert!
+      failureActor ! createLogEvent(3L, model.Failure) //  trig alert!
 
       //probe.expectMsg(100 millis, new AlertEvent(eventName, "3 failed events with name " + eventName + " is more than allowed (2)", true)) TODO FIX!
       probe.expectMsgAllClassOf(400 millis, classOf[AlertEvent])
@@ -64,10 +64,10 @@ class FailureAnalyserSpec(_system: ActorSystem)
       val probe = TestProbe()
       failureActor ! probe.ref
 
-      failureActor ! createLogEvent(currentTime-50, Failure)
-      failureActor ! createLogEvent(currentTime-40, Failure)
-      failureActor ! createLogEvent(currentTime-1000, Failure) // to old, nothing happens
-      failureActor ! createLogEvent(currentTime-30, Failure)
+      failureActor ! createLogEvent(currentTime-50, model.Failure)
+      failureActor ! createLogEvent(currentTime-40, model.Failure)
+      failureActor ! createLogEvent(currentTime-1000, model.Failure) // to old, nothing happens
+      failureActor ! createLogEvent(currentTime-30, model.Failure)
       //  probe.expectMsg(time*2 millis, new Alert(eventName, "3 failed events with name " + eventName + " is more than allowed (2)", true)) TODO FIX!
       probe.expectMsgAllClassOf(400 millis, classOf[AlertEvent])
 
@@ -81,8 +81,8 @@ class FailureAnalyserSpec(_system: ActorSystem)
       val probe = TestProbe()
       latencyActor ! probe.ref
 
-      latencyActor ! createRequestEvent(1L, None, None, Failure, 10) 
-      latencyActor ! createRequestEvent(2L, None, None, Failure, 110) // trig alert!
+      latencyActor ! createRequestEvent(1L, None, None, model.Failure, 10) 
+      latencyActor ! createRequestEvent(2L, None, None, model.Failure, 110) // trig alert!
 
 //      probe.expectMsg(100 millis, new Alert(eventName, "Average latency 75ms is higher than the maximum allowed latency 60ms", true))
       probe.expectMsgAllClassOf(50 millis, classOf[AlertEvent])

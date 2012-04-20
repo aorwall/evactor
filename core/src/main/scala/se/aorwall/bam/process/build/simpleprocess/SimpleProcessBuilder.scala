@@ -7,7 +7,6 @@ import se.aorwall.bam.process.build._
 import akka.actor.ActorRef
 import se.aorwall.bam.process.ProcessorEventBus
 import akka.actor.ActorLogging
-import grizzled.slf4j.Logging
 import scala.collection._
 
 /**

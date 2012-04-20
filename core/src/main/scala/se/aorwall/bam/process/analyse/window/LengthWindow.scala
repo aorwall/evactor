@@ -1,15 +1,15 @@
 package se.aorwall.bam.process.analyse.window
 
-import grizzled.slf4j.Logging
+import akka.actor.ActorLogging
 
 /**
  *
  */
-trait LengthWindow extends Window with Logging {
+trait LengthWindow extends Window {
 
   val noOfRequests: Int
 
-  override def getInactive(activities: Map[Long, S]): Map[Long, S] = {
+  override protected[analyse] def getInactive(activities: Map[Long, S]): Map[Long, S] = {
 
     val noOfInactive = activities.size - noOfRequests
 

@@ -1,19 +1,24 @@
 package se.aorwall.bam.process.extract
 
 import akka.actor.{Actor, ActorLogging, ActorRef}
-import grizzled.slf4j.Logging
 import se.aorwall.bam.model.attributes.HasMessage
 import se.aorwall.bam.model.events.Event
 import se.aorwall.bam.process._
+import se.aorwall.bam.expression.ExpressionEvaluator
 
 /**
  * Extract information from messages. 
+ * 
+ * It will first evaluate the message in the event with an ExpressionEvaluator
+ * and then create a new Event, based on the evaluated message, with an EventCreator.
  */
-class Extractor(
+abstract class Extractor(
     override val subscriptions: List[Subscription], 
-    val channel: String, 
-    val extract: (Event with HasMessage) => Option[Event]) 
+    val channel: String,
+    val expression: String) 
   extends Processor(subscriptions) 
+  with EventCreator
+  with ExpressionEvaluator
   with Monitored
   with Publisher
   with ActorLogging {
@@ -30,7 +35,7 @@ class Extractor(
     
     log.debug("will extract values from {}", event )
 	  
-    extract(event) match {
+    createBean(evaluate(event), event, channel) match {
       case Some(event) => {
         testActor match {
           case Some(actor: ActorRef) => actor ! event

@@ -9,11 +9,11 @@ import akka.actor.ExtensionId
 import akka.actor.ExtensionIdProvider
 import akka.event.ActorEventBus
 import akka.event.LookupClassification
-import grizzled.slf4j.Logging
 import se.aorwall.bam.model.events
 import akka.actor.ActorSystemImpl
 import akka.actor.ExtendedActorSystem
 import scala.collection.JavaConversions._
+import akka.actor.ActorLogging
 
 /**
  * This is a first implementation of the event bus for only sending events
@@ -36,8 +36,8 @@ object ProcessorEventBusExtension extends ExtensionId[ProcessorEventBus] with Ex
 }
 
 // TODO: Subclassifier or something...
-class ProcessorEventBus extends Extension with ActorEventBus with LookupClassification with Logging { 
-    
+class ProcessorEventBus extends Extension with ActorEventBus with LookupClassification { 
+  
   type Event = events.Event
   type Classifier = Subscription
     
@@ -48,7 +48,7 @@ class ProcessorEventBus extends Extension with ActorEventBus with LookupClassifi
   //protected def compareClassifiers(a: Classifier, b: Classifier): Int = a.channel compareTo b.channel
     
   protected def publish(event: events.Event, subscriber: Subscriber) {
-    trace("publishing event {} to {}", event.toString, subscriber)
+    //trace("publishing event {} to {}", event.toString, subscriber)
     subscriber ! event
   }
   

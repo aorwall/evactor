@@ -7,7 +7,6 @@ import org.scalatest.matchers.MustMatchers
 import org.scalatest.WordSpec
 import com.typesafe.config.ConfigFactory
 import akka.actor.ActorSystem
-import grizzled.slf4j.Logging
 import se.aorwall.bam.model.events.Event
 import se.aorwall.bam.model.events.LogEvent
 import se.aorwall.bam.model.Start
@@ -65,7 +64,7 @@ object EventStorageSpec {
 }
 
 @RunWith(classOf[JUnitRunner])
-class EventStorageSpec(system: ActorSystem) extends BamSpec with Logging {
+class EventStorageSpec(system: ActorSystem) extends BamSpec {
 
   def this() = this( ActorSystem("EventStorageSpec", EventStorageSpec.storageConf) )
   

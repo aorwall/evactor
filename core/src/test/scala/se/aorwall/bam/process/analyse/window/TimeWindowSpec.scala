@@ -1,7 +1,6 @@
 package se.aorwall.bam.process.analyse.window
 
 import collection.immutable.TreeMap
-import grizzled.slf4j.Logging
 import org.scalatest.{WordSpec, FunSuite}
 import org.scalatest.matchers.MustMatchers
 
@@ -9,7 +8,7 @@ import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TimeWindowSpec extends WordSpec with MustMatchers with Logging {
+class TimeWindowSpec extends WordSpec with MustMatchers {
 
   val currentTime = System.currentTimeMillis
   val events = TreeMap(

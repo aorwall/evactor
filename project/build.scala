@@ -36,7 +36,7 @@ object BamBuild extends Build {
     settings = defaultSettings ++ Seq(
       libraryDependencies ++= Dependencies.api
     )
-  ) dependsOn (core, storageCassandra)
+  ) dependsOn (core)
                      
   lazy val camel = Project(
     id = "camel",
@@ -86,12 +86,12 @@ object BamBuild extends Build {
 object Dependencies {
   import Dependency._
   
-  val core = Seq(akkaActor, grizzled, jacksonCore, jacksonMapper, mvel2, 
+  val core = Seq(akkaActor, jacksonCore, jacksonMapper, mvel2, 
       Test.scalatest, Test.junit, Test.mockito, Test.akkaTestkit)
-  val api = Seq (jerkson, unfilteredFilter, unfilteredNetty, unfilteredNettyServer)
-  val example = Seq (akkaKernel, camelCore, camelIrc, camelAtom, unfilteredNettyServer)
-  val benchmark = Seq(akkaKernel, akkaRemote, netty, protobuf, Test.scalatest, Test.junit, Test.akkaTestkit)
-  val storageCassandra = Seq(cassandraAll, cassandraThrift, guava, hectorCore, jodaConvert, jodaTime, perf4j, thrift, uuid) //highScaleLib
+  val api = Seq (grizzled, jerkson, unfilteredFilter, unfilteredNetty, unfilteredNettyServer)
+  val example = Seq (akkaKernel, camelCore, camelIrc, camelAtom, grizzled, unfilteredNettyServer)
+  val benchmark = Seq(akkaKernel, akkaRemote, grizzled, netty, protobuf, Test.scalatest, Test.junit, Test.akkaTestkit)
+  val storageCassandra = Seq(cassandraAll, cassandraThrift, grizzled, guava, hectorCore, jodaConvert, jodaTime, perf4j, thrift, uuid) //highScaleLib
   val camel = Seq(camelCore)
 
 }

@@ -1,13 +1,13 @@
 package se.aorwall.bam.collect
 
 import akka.actor.Actor
-import grizzled.slf4j.Logging
 import se.aorwall.bam.model.events.Event
 import se.aorwall.bam.process.Processor
 import se.aorwall.bam.storage.Storage
 import se.aorwall.bam.process.ProcessorEventBus
 import akka.actor.ActorLogging
 import se.aorwall.bam.process.Publisher
+
 //import com.twitter.ostrich.stats.Stats
 
 /**

@@ -11,7 +11,7 @@ import akka.actor.ActorRef
 import akka.actor.ActorLogging
 import se.aorwall.bam.process.Subscription
 import scala.collection.immutable.TreeSet
-import se.aorwall.bam.model.Failure
+import se.aorwall.bam.model
 
 class FailureAnalyser (
     override val subscriptions: List[Subscription], 
@@ -41,7 +41,7 @@ class FailureAnalyser (
     allEvents = allEvents.drop(inactiveEvents.size)
 	
     val failedEvents = allEvents.count { _._2 match {
-      case Failure => true
+      case model.Failure => true
       case _ => false
    	 }
     }
