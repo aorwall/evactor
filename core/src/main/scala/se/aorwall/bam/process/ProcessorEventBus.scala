@@ -13,6 +13,7 @@ import grizzled.slf4j.Logging
 import se.aorwall.bam.model.events
 import akka.actor.ActorSystemImpl
 import akka.actor.ExtendedActorSystem
+import scala.collection.JavaConversions._
 
 /**
  * This is a first implementation of the event bus for only sending events
@@ -77,6 +78,9 @@ object Subscriptions {
   
   def apply(eventType: String, channel: String): List[Subscription] = List(new Subscription(eventType, channel));
   
+  def apply(eventType: String, channel: String, category: String): List[Subscription] = List(new Subscription(eventType, channel, category));
+  
+  def apply(subscriptions: java.util.Collection[Subscription]): List[Subscription] = subscriptions.toList
 }
 
 case class Subscription(
