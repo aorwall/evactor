@@ -4,7 +4,7 @@ import se.aorwall.bam.model.events.Event
 import akka.actor.ActorLogging
 import se.aorwall.bam.process.ProcessorEventBus
 import se.aorwall.bam.process.Subscriber
-import com.twitter.ostrich.stats.Stats
+//import com.twitter.ostrich.stats.Stats
 import akka.actor.Props
 import akka.routing.RoundRobinRouter
 import se.aorwall.bam.process.Subscription
@@ -24,13 +24,13 @@ class StorageProcessorRouter extends Actor with Subscriber with ActorLogging {
   override def preStart = {
     log.debug("subscribing to all events")
     subscribe(context.self, List(new Subscription(None, None, None)))
-    Stats.setLabel(context.self.toString, "running")
+//    Stats.setLabel(context.self.toString, "running") //TODO: Not used atm
   }
   
   override def postStop = {
     log.debug("unsubscribing from all events")
     unsubscribe(context.self, List(new Subscription(None, None, None)))
-    Stats.setLabel(context.self.toString, "stopped")
+//    Stats.setLabel(context.self.toString, "stopped")
   }
   
 }

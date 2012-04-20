@@ -6,7 +6,6 @@ import akka.actor.ActorRef
 import akka.actor.EmptyLocalActorRef
 import akka.actor.InternalActorRef
 import se.aorwall.bam.model.events.Event
-import com.twitter.ostrich.stats.Stats
 
 abstract class Processor (
     val subscriptions: List[Subscription]) 
@@ -49,13 +48,13 @@ trait Monitored extends Processor with ActorLogging {
   
   abstract override def preStart = {
     // set label context.self + running
-    Stats.setLabel(context.self.toString, "running")
+//    Stats.setLabel(context.self.toString, "running") //TODO: Ostrich stuff, removed atm...
     super.preStart()
   }
 
   abstract override def postStop = {
     // set label context.self + stopped
-    Stats.setLabel(context.self.toString, "stopped")
+//    Stats.setLabel(context.self.toString, "stopped") //TODO: Ostrich stuff, removed atm...
     super.postStop()
   }
   

@@ -8,7 +8,7 @@ import se.aorwall.bam.storage.Storage
 import se.aorwall.bam.process.ProcessorEventBus
 import akka.actor.ActorLogging
 import se.aorwall.bam.process.Publisher
-import com.twitter.ostrich.stats.Stats
+//import com.twitter.ostrich.stats.Stats
 
 /**
  * Collecting incoming events
@@ -37,11 +37,12 @@ class Collector extends Actor with Publisher with Storage with ActorLogging {
     context.actorFor("../process") ! event    
   }
   
-  override def preStart = {
-    Stats.setLabel(context.self.toString, "running")
-  }
-
-  override def postStop = {
-    Stats.setLabel(context.self.toString, "stopped")
-  }
+// TODO: Not used atm:
+//  override def preStart = { 
+//    Stats.setLabel(context.self.toString, "running")
+//  }
+//
+//  override def postStop = {
+//    Stats.setLabel(context.self.toString, "stopped")
+//  }
 }

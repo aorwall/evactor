@@ -37,7 +37,15 @@ object BamBuild extends Build {
       libraryDependencies ++= Dependencies.api
     )
   ) dependsOn (core, storageCassandra)
-                         
+                     
+  lazy val camel = Project(
+    id = "camel",
+    base = file("camel"),
+    settings = defaultSettings ++ Seq(
+      libraryDependencies ++= Dependencies.camel
+    )
+  ) dependsOn (core)
+
   lazy val example = Project(
     id = "example",
     base = file("example"),
@@ -79,13 +87,13 @@ object Dependencies {
   import Dependency._
   
   val core = Seq(akkaActor, grizzled, jacksonCore, jacksonMapper, mvel2, 
-      ostrich, twitterJson, twitterUtilCore, twitterUtilEval, twitterUtilLogging,
       Test.scalatest, Test.junit, Test.mockito, Test.akkaTestkit)
   val api = Seq (jerkson, unfilteredFilter, unfilteredNetty, unfilteredNettyServer)
   val example = Seq (akkaKernel, camelCore, camelIrc, camelAtom, unfilteredNettyServer)
-  val benchmark = Seq(akkaKernel, akkaRemote, netty, protobuf)
+  val benchmark = Seq(akkaKernel, akkaRemote, netty, protobuf, Test.scalatest, Test.junit, Test.akkaTestkit)
   val storageCassandra = Seq(cassandraAll, cassandraThrift, guava, hectorCore, jodaConvert, jodaTime, perf4j, thrift, uuid) //highScaleLib
-  
+  val camel = Seq(camelCore)
+
 }
 
 object Dependency {
