@@ -1,37 +1,43 @@
 package se.aorwall.bam.storage
+
 import akka.actor.Actor
 import se.aorwall.bam.model.events.Event
 import akka.actor.ActorLogging
 import se.aorwall.bam.process.ProcessorEventBus
 import se.aorwall.bam.process.Subscriber
-//import com.twitter.ostrich.stats.Stats
 import akka.actor.Props
 import akka.routing.RoundRobinRouter
 import se.aorwall.bam.process.Subscription
+import se.aorwall.bam.process.ProcessorConfiguration
+import se.aorwall.bam.process.Processor
 
 /**
  * Stores events
  */
-class StorageProcessorRouter extends Actor with Subscriber with ActorLogging {
+
+class StorageProcessorConf (
+    override val name: String, 
+    override val subscriptions: List[Subscription]) 
+  extends ProcessorConfiguration (name, subscriptions) {
+  
+  def processor = new StorageProcessorRouter(subscriptions)
+  
+}
+
+class StorageProcessorRouter (
+    override val subscriptions: List[Subscription])  
+  extends Processor (subscriptions) with Subscriber with ActorLogging {
+  
+  type T = Event
   
   val router = context.actorOf(Props[StorageProcessor].withRouter(RoundRobinRouter(nrOfInstances = 30))) //TODO: Should be configured in akka conf
   
   override def receive = {
-    case event: Event => router ! event
+    case event: Event => process(event)
     case msg => log.info("can't handle: {}", msg)
   }
   
-  override def preStart = {
-    log.debug("subscribing to all events")
-    subscribe(context.self, List(new Subscription(None, None, None)))
-//    Stats.setLabel(context.self.toString, "running") //TODO: Not used atm
-  }
-  
-  override def postStop = {
-    log.debug("unsubscribing from all events")
-    unsubscribe(context.self, List(new Subscription(None, None, None)))
-//    Stats.setLabel(context.self.toString, "stopped")
-  }
+  def process(event: Event) = router ! event
   
 }
 

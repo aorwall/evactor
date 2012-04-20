@@ -10,42 +10,50 @@ import akka.util.Index
 import akka.actor.ActorLogging
 import se.aorwall.bam.storage.StorageProcessor
 import se.aorwall.bam.storage.StorageProcessorRouter
+import akka.actor.Status
 
 class ProcessorHandler extends Actor with ActorLogging  {
   
-  /**
-   * Will try to do a more refined solution for selecting the 
-   * right processors for each event later...
-   */
-  val processorsWithEventName = new Index[String, ActorRef](100, _ compareTo _)
-  
   override def preStart = {
-    log.debug("starting and creating a new Storage Processor")
-    context.actorOf(Props[StorageProcessorRouter], name = "storageProcessor")
+    log.debug("starting...")
   }
   
   def receive = {
     case configuration: ProcessorConfiguration => setProcessor(configuration)
-    case processorId: String => removeProcessor(processorId)
-    case msg => log.info("can't handle: {}", msg)
+    case name: String => removeProcessor(name)
+    case msg => log.warning("can't handle: {}", msg)
   }
   
+  /**
+   * Add and start new processor in the actor context. Will fail if
+   * an exception is thrown on startup.
+   */
   def setProcessor(configuration: ProcessorConfiguration) {
-    log.debug("setting processor for configuration: {}", configuration)
-
-    // stopping previous actor if one exists
-    val runningActor = context.actorFor(configuration.name)
-    context.stop(runningActor)
-    context.actorOf(Props(configuration.processor), name = configuration.name)
+    try {
+	    log.debug("starting processor for configuration: {}", configuration)
+	    
+      context.actorOf(Props(configuration.processor), name = configuration.name)
+      sender ! Status.Success
+    } catch {
+			case e: Exception => {
+			  log.warning("Starting processor with name {} failed. {}", configuration.name, e)
+			  sender ! Status.Failure(e)
+			}
+	  }
   }
 
-  def removeProcessor(processorId: String) {
-    log.debug("stopping processor for process: {}", processorId)
-    val runningActor = context.actorFor(processorId)
-    context.stop(runningActor)    
+  def removeProcessor(name: String) {    
+    try {
+	    log.debug("stopping processor with name: {}", name)
+	    val runningActor = context.actorFor(name)
+	    context.stop(runningActor)  
+	    sender ! Status.Success    
+    } catch {
+			case e: Exception => sender ! Status.Failure(e)
+	  }
   }
 
   override def postStop() {
-    log.debug("stopping..")
+    log.debug("stopping...")
   }
 }
