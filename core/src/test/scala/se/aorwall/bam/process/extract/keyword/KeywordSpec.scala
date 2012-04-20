@@ -8,9 +8,19 @@ import se.aorwall.bam.model.attributes.HasMessage
 import se.aorwall.bam.model.events.DataEvent
 import se.aorwall.bam.expression.MvelExpression
 import se.aorwall.bam.BamSpec
+import akka.testkit.TestKit
+import akka.actor.ActorSystem
+import akka.testkit.TestActorRef
+import akka.testkit.TestProbe
+import akka.util.duration._
+import akka.actor.Actor
 
 @RunWith(classOf[JUnitRunner])
-class KeywordSpec extends BamSpec {
+class KeywordSpec (_system: ActorSystem) 
+  extends TestKit(_system) 
+  with BamSpec {
+
+  def this() = this(ActorSystem("KeywordSpec"))
 
 	val event = new Event("channel", None, "id", 0L) with HasMessage {
 		val message = "{ \"field\": \"field2\", \"field2\": \"anothervalue\"}"
@@ -18,19 +28,30 @@ class KeywordSpec extends BamSpec {
 
 	val keyword = new Keyword("name", Nil, "channel", new MvelExpression("message.field2"))
 	
-	/* TODO: Changed implementation, must fix tests
 	"Keyword" must {
 
 		"extract keywords from json messages" in {
-			val newEvent = keyword.extract(event)
-
-			newEvent match {
-				case Some(e: Event) => e.category must be (Some("anothervalue"))
-				case e => fail("expected an instance of se.aorwall.bam.model.events.Event but found: " + e)
-			}		
+		  
+			val actor = TestActorRef(keyword.processor)
+      val probe1 = TestProbe()
+      val probe2 = TestProbe()
+      actor ! probe1.ref
+      
+      actor ! event
+            
+      val dest = TestActorRef(new Actor {
+				def receive = {
+					case e: Event => probe2.ref ! e.category
+					case _ => fail
+				}
+			})
 			
+      probe1.expectMsgAllClassOf(200 millis, classOf[Event])
+      probe1.forward(dest)
+      probe2.expectMsg(200 millis, Some("anothervalue"))
+      actor.stop
 		}
 	}
-  */
+
 
 }
