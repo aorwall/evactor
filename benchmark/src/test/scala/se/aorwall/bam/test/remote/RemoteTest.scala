@@ -1,21 +1,21 @@
 package se.aorwall.bam.test.remote
 
 import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 import org.scalatest.matchers.MustMatchers
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.FunSuite
+import akka.actor.actorRef2Scala
+import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.actor.Props
 import akka.testkit.TestKit
+import akka.testkit.TestProbe
+import akka.util.duration.intToDurationInt
 import grizzled.slf4j.Logging
+import se.aorwall.bam.test.TestKernel.channels
 import se.aorwall.bam.test.RequestGenerator
 import se.aorwall.bam.test.TestKernel
-import org.scalatest.junit.JUnitRunner
-import se.aorwall.bam.model.events.LogEvent
-import se.aorwall.bam.model.Start
-import akka.testkit.TestProbe
-import akka.util.duration._
-import akka.actor.ActorRef
 
 @RunWith(classOf[JUnitRunner])
 class RemoteTest(_system: ActorSystem) extends TestKit(_system) with FunSuite with MustMatchers with BeforeAndAfterAll with Logging {
@@ -32,7 +32,7 @@ class RemoteTest(_system: ActorSystem) extends TestKit(_system) with FunSuite wi
    */
   test("Load test") {   
 	  
-    val hostname = "darkthrone"
+    val hostname = "localhost"
     
 	  val noOfRequestsPerChannel: Int = 1
 	  val threads = 1

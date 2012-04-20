@@ -1,8 +1,8 @@
 package se.aorwall.bam.test
 
-import com.twitter.ostrich.admin.config.AdminServiceConfig
-import com.twitter.ostrich.admin.config.ServerConfig
-import com.twitter.ostrich.admin.RuntimeEnvironment
+//import com.twitter.ostrich.admin.config.AdminServiceConfig
+//import com.twitter.ostrich.admin.config.ServerConfig
+//import com.twitter.ostrich.admin.RuntimeEnvironment
 import akka.actor.Actor
 import akka.actor.ActorLogging
 import akka.actor.ActorSystem
@@ -18,20 +18,13 @@ import se.aorwall.bam.process.build.simpleprocess.SimpleProcess
 import se.aorwall.bam.process.extract.keyword.Keyword
 import se.aorwall.bam.process.extract.kpi.Kpi
 import se.aorwall.bam.process._
+import se.aorwall.bam.process.ProcessorEventBusExtension
+import se.aorwall.bam.process.Subscription
 
 object TestKernel {  
 
-  val businessProcesses = 
-    new SimpleProcess("process1", List("component1_1", "component1_2"), 12000) :: 
-    new SimpleProcess("process2", List("component2_1", "component2_2", "component2_3", "component2_4", "component2_5"), 10000) :: 
-    new SimpleProcess("process3", List("component3_1", "component3_2", "component3_3"), 15000) :: 
-    new SimpleProcess("process4", List("component4_1"), 3000) :: 
-    new SimpleProcess("process5", List("component5_1", "component5_2", "component5_3", "component5_4"), 20000) :: 
-    new SimpleProcess("process6", List("component6_1", "component6_2", "component6_3"), 10000) :: 
-    new SimpleProcess("process7", List("component7_1", "component7_2", "component7_3", "component7_4"), 8000) :: 
-    new SimpleProcess("process8", List("component8_1", "component8_2"), 15000) :: 
-    new SimpleProcess("process9", List("component9_1", "component9_2", "component9_3"), 20000) :: Nil
-
+  val channels = List("channel1", "channel2", "channel3", "channel4", "channel5")
+    
   val requestTimeout = 2000L  
 }
 
@@ -41,22 +34,24 @@ class TestKernel extends Bootable {
   lazy val system = ActorSystem("test")
 
   def startup = {         
-	 val collector = system.actorOf(Props[Collector], name = "collect")
-	 val processor = system.actorOf(Props[ProcessorHandler], name = "process") 
-	 val timer = system.actorOf(Props[TimerActor], name = "timer") 
-    // set up processors
-    processor ! new Request("requestProcessor", requestTimeout)
-    businessProcesses.foreach { processor ! _ }
+    val collector = system.actorOf(Props[Collector], name = "collect")
+    val processorHandler = system.actorOf(Props[ProcessorHandler], name = "process") 
+    val timer = system.actorOf(Props[TimerActor], name = "timer") 
+    
+    // set up request processors
+    for(channel <- channels){
+      processorHandler ! new Request(channel, List(new Subscription(Some("LogEvent"), Some(channel), None)), requestTimeout)
+    }
         
-  	 val classifier = classOf[SimpleProcessEvent].getSimpleName + "/*"
-  	 ProcessorEventBusExtension(system).subscribe(timer, classifier)
+    val classifier = new Subscription(Some("RequestEvent"), None, None)
+    ProcessorEventBusExtension(system).subscribe(timer, classifier)
           	 
     // start ostrich admin web service
-    val adminConfig = new AdminServiceConfig {
-      httpPort = 8080
-    }
-    val runtime = RuntimeEnvironment(this, Array[String]())
-	 val admin = adminConfig()(runtime)		
+//    val adminConfig = new AdminServiceConfig {
+//      httpPort = 8080
+//    }
+//    val runtime = RuntimeEnvironment(this, Array[String]())
+//	 val admin = adminConfig()(runtime)		
   }
 
   def shutdown = {
