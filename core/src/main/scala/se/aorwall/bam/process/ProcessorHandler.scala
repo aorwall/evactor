@@ -1,19 +1,23 @@
 package se.aorwall.bam.process
 
-import akka.actor.actorRef2Scala
-import akka.actor.Actor
-import akka.actor.ActorRef
-import akka.actor.Props
+import akka.actor._
+import akka.actor.SupervisorStrategy._
 import akka.routing.BroadcastRouter
+import akka.util.duration._
 import se.aorwall.bam.model.events.Event
-import akka.util.Index
-import akka.actor.ActorLogging
 import se.aorwall.bam.storage.StorageProcessor
 import se.aorwall.bam.storage.StorageProcessorRouter
-import akka.actor.Status
 
+/**
+ * Handles all processors.
+ */
 class ProcessorHandler extends Actor with ActorLogging  {
   
+  override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries = 10, withinTimeRange = 1 minute) {
+    case _: IllegalArgumentException => Stop
+    case _: Exception => Restart
+  }
+
   override def preStart = {
     log.debug("starting...")
   }
@@ -21,7 +25,7 @@ class ProcessorHandler extends Actor with ActorLogging  {
   def receive = {
     case configuration: ProcessorConfiguration => setProcessor(configuration)
     case name: String => removeProcessor(name)
-    case msg => log.warning("can't handle: {}", msg)
+    case msg => log.warning("can't handle: {}", msg); sender ! Status.Failure
   }
   
   /**
