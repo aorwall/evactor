@@ -18,7 +18,7 @@ import se.aorwall.bam.process.Processor
 class StorageProcessorConf (
     override val name: String, 
     override val subscriptions: List[Subscription],
-    override val maxThreads: Int) 
+    val maxThreads: Int) 
   extends ProcessorConfiguration (name, subscriptions) {
   
   def processor = new StorageProcessorRouter(subscriptions, maxThreads)
@@ -27,7 +27,7 @@ class StorageProcessorConf (
 
 class StorageProcessorRouter (
     override val subscriptions: List[Subscription],
-    override val maxThreads: Int)  
+    val maxThreads: Int)  
   extends Processor (subscriptions) 
   with Subscriber 
   with ActorLogging {
