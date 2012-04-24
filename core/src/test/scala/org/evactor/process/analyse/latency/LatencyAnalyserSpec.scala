@@ -32,12 +32,12 @@ import org.evactor.model.events.AlertEvent
 import org.evactor.model.events.RequestEvent
 import org.evactor.model.Success
 import org.evactor.process.analyse.window.LengthWindow
-import org.evactor.BamSpec
+import org.evactor.EvactorSpec
 
 @RunWith(classOf[JUnitRunner])
 class LatencyAnalyserSpec(_system: ActorSystem) 
   extends TestKit(_system)
-  with BamSpec
+  with EvactorSpec
   with BeforeAndAfterAll{
 
   def this() = this(ActorSystem("LatencyAnalyserSpec"))

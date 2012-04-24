@@ -27,14 +27,14 @@ import akka.testkit.TestProbe
 import org.evactor.model.events.DataEvent
 import org.evactor.model.events.Event
 import org.evactor.model.events.KpiEvent
-import org.evactor.BamSpec
+import org.evactor.EvactorSpec
 import org.evactor.expression.MvelExpression
 import akka.util.duration._
 
 @RunWith(classOf[JUnitRunner])
 class KpiSpec (_system: ActorSystem) 
   extends TestKit(_system) 
-  with BamSpec {
+  with EvactorSpec {
 
   def this() = this(ActorSystem("KeywordSpec"))
 

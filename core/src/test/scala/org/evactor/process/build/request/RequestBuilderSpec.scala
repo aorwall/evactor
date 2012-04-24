@@ -28,12 +28,12 @@ import akka.testkit.TestKit
 import akka.actor.ActorSystem
 import akka.testkit.TestActorRef
 import org.evactor.process.build.BuildActor
-import org.evactor.BamSpec
+import org.evactor.EvactorSpec
 
 @RunWith(classOf[JUnitRunner])
 class RequestBuilderSpec(_system: ActorSystem) 
   extends TestKit(_system)
-  with BamSpec {
+  with EvactorSpec {
 
   def this() = this(ActorSystem("RequestBuilderSpec"))
   

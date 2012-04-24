@@ -1,5 +1,6 @@
-create keyspace Bam;
-use Bam;
+drop keyspace Evactor;
+create keyspace Evactor;
+use Evactor;
 create column family EventChannel with default_validation_class=CounterColumnType and comparator = UTF8Type and replicate_on_write=true;
 
 create column family LogEvent with comparator = UTF8Type;
@@ -9,6 +10,7 @@ create column family RequestEventCategory with default_validation_class=CounterC
 create column family RequestEventTimeline with comparator = UUIDType;
 create column family RequestEventState with comparator = UUIDType;
 create column family RequestEventCount with default_validation_class=CounterColumnType and comparator = LongType and replicate_on_write=true;
+create column family RequestEventLatency with default_validation_class=CounterColumnType and comparator = LongType and replicate_on_write=true;
 
 create column family SimpleProcessEvent with comparator = UTF8Type;
 create column family SimpleProcessEventCategory with default_validation_class=CounterColumnType and comparator = UTF8Type and replicate_on_write=true;
@@ -26,3 +28,8 @@ create column family KpiEventCategory with default_validation_class=CounterColum
 create column family KpiEventTimeline with comparator = UUIDType;
 create column family KpiEventCount with default_validation_class=CounterColumnType and comparator = LongType and replicate_on_write=true;
 create column family KpiEventSum with comparator = LongType;
+
+create column family AlertEvent with comparator = UTF8Type;
+create column family AlertEventCategory with default_validation_class=CounterColumnType and comparator = UTF8Type and replicate_on_write=true;
+create column family AlertEventTimeline with comparator = UUIDType;
+create column family AlertEventCount with default_validation_class=CounterColumnType and comparator = LongType and replicate_on_write=true;

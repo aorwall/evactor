@@ -27,12 +27,12 @@ import akka.util.duration.intToDurationInt
 import org.evactor.model.events.AlertEvent
 import org.evactor.model.events.Event
 import org.scalatest.junit.JUnitRunner
-import org.evactor.BamSpec
+import org.evactor.EvactorSpec
 
 @RunWith(classOf[JUnitRunner])
 class AbsenceOfRequestsAnalyserSpec(_system: ActorSystem) 
   extends TestKit(_system) 
-  with BamSpec 
+  with EvactorSpec 
   with BeforeAndAfterAll {
 
   def this() = this(ActorSystem("AbsenceOfRequestsAnalyserSpec"))

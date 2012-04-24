@@ -50,9 +50,9 @@ class ExampleKernel extends Bootable {
 
 	lazy val system = ActorSystem("example")
 		
-	val ircChannels = system.settings.config.getString("akka.bam.irc.channels")
-	val nick = system.settings.config.getString("akka.bam.irc.nick")
-	val server = system.settings.config.getString("akka.bam.irc.server")
+	val ircChannels = system.settings.config.getString("akka.evactor.irc.channels")
+	val nick = system.settings.config.getString("akka.evactor.irc.nick")
+	val server = system.settings.config.getString("akka.evactor.irc.server")
 
 	lazy val collector = system.actorOf(Props[Collector], name = "collect")
 	lazy val processor = system.actorOf(Props[ProcessorHandler], name = "process")
@@ -62,7 +62,7 @@ class ExampleKernel extends Bootable {
   def startup = {    
     // Start and configure 
 		val irc = system.actorOf(Props(new IrcAgent(nick, server, ircChannels, collector)), name = "irc")
-//    val bamCommits = system.actorOf(Props(new AtomAgent("https://github.com/aorwall/bam/commits/master.atom", "github/commits/bam", collector)), name = "bamCommits")
+//    val evactorCommits = system.actorOf(Props(new AtomAgent("https://github.com/aorwall/evactor/commits/master.atom", "github/commits/evactor", collector)), name = "evactorCommits")
 //    val akkaCommits = system.actorOf(Props(new AtomAgent("https://github.com/jboner/akka/commits/master.atom", "github/commits/akka", collector)), name = "akkaCommits")
 //    val cassandraCommits = system.actorOf(Props(new AtomAgent("https://github.com/apache/cassandra/commits/trunk.atom", "github/commits/cassandra", collector)), name = "cassandraCommits") 
 //    val scalaCommits = system.actorOf(Props(new AtomAgent("https://github.com/scala/scala/commits/master.atom", "github/commits/scala", collector)), name = "scalaCommits")

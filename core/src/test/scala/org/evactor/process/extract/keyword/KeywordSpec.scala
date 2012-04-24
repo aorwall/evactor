@@ -23,7 +23,7 @@ import org.evactor.model.events.Event
 import org.evactor.model.attributes.HasMessage
 import org.evactor.model.events.DataEvent
 import org.evactor.expression.MvelExpression
-import org.evactor.BamSpec
+import org.evactor.EvactorSpec
 import akka.testkit.TestKit
 import akka.actor.ActorSystem
 import akka.testkit.TestActorRef
@@ -34,7 +34,7 @@ import akka.actor.Actor
 @RunWith(classOf[JUnitRunner])
 class KeywordSpec (_system: ActorSystem) 
   extends TestKit(_system) 
-  with BamSpec {
+  with EvactorSpec {
 
   def this() = this(ActorSystem("KeywordSpec"))
 

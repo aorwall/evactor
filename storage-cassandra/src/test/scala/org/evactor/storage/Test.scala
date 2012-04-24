@@ -45,7 +45,7 @@ class Test extends FunSuite with Logging {
   
   val conf = ConfigFactory.parseString("""
 			akka {
-			  bam {
+			  evactor {
 			    storage {
 			        
 			      implementations {
@@ -58,7 +58,7 @@ class Test extends FunSuite with Logging {
 			        hostname = "localhost"
 			        port = 9160
 			        clustername = "TestCluster"
-			        keyspace = "Bam"
+			        keyspace = "Evactor"
 			      }
 			    }
 			  }

@@ -36,10 +36,10 @@ object EventStorageFactory {
     import config._
 
     val StorageImplementations: Map[String, String] =
-      getConfig("akka.bam.storage.implementations").root.unwrapped.asScala.toMap.map { case (k, v) => (k, v.toString) }
+      getConfig("akka.evactor.storage.implementations").root.unwrapped.asScala.toMap.map { case (k, v) => (k, v.toString) }
 
     val StorageBindings: Map[String, Seq[String]] = {
-      val configPath = "akka.bam.storage.storage-bindings"
+      val configPath = "akka.evactor.storage.storage-bindings"
       hasPath(configPath) match {
         case false => Map()
         case true => getConfig(configPath).root.unwrapped.asScala.toMap.map {

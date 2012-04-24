@@ -22,13 +22,13 @@ import org.scalatest.WordSpec
 import akka.actor.ActorSystem
 import akka.testkit.TestKit
 import org.evactor.model.events.DataEvent
-import org.evactor.BamSpec
+import org.evactor.EvactorSpec
 import akka.testkit.TestActorRef
 
 @RunWith(classOf[JUnitRunner])
 class XPathExpressionEvaluatorSpec (_system: ActorSystem) 
   extends TestKit(_system) 
-  with BamSpec {
+  with EvactorSpec {
   
   def this() = this(ActorSystem("MvelExpressionEvaluatorSpec"))
   

@@ -28,7 +28,7 @@ import akka.actor.actorRef2Scala
 import akka.testkit.TestKit
 import akka.util.duration.intToDurationInt
 import org.evactor.model.events.DataEvent
-import org.evactor.BamSpec
+import org.evactor.EvactorSpec
 
 class TestProcessor (override val subscriptions: List[Subscription]) 
   extends Processor (subscriptions)  {
@@ -52,7 +52,7 @@ class TestProcessor (override val subscriptions: List[Subscription])
 @RunWith(classOf[JUnitRunner])
 class ProcessorSpec(_system: ActorSystem) 
   extends TestKit(_system) 
-  with BamSpec   
+  with EvactorSpec   
   with BeforeAndAfterAll {
 
   def this() = this(ActorSystem("ProcessorSpec"))

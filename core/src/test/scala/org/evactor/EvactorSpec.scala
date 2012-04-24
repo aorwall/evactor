@@ -20,15 +20,15 @@ import org.scalatest.WordSpec
 import org.evactor.model.events._
 import org.evactor.model.State
 
-object BamSpec {
+object EvactorSpec {
   val channel = "channel"
   val category = Some("category")
   val id = "id"
   val timestamp = 0L 
 }
 
-trait BamSpec extends WordSpec with MustMatchers with ShouldMatchers {
-  import BamSpec._
+trait EvactorSpec extends WordSpec with MustMatchers with ShouldMatchers {
+  import EvactorSpec._
   
   def createDataEvent(message: String) = new DataEvent(channel, category, id, timestamp, message)
    

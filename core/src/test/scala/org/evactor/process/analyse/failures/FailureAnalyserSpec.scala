@@ -31,13 +31,13 @@ import org.evactor.model.events.LogEvent
 import org.evactor.model
 import org.evactor.model.Success
 import org.evactor.process.analyse.window.TimeWindow
-import org.evactor.BamSpec
+import org.evactor.EvactorSpec
 import org.evactor.process.analyse.window.LengthWindow
 
 @RunWith(classOf[JUnitRunner])
 class FailureAnalyserSpec(_system: ActorSystem) 
   extends TestKit(_system) 
-  with BamSpec 
+  with EvactorSpec 
   with BeforeAndAfterAll {
 
   def this() = this(ActorSystem("FailureAnalyserSpec"))

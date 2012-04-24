@@ -25,7 +25,7 @@ import akka.actor.ActorSystem
 import org.evactor.model.events.Event
 import org.evactor.model.events.LogEvent
 import org.evactor.model.Start
-import org.evactor.BamSpec
+import org.evactor.EvactorSpec
 
 class TestEventStorage(system: ActorSystem) extends EventStorage {
  
@@ -60,7 +60,7 @@ object EventStorageSpec {
 
   val storageConf = ConfigFactory.parseString("""
 		akka {
-		  bam {
+		  evactor {
 		    storage {
 		        
 		      implementations {
@@ -79,7 +79,7 @@ object EventStorageSpec {
 }
 
 @RunWith(classOf[JUnitRunner])
-class EventStorageSpec(system: ActorSystem) extends BamSpec {
+class EventStorageSpec(system: ActorSystem) extends EvactorSpec {
 
   def this() = this( ActorSystem("EventStorageSpec", EventStorageSpec.storageConf) )
   

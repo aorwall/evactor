@@ -19,10 +19,10 @@ import org.junit.runner.RunWith
 import org.scalatest.WordSpec
 import org.scalatest.matchers.ShouldMatchers
 import org.scalatest.junit.JUnitRunner
-import org.evactor.BamSpec
+import org.evactor.EvactorSpec
 
 @RunWith(classOf[JUnitRunner])
-class EventSpec extends BamSpec {
+class EventSpec extends EvactorSpec {
 
   "An Event" should {
      

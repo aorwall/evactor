@@ -34,7 +34,7 @@ import org.evactor.model.events.RequestEvent
 import org.mockito.Mockito._
 import org.evactor.process.ProcessorEventBus
 import org.evactor.model.events.Event
-import org.evactor.BamSpec
+import org.evactor.EvactorSpec
 
 trait TestEventBuilder extends EventBuilder  {  
 
@@ -51,7 +51,7 @@ trait TestEventBuilder extends EventBuilder  {
 @RunWith(classOf[JUnitRunner])
 class BuildActorSpec(_system: ActorSystem) 
   extends TestKit(_system)
-  with BamSpec
+  with EvactorSpec
   with BeforeAndAfterAll
   with BeforeAndAfter {
 

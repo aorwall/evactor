@@ -26,7 +26,7 @@ import akka.testkit.TestKit
 import org.evactor.model.attributes.HasMessage
 import org.evactor.model.events.DataEvent
 import org.evactor.model.events.Event
-import org.evactor.BamSpec
+import org.evactor.EvactorSpec
 import org.evactor.process.Subscription
 import akka.testkit.TestActorRef
 import akka.testkit.TestProbe
@@ -35,7 +35,7 @@ import akka.util.duration._
 @RunWith(classOf[JUnitRunner])
 class ExtractorSpec(_system: ActorSystem) 
   extends TestKit(_system) 
-  with BamSpec 
+  with EvactorSpec 
   with BeforeAndAfterAll 
   with BeforeAndAfter{
 

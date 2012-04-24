@@ -19,7 +19,7 @@ import akka.testkit.TestKit
 import org.scalatest.BeforeAndAfterAll
 import akka.actor.ActorSystem
 import org.junit.runner.RunWith
-import org.evactor.BamSpec
+import org.evactor.EvactorSpec
 import org.scalatest.junit.JUnitRunner
 import akka.testkit.TestActorRef
 import akka.actor.Actor
@@ -33,7 +33,7 @@ import org.evactor.model.events.Event
 @RunWith(classOf[JUnitRunner])
 class ProcessorHandlerSpec(_system: ActorSystem) 
   extends TestKit(_system) 
-  with BamSpec   
+  with EvactorSpec   
   with BeforeAndAfterAll {
 
   def this() = this(ActorSystem("ProcessorHandlerSpec"))

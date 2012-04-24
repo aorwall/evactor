@@ -21,7 +21,7 @@ import org.evactor.model.events.Event
 import org.evactor.model.events.DataEvent
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
-import org.evactor.BamSpec
+import org.evactor.EvactorSpec
 import akka.testkit.TestActorRef
 import akka.testkit.TestKit
 import akka.actor.ActorSystem
@@ -29,7 +29,7 @@ import akka.actor.ActorSystem
 @RunWith(classOf[JUnitRunner])
 class MvelExpressionEvaluatorSpec(_system: ActorSystem) 
   extends TestKit(_system) 
-  with BamSpec {
+  with EvactorSpec {
   
   def this() = this(ActorSystem("MvelExpressionEvaluatorSpec"))
   

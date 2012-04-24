@@ -30,13 +30,13 @@ import org.scalatest.BeforeAndAfterAll
 import org.evactor.process.build.simpleprocess.SimpleProcessBuilder
 import org.evactor.process.build.simpleprocess.SimpleProcessEventBuilder
 import org.evactor.process.build.BuildActor
-import org.evactor.BamSpec
+import org.evactor.EvactorSpec
 import org.evactor.process.Subscription
 
 @RunWith(classOf[JUnitRunner])
 class SimpleProcessSpec(_system: ActorSystem) 
   extends TestKit(_system) 
-  with BamSpec {
+  with EvactorSpec {
 
   def this() = this(ActorSystem("SimpleProcessSpec"))
   
