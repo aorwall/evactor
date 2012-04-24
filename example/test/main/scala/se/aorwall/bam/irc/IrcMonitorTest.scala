@@ -1,4 +1,4 @@
-package se.aorwall.bam.irc
+package org.evactor.irc
 
 import grizzled.slf4j.Logging
 
