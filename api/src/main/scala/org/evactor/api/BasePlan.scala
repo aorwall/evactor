@@ -32,9 +32,12 @@ class BasePlan (system: ActorSystem) extends NettyPlan with Logging {
   val logApi = new LogEventAPI(system)
   val alertApi = new AlertEventAPI(system)
   
+  val indexFile = Source.fromFile("index.html", "UTF-8").mkString
   
   def intent = {
-   
+    case req @ Path(Seg(Nil)) => try {
+      ResponseString(indexFile)
+    } catch { case e => warn("error while getting index page", e); BadRequest }
     case req @ Path(Seg("kpi" :: path)) => try {
       val Params(params) = req
       kpiApi.doRequest(path, params)
