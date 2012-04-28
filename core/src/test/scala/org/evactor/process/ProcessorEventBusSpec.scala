@@ -43,8 +43,8 @@ class ProcessorEventBusSpec (_system: ActorSystem)
     
   val bus = ProcessorEventBusExtension(_system)
   
-  val subscriptionCategory = new Subscription(Some("DataEvent"), Some("foo"), Some("bar"))
-  val subscription = new Subscription(Some("DataEvent"), Some("foo"), None)
+  val subscriptionCategory = new Subscription(Some("foo"), Some("bar"))
+  val subscription = new Subscription(Some("foo"), None)
   
   val event1 = new DataEvent("foo", Some("bar"), "", 0L, "")
   val event2 = new DataEvent("bar", None, "", 0L, "")
@@ -86,11 +86,11 @@ class ProcessorEventBusSpec (_system: ActorSystem)
         
     "publish an event with another event name to the subscriber subscribing to all events" in {
       val subscriber = TestProbe()
-      bus.subscribe(subscriber.ref, new Subscription(None, None, None))
+      bus.subscribe(subscriber.ref, new Subscription())
       bus.publish(event1)
       subscriber.expectMsg(1 second, event1)
       subscriber.expectNoMsg(1 second)
-      bus.unsubscribe(subscriber.ref, new Subscription(None, None, None))      
+      bus.unsubscribe(subscriber.ref, new Subscription())      
     }
   }
 }

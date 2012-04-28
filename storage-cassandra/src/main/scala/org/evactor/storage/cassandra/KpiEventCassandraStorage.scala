@@ -28,31 +28,11 @@ import me.prettyprint.hector.api.beans.ColumnSlice
 import me.prettyprint.hector.api.factory.HFactory
 import org.evactor.model.events.Event
 import org.evactor.model.events.KpiEvent
-import org.evactor.storage.KpiEventStorage
 
-class KpiEventCassandraStorage(system: ActorSystem, cfPrefix: String) extends CassandraStorage (system, cfPrefix) with KpiEventStorage {
-	type EventType = KpiEvent
-
-	def this(system: ActorSystem) = this(system, "KpiEvent")
-			
-   override val columnNames = List("id", "timestamp", "value")
-	   
-   val SUM_CF = "KpiEventSum"
+class KpiEventCassandraStorage(system: ActorSystem) {
+	/*
+   val SUM_CF = "Sum"
      
-   override def storeEvent(event: Event): Unit = event match {
-	  case kpiEvent: KpiEvent => { 
-		  super.storeEvent(event)
-		  
-		  // store sum
-		  storeSum(event.channel, kpiEvent)
-		  
-		  if(event.category.isDefined)
-		  	storeSum(createKey(event.channel, event.category), kpiEvent)  
-	  }
-	  case msg => warn("not a KpiEvent: " + msg); false
-	  
-	}
-	
 	protected def storeSum(key: String, event: KpiEvent) {
   
     // column family: KpiEventCountSum
@@ -98,9 +78,6 @@ class KpiEventCassandraStorage(system: ActorSystem, cfPrefix: String) extends Ca
     else 0.0
 	}
 	
-  /**
-   * Read kpi statistics within a time span from fromTimestamp to toTimestamp
-   */
   def getSumStatistics(channel: String, category: Option[String], fromTimestamp: Option[Long], toTimestamp: Option[Long], interval: String): (Long, List[(Long, Double)]) = {    
     
   
@@ -113,8 +90,8 @@ class KpiEventCassandraStorage(system: ActorSystem, cfPrefix: String) extends Ca
   }
   
   protected def getSumStatisticsFromInterval(channel: String, category: Option[String], from: Long, to: Long, interval: String): (Long, List[(Long, Double)]) = {
-	  val stats = readStatisticsFromInterval(channel, category, None, from, to, interval)
-	  val key = createKey(channel, category)
+    val stats = readStatisticsFromInterval(channel, category, None, from, to, interval)
+    val key = createKey(channel, category)
     val period = interval match {
     	case YEAR => Years.ONE
     	case MONTH => Months.ONE
@@ -133,18 +110,5 @@ class KpiEventCassandraStorage(system: ActorSystem, cfPrefix: String) extends Ca
 	  
 	  (stats._1, sumList)
   }
-  
-  
-   def eventToColumns(event: Event): List[(String, String)] = event match {  
-	  case kpiEvent: KpiEvent => ("id", event.id) :: ("timestamp", event.timestamp.toString) :: ("value", kpiEvent.value.toString) :: Nil
-	  case _ => throw new RuntimeException("Type not supported: " + event.getClass().getName()) // TODO: Fix some kind of storage exception...
-	}
-	
-   def columnsToEvent(columns: ColumnSlice[String, String]): Event = {
-     val get = getValue(columns) _	
-	   new KpiEvent("", None,
-			 			get("id"),
-			 			get("timestamp").toLong,
-			 			get("value").toDouble)
-	}
+  */
 }

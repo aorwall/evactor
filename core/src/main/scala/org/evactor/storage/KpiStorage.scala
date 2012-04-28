@@ -17,9 +17,8 @@ package org.evactor.storage
 
 import org.evactor.model.events.Event
 
-trait KpiEventStorage extends EventStorage{
+trait KpiStorage {
 
   def getSumStatistics(channel: String, category: Option[String], fromTimestamp: Option[Long], toTimestamp: Option[Long], interval: String): (Long, List[(Long, Double)])
-  
-}
 
+}

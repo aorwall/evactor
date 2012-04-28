@@ -29,18 +29,13 @@ import java.net.URLDecoder
 import unfiltered.request.Params
 import unfiltered.response.BadRequest
 import org.evactor.model.events.KpiEvent
-import org.evactor.storage.KpiEventStorage
 import unfiltered.response.ResponseFunction
 import org.jboss.netty.handler.codec.http.HttpResponse
 import org.evactor.model.events.Event
 
-class KpiEventAPI (override val system: ActorSystem) extends EventAPI {
+class KpiEventAPI  {
     
-  val storage = EventStorageExtension(system).getEventStorage(classOf[KpiEvent].getName) match {
-    case Some(s: KpiEventStorage) => s
-    case Some(s) => throw new RuntimeException("Storage impl is of the wrong type: %s".format(s))
-    case None => throw new RuntimeException("No storage impl found for KPI Event")
-  }
+  /* move this:
      
   override def doRequest(
       path: Seq[String], 
@@ -57,13 +52,9 @@ class KpiEventAPI (override val system: ActorSystem) extends EventAPI {
   protected def average ( sum: (Long, List[(Long, Double)])) = (sum._1, sum._2.map { 
 	  case (x,y) => if(x > 0) y/x
                   else 0
-	})
+  })
 	
-  override implicit protected[api] def toMap(e: Event): Map[String, Any] = e match {
-    case event: KpiEvent => Map ("id" -> event.id, 
-         "timestamp" -> event.timestamp,
-         "value" -> event.value)
-  }
+  */
   
 }
 

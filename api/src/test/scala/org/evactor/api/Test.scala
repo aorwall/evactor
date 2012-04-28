@@ -26,5 +26,4 @@ object Test {
 	 unfiltered.netty.Http(8080).plan(new BasePlan(system)).run()	 
 	 
   }
-  
 }

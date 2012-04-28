@@ -26,11 +26,19 @@ import org.evactor.model.State
 import unfiltered.response.BadRequest
 import org.evactor.model.events.Event
 import unfiltered.response.NotFound
+import org.evactor.storage.LatencyStorage
+import org.evactor.storage.StateStorage
+import org.evactor.storage.EventStorageExtension
 
-abstract class EventAPI {
-
-  val system: ActorSystem
-  val storage: EventStorage
+class EventAPI (val system: ActorSystem) {
+  
+  // TODO: Some other system to decide which storage solutions that is available.
+  // Maybe a LatencyAPI and StateAPI trait extending this one
+  val storage: EventStorage with LatencyStorage with StateStorage = EventStorageExtension(system).getEventStorage() match {
+    case Some(s: EventStorage with LatencyStorage with StateStorage) => s
+    case Some(s) => throw new RuntimeException("Storage impl is of the wrong type: %s".format(s))
+    case None => throw new RuntimeException("No storage impl found")
+  }
   
   def doRequest(
       path: Seq[String], 
@@ -41,6 +49,9 @@ abstract class EventAPI {
    	  case "stats" :: tail => getStats(tail, params)
    	  case "events" :: tail => getEvents(tail, params)
    	  case "event" :: id :: Nil => getEvent(id) 
+   	  case "latency" :: channel :: Nil => getAvgLatency(decode(channel), None, getInterval(params.get("interval")))
+   	  case "latency" :: channel :: category :: Nil => getAvgLatency(decode(channel), Some(decode(category)), getInterval(params.get("interval")))
+   	  case _ => BadRequest
   }
   
   protected[api] def getChannels(count: Int): List[Map[String, Any]] = 
@@ -53,30 +64,41 @@ abstract class EventAPI {
     path match {
       case channel :: Nil => storage.getStatistics(decode(channel), None, Some(0L), Some(now), getInterval(params.get("interval")))
    	  case channel :: category :: Nil => storage.getStatistics(decode(channel), Some(decode(category)), Some(0L), Some(now), getInterval(params.get("interval")))
+//   	  case channel :: category :: state :: Nil => storage.getStatistics(decode(channel), Some(decode(category)), getState(state), Some(0L), Some(now), getInterval(params.get("interval")))
    	  case e => throw new IllegalArgumentException("Illegal stats request: %s".format(e))
   }
   
-  protected[api] def getEvents(path: Seq[String], params: Map[String, Seq[String]]): List[Map[String, Any]] = 
+  protected[api] def getEvents(path: Seq[String], params: Map[String, Seq[String]]): List[Event] = 
     path match {
  	    case channel :: Nil => storage.getEvents(decode(channel), None, None, None, 10, 0)
  	    case channel :: category :: Nil => storage.getEvents(decode(channel), Some(decode(category)), None, None, 10, 0)
  	    case e => throw new IllegalArgumentException("Illegal events request: %s".format(e))
-	  }
+    }
   	
-  protected[api] def getEvent(id: String): Option[Map[String, Any]] = 
+  protected[api] def getEvent(id: String): Option[Event] = 
     storage.getEvent(id) match {
  	 	  case Some(e: Event) => Some(e)
  	 	  case _ => None
-	  }
+	}
+  
+  protected[api] def getAvgLatency(channel: String, category: Option[String], interval: String): Map[String, Any] = 
+    average(storage.getLatencyStatistics(channel, None, Some(0L), Some(now), interval))
+  
+  protected[api] def average ( sum: (Long, List[(Long, Long)])) = 
+    Map ("timestamp" -> sum._1, 
+         "stats" -> sum._2.map { 
+    case (x,y) => if(x > 0) y/x
+    					 else 0
+  })
   
   implicit protected[api] def anyToResponse(any: AnyRef): ResponseFunction[HttpResponse] = any match {
     case None => NotFound
     case _ => ResponseString(generate(any))
   }
   
-  implicit protected[api] def toMap(events: List[Event]): List[Map[String, Any]] = events.map(_.toMap)
+//  implicit protected[api] def toMap(events: List[Event]): List[Map[String, Event]] = events.map(_.toMap)
    
-  implicit protected[api] def toMap(event: Event): Map[String, Any] 
+  //implicit protected[api] def toMap(event: Event): Map[String, Any] 
   	
   protected[api] def decode(name: String) = {
     URLDecoder.decode(name, "UTF-8")
@@ -92,11 +114,7 @@ abstract class EventAPI {
 		case None => "day"
   }
   
-  protected[api] def getState(state: Option[Seq[String]]) = 
-    state match {
-	    case Some( s:: Nil) => Some(State.apply(s))
-	    case None => None
-  }
+  protected[api] def getState(state: Seq[String]) = State.apply(state.mkString)
   
   implicit protected[api] def toCountMap(list: List[(String, Long)]): List[Map[String, Any]] =
     list.map { (t) => Map("name" -> t._1, "count" -> t._2) }

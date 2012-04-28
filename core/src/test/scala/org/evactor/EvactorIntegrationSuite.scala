@@ -69,14 +69,14 @@ class LogdataIntegrationSuite(_system: ActorSystem)
     val processor = system.actorOf(Props[ProcessorHandler].withDispatcher(CallingThreadDispatcher.Id), name = "process")
           
     // start the processors
-    val reqSubscriptions = List(new Subscription(Some("RequestEvent"), Some("startComponent"), None), new Subscription(Some("RequestEvent"), Some("endComponent"), None))  
+    val reqSubscriptions = List(new Subscription(Some("startComponent"), None), new Subscription(Some("endComponent"), None))  
 
-    processor ! new Request("startComponent", List(new Subscription(Some("LogEvent"), Some("startComponent"), None)), 120000L)
-  	processor ! new Request("endComponent", List(new Subscription(Some("LogEvent"), Some("endComponent"), None)), 120000L)
+    processor ! new Request("startComponent", List(new Subscription(Some("startComponent"), None)), 120000L)
+  	processor ! new Request("endComponent", List(new Subscription(Some("endComponent"), None)), 120000L)
     processor ! new SimpleProcess("simpleProcess", reqSubscriptions, processId, None, 120000l)  
-    processor ! new Latency("latency", List(new Subscription(Some("SimpleProcessEvent"), Some(processId), None)), "latency", None, 2000, Some(new LengthWindowConf(2)))
+    processor ! new Latency("latency", List(new Subscription(Some(processId), None)), "latency", None, 2000, Some(new LengthWindowConf(2)))
 
-  	 ProcessorEventBusExtension(system).subscribe(probe.ref, new Subscription(Some("AlertEvent"), Some("latency"), None))
+  	 ProcessorEventBusExtension(system).subscribe(probe.ref, new Subscription(Some("latency"), None))
         
     // Collect logs
     val currentTime = System.currentTimeMillis

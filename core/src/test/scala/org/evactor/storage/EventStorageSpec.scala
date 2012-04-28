@@ -27,7 +27,7 @@ import org.evactor.model.events.LogEvent
 import org.evactor.model.Start
 import org.evactor.EvactorSpec
 
-class TestEventStorage(system: ActorSystem) extends EventStorage {
+class TestEventStorage(override val system: ActorSystem) extends EventStorage(system) {
  
   def storeEvent(event: Event): Unit = {
 
@@ -63,13 +63,7 @@ object EventStorageSpec {
 		  evactor {
 		    storage {
 		        
-		      implementations {
-		        event = org.evactor.storage.TestEventStorage
-		      }
-		
-		      storage-bindings {
-		        event = ["org.evactor.model.events.LogEvent"] 
-		      }
+		      implementation = org.evactor.storage.TestEventStorage
 		    
 		    }
 		  }
@@ -89,12 +83,8 @@ class EventStorageSpec(system: ActorSystem) extends EvactorSpec {
   
   "EventStorage" must {
 
-    "have correct bindings" in {
-      store.bindings(logEvent.getClass.getName) must be("event")
-    }
-
     "returns the right event storage implementation" in {     
-      store.getEventStorage(logEvent) match {
+      store.getEventStorage match {
         case Some(e) => e.getClass.getName must be ("org.evactor.storage.TestEventStorage")
         case e => fail("expected an instance of org.evactor.storage.TestEventStorage but found: " + e)
       }    

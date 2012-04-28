@@ -26,38 +26,18 @@ import unfiltered.request.Params
 
 class BasePlan (system: ActorSystem) extends NettyPlan with Logging {
 
-  val kpiApi = new KpiEventAPI(system)
-  val dataApi = new DataEventAPI(system)
-  val requestApi = new RequestEventAPI(system)
-  val logApi = new LogEventAPI(system)
-  val alertApi = new AlertEventAPI(system)
+  val api = new EventAPI(system)
   
-  val indexFile = Source.fromFile("index.html", "UTF-8").mkString
+//  val indexFile = Source.fromFile("/index.html", "UTF-8").mkString
   
   def intent = {
-    case req @ Path(Seg(Nil)) => try {
-      ResponseString(indexFile)
-    } catch { case e => warn("error while getting index page", e); BadRequest }
-    case req @ Path(Seg("kpi" :: path)) => try {
+//    case req @ Path(Seg(Nil)) => try {
+//      ResponseString(indexFile)
+//    } catch { case e => warn("error while getting index page", e); BadRequest }
+    case req @ Path(Seg("api" :: path)) => try {
       val Params(params) = req
-      kpiApi.doRequest(path, params)
-    } catch { case e => warn("error while calling kpi event api", e); BadRequest }
-    case req @ Path(Seg("data" :: path)) => try {
-      val Params(params) = req
-      dataApi.doRequest(path, params)
-    } catch { case e => warn("error while calling data event api", e); BadRequest }
-    case req @ Path(Seg("request" :: path)) => try {
-      val Params(params) = req
-      requestApi.doRequest(path, params)
-    } catch { case e => warn("error while calling request event api", e); BadRequest }
-    case req @ Path(Seg("log" :: path)) => try {
-      val Params(params) = req
-      logApi.doRequest(path, params)
-    } catch { case e => warn("error while calling log event api", e); BadRequest }
-    case req @ Path(Seg("alert" :: path)) => try {
-      val Params(params) = req
-      alertApi.doRequest(path, params)
-    } catch { case e => warn("error while calling alert event api", e); BadRequest }
+      api.doRequest(path, params)
+    } catch { case e => warn("error while calling event api", e); BadRequest }
     case _ => ResponseString("Couldn't handle request")
       
   }
