@@ -26,15 +26,9 @@ import org.evactor.model.Message
 /**
  * Stores events
  */
-
-class StorageProcessorConf (
-    val name: String, 
-    val subscriptions: List[Subscription],
-    val maxThreads: Int) {
-  
-  def processor = new StorageProcessorRouter(subscriptions, maxThreads)
-  
-}
+case class StorageProcessorConf (
+    val channel: Option[String],
+    val maxThreads: Int)
 
 class StorageProcessorRouter (
     val subscriptions: List[Subscription],
