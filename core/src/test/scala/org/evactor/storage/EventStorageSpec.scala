@@ -26,10 +26,11 @@ import org.evactor.model.events.Event
 import org.evactor.model.events.LogEvent
 import org.evactor.model.Start
 import org.evactor.EvactorSpec
+import org.evactor.model.Message
 
 class TestEventStorage(override val system: ActorSystem) extends EventStorage(system) {
  
-  def storeEvent(event: Event): Unit = {
+  def storeMessage(message: Message): Unit = {
 
   }
   

@@ -24,7 +24,6 @@ import akka.actor.ActorContext
 import akka.actor.ActorSystem
 import org.evactor.model.attributes.HasState
 import org.evactor.model.events.Event
-import org.evactor.model.events.EventRef
 import org.evactor.storage.EventStorage
 import java.util.UUID
 import org.evactor.model.State
@@ -36,14 +35,12 @@ import me.prettyprint.hector.api.beans.HColumn
 import me.prettyprint.hector.api.beans.ColumnSlice
 import grizzled.slf4j.Logging
 import me.prettyprint.cassandra.service.CassandraHostConfigurator
-import me.prettyprint.cassandra.serializers.UUIDSerializer
-import me.prettyprint.cassandra.serializers.StringSerializer
-import me.prettyprint.cassandra.serializers.LongSerializer
-import me.prettyprint.cassandra.serializers.ObjectSerializer
+import me.prettyprint.cassandra.serializers._
 import org.evactor.model.attributes.HasLatency
 import akka.actor.ExtendedActorSystem
 import org.evactor.storage.LatencyStorage
 import org.evactor.storage.StateStorage
+import org.evactor.model.Message
 
 class CassandraStorage(override val system: ActorSystem) extends EventStorage(system) with LatencyStorage with StateStorage with Logging {
     
@@ -102,9 +99,11 @@ class CassandraStorage(override val system: ActorSystem) extends EventStorage(sy
             .get()
             
   // TODO: Consistency level should be set to ONE for all writes and there should be some kind of rollback?            
-  def storeEvent(event: Event): Unit = {
+  def storeMessage(message: Message): Unit = {
     val mutator = HFactory.createMutator(keyspace, StringSerializer.get)
  
+    val event = message.event
+    
  	 // TODO: will need some kind of rollback if one of the inserts fails    
     val timeuuid = TimeUUIDUtils.getTimeUUID(event.timestamp)
 
@@ -119,22 +118,22 @@ class CassandraStorage(override val system: ActorSystem) extends EventStorage(sy
     mutator.addInsertion(event.id, EVENT_CF, HFactory.createColumn("class", event.getClass.getName, StringSerializer.get, StringSerializer.get))
     mutator.addInsertion(event.id, EVENT_CF, HFactory.createColumn("event", event, StringSerializer.get, ObjectSerializer.get))
 
-    storeEventTimeline(mutator, event, event.channel, timeuuid)
-    storeEventCounters(mutator, event, event.channel)
+    storeEventTimeline(mutator, event, message.channel, timeuuid)
+    storeEventCounters(mutator, event, message.channel)
 
-    event.category match {
+    message.category match {
       case Some(category) => {
-        storeEventTimeline(mutator, event, createKey(event.channel, event.category), timeuuid)
-        storeEventCounters(mutator, event, createKey(event.channel, event.category))
-        mutator.incrementCounter(event.channel, CATEGORY_CF, category, 1)
+        storeEventTimeline(mutator, event, createKey(message.channel, message.category), timeuuid)
+        storeEventCounters(mutator, event, createKey(message.channel, message.category))
+        mutator.incrementCounter(message.channel, CATEGORY_CF, category, 1)
       }
       case _ =>
     }    
     
-    mutator.incrementCounter("channels", CHANNEL_CF, event.channel, 1)
+    mutator.incrementCounter("channels", CHANNEL_CF, message.channel, 1)
     
     event match {
-      case latencyEvent: Event with HasLatency => storeLatency(latencyEvent)
+      case latencyEvent: Event with HasLatency => storeLatency(message.channel, message.category, latencyEvent)
       case _ => 
     }
     
@@ -208,11 +207,11 @@ class CassandraStorage(override val system: ActorSystem) extends EventStorage(sy
     }
   }
   
-  protected def storeLatency(event: Event with HasLatency) {
-    storeLatency(event.channel, event)
+  protected def storeLatency(channel: String, category: Option[String], event: Event with HasLatency) {
+    storeLatency(channel, event)
     
-    event.category match {
-      case Some(category) => storeLatency(createKey(event.channel, event.category), event)
+    category match {
+      case Some(cat) => storeLatency(createKey(channel, category), event)
       case _ =>
     }
   }
@@ -365,16 +364,6 @@ class CassandraStorage(override val system: ActorSystem) extends EventStorage(sy
           .get
           .getColumns.map ( col => (col.getName -> col.getValue.longValue)).toList
   }
-  
-  protected def getEventRef(columns: ColumnSlice[String, String], name: String): Option[EventRef] = {
-    if(columns.getColumnByName(name) != null) Some(EventRef.fromString(columns.getColumnByName(name).getValue()))
-    else None
-  }
-  	
-  protected def getEventRefCol(name: String, eventRef: Option[EventRef]): List[(String, String)] = eventRef match {
-	  case Some(eRef) => (name, eRef.toString) :: Nil
-	  case None => Nil
-   } 
 	
   /**
    * Read statistics within a time span from fromTimestamp to toTimestamp

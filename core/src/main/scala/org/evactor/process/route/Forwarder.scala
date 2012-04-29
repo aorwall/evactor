@@ -22,7 +22,7 @@ import org.evactor.process.Subscription
 import org.evactor.process.Publisher
 
 /**
- * Forwards events to another channel and category
+ * Forwards events to another channel and category.
  */
 class Forwarder (
     override val subscriptions: List[Subscription],

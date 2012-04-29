@@ -18,10 +18,11 @@ package org.evactor.storage
 import org.evactor.model.events.Event
 import org.evactor.model.State
 import akka.actor.ActorSystem
+import org.evactor.model.Message
 
 abstract class EventStorage (val system: ActorSystem) {
   
-  def storeEvent(event: Event): Unit
+  def storeMessage(message: Message): Unit
   
   def getEvent(id: String): Option[Event]
   

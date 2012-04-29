@@ -19,7 +19,6 @@ import com.typesafe.config.ConfigFactory
 import akka.actor.ActorSystem
 import grizzled.slf4j.Logging
 import org.evactor.model.events.DataEvent
-import org.evactor.model.events.EventRef
 import org.evactor.model.events.LogEvent
 import org.evactor.model.events.RequestEvent
 import org.evactor.model.events.SimpleProcessEvent
@@ -32,6 +31,7 @@ import org.scalatest.junit.JUnitRunner
 import org.scalatest.FunSuite
 import org.evactor.storage.cassandra.CassandraStorage
 import akka.actor.ExtendedActorSystem
+import org.evactor.model.Message
 
 /**
  * Not really a test yet. Just doing some write and read tests against
@@ -101,23 +101,23 @@ class Test extends FunSuite with Logging {
     
   }
 */
-  val log1 = new LogEvent("channel", None, "329380921338", System.currentTimeMillis, "329380921308", "client", "server", Start, "message")
-  val log2 = new LogEvent("channel", None,"329380921339", System.currentTimeMillis, "329380921308", "client", "server", Success, "message")
+  val log1 = new Message("channel", None, new LogEvent("329380921338", System.currentTimeMillis, "329380921308", "component", "client", "server", Start, "message"))
+  val log2 = new Message("channel", None, new LogEvent("329380921339", System.currentTimeMillis, "329380921308", "component", "client", "server", Success, "message"))
      
   test("Log event"){
    
-    storage.storeEvent(log1)
-    storage.storeEvent(log2)
+    storage.storeMessage(log1)
+    storage.storeMessage(log2)
     info("LogEventStorage: " + storage.getEvents("channel", None, None, None, 10, 0))
   }     
   
-  val req1 = new RequestEvent("channel2", None, "329380921328", System.currentTimeMillis, Some(EventRef(log1)), Some(EventRef(log2)), Start, 10L)
-  val req2 = new RequestEvent("channel2", None, "329380921329", System.currentTimeMillis+1, Some(EventRef(log1)), Some(EventRef(log1)), Start, 10L)
+  val req1 = new Message("channel2", None, new RequestEvent("329380921328", System.currentTimeMillis, "329380921328", "component", Some("329380921338"), Some("329380921338"), Start, 10L))
+  val req2 = new Message("channel2", None, new RequestEvent("329380921329", System.currentTimeMillis+1, "329380921328", "component", Some("329380921338"), Some("329380921338"), Start, 10L))
     
   test("Request event") {
    
-    storage.storeEvent(req1)
-    storage.storeEvent(req2)
+    storage.storeMessage(req1)
+    storage.storeMessage(req2)
     info("RequestEventStorage: " + storage.getEvents("channel", None, None, None, 10, 0))
     
   }
