@@ -13,15 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.evactor.model.events
+package org.evactor.process
+
+import org.evactor.model.events.Event
+import org.evactor.model.Message
+import akka.actor.ActorRef
 
 /**
- * An event with a measurable value
+ * Trait extended by actors publishing events to the processor event bus
  */
-case class KpiEvent (
-    override val id: String, 
-    override val timestamp: Long, 
-    val value: Double) 
-  extends Event(id, timestamp)  {
+trait Publisher extends UseProcessorEventBus {
+ 
+  val publication: Publication
   
+  def publish(event: Event) {
+    publication match {
+      case TestPublication(testActor) => testActor ! event
+      case pub: Publication => bus.publish(new Message(pub.channel, pub.category, event))
+    }
+    
+  }
+
 }

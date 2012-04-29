@@ -19,20 +19,19 @@ import akka.actor.Actor._
 import org.evactor.process.ProcessorConfiguration
 import org.evactor.process.Subscription
 import org.evactor.utils.JavaHelpers.any2option
+import org.evactor.process.Publication
 
 class AbsenceOfRequests (
     override val name: String,
     override val subscriptions: List[Subscription], 
-    val channel: String, 
-    val category: Option[String],
+    val publication: Publication,
     val timeFrame: Long)
   extends ProcessorConfiguration(name, subscriptions) {
 
-  def this(name: String, subscription: Subscription, 
-    channel: String, category: String, timeFrame: Long) = {
-    this(name, List(subscription), channel, category, timeFrame)
+  def this(name: String, subscription: Subscription, publication: Publication, timeFrame: Long) = {
+    this(name, List(subscription), publication, timeFrame)
   }
   
-  def processor = new AbsenceOfRequestsAnalyser(subscriptions, channel, category, timeFrame)
+  def processor = new AbsenceOfRequestsAnalyser(subscriptions, publication, timeFrame)
 
 }

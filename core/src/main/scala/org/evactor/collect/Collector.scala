@@ -22,27 +22,32 @@ import org.evactor.storage.Storage
 import org.evactor.process.ProcessorEventBus
 import akka.actor.ActorLogging
 import org.evactor.process.Publisher
+import org.evactor.model.Message
+import org.evactor.process.UseProcessorEventBus
+import org.evactor.process.ProcessorEventBusExtension
 
 //import com.twitter.ostrich.stats.Stats
 
 /**
  * Collecting incoming events
  */
-class Collector extends Actor with Publisher with Storage with ActorLogging {
+class Collector extends Actor with Storage with ActorLogging {
+  
+  private[this] val bus = ProcessorEventBusExtension(context.system)
 
   def receive = {
-    case event: Event => collect(event)
+    case message: Message => collect(message)
     case msg => log.debug("can't handle {}", msg)
   }
 
-  def collect(event: Event) {
+  def collect(message: Message) {
    
-    log.debug("collecting: {}", event)
+    log.debug("collecting: {}", message)
 
-    if(!eventExists(event)) {
-      publish(event)
+    if(!eventExists(message.event)) {
+      bus.publish(message)
     } else {
-      log.warning("The event is already processed: {}", event) 
+      log.warning("The event is already processed: {}", message.event) 
     }
     
   }

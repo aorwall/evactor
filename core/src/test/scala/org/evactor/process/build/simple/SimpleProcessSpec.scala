@@ -15,23 +15,23 @@
  */
 package org.evactor.process.build.simple
 
+import org.evactor.process.build.simpleprocess.SimpleProcessBuilder
+import org.evactor.process.Subscription
+import org.evactor.EvactorSpec
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
-import org.scalatest.matchers.MustMatchers
-import org.scalatest.WordSpec
-import akka.testkit.TestActorRef
-import org.evactor.model.events.RequestEvent
-import org.evactor.model.events.SimpleProcessEvent
-import org.evactor.model.Success
-import org.evactor.model.Failure
-import akka.testkit.TestKit
-import akka.actor.ActorSystem
 import org.scalatest.BeforeAndAfterAll
-import org.evactor.process.build.simpleprocess.SimpleProcessBuilder
-import org.evactor.process.build.simpleprocess.SimpleProcessEventBuilder
+import org.scalatest.WordSpec
+import akka.actor.ActorSystem
+import akka.testkit.TestActorRef
+import akka.testkit.TestKit
+import org.evactor.process.StaticPublication
 import org.evactor.process.build.BuildActor
-import org.evactor.EvactorSpec
-import org.evactor.process.Subscription
+import org.evactor.process.build.simpleprocess.SimpleProcessEventBuilder
+import org.evactor.model.events.RequestEvent
+import org.evactor.model.Success
+import org.evactor.model.events.SimpleProcessEvent
+import org.evactor.model.Failure
 
 @RunWith(classOf[JUnitRunner])
 class SimpleProcessSpec(_system: ActorSystem) 
@@ -46,7 +46,7 @@ class SimpleProcessSpec(_system: ActorSystem)
 
   val subscriptions = List(new Subscription(Some(startCompId), None), new Subscription(Some(startCompId), None))  
     
-  val actor = TestActorRef(new SimpleProcessBuilder(subscriptions, processId, None, 120000L))
+  val actor = TestActorRef(new SimpleProcessBuilder(subscriptions, new StaticPublication(processId, None), List(startCompId, endCompId), 120000L))
   val processor = actor.underlyingActor
 
 
@@ -54,17 +54,15 @@ class SimpleProcessSpec(_system: ActorSystem)
 
     "create an event with state SUCCESS when flow is succesfully processed" in {
       
-      val buildActor = TestActorRef(new BuildActor("329380921309", 1000) 
-      		with SimpleProcessEventBuilder { 
-      			val channel = processId
-      			val category = None
-      			val steps = 2
-      		})
+      val buildActor = TestActorRef(new BuildActor("corrId", 1000, new StaticPublication("", None)) 
+        with SimpleProcessEventBuilder { 
+     	  val components = List(startCompId, endCompId)
+        })
       
       val eventBuilder = buildActor.underlyingActor
-      eventBuilder.addEvent(new RequestEvent(startCompId, None, "329380921309", 0L, None, None, Success, 0L))
+      eventBuilder.addEvent(new RequestEvent("329380921309", 0L, "corrId", startCompId, None, None, Success, 0L))
       eventBuilder.isFinished must be === false
-      eventBuilder.addEvent(new RequestEvent(endCompId, None, "329380921309", 1L, None, None, Success, 0L))
+      eventBuilder.addEvent(new RequestEvent("329380921310", 1L, "corrId", endCompId, None, None, Success, 0L))
       eventBuilder.isFinished must be === true
 
       eventBuilder.createEvent() match {
@@ -75,15 +73,13 @@ class SimpleProcessSpec(_system: ActorSystem)
 
     "create an activity with state FAILURE when a log event has the state FAILURE" in {
       
-      val buildActor = TestActorRef(new BuildActor("329380921309", 1000) 
+      val buildActor = TestActorRef(new BuildActor("corrId", 1000, new StaticPublication("", None)) 
       		with SimpleProcessEventBuilder { 
-      			val channel = processId
-      			val category = None
-      			val steps = 2
+              val components = List(startCompId, endCompId)
       		})
       
       val eventBuilder = buildActor.underlyingActor      
-      eventBuilder.addEvent(new RequestEvent(startCompId, None, "329380921309", 0L, None, None, Failure, 0L))
+      eventBuilder.addEvent(new RequestEvent("329380921309", 0L, "corrId", startCompId, None, None, Failure, 0L))
       eventBuilder.isFinished must be === true
 
        eventBuilder.createEvent() match {
@@ -94,15 +90,13 @@ class SimpleProcessSpec(_system: ActorSystem)
     
     "create an event with state SUCCESS when flow with just one component succesfully processed" in {
       
-      val buildActor = TestActorRef(new BuildActor("329380921309", 1000) 
+      val buildActor = TestActorRef(new BuildActor("corrId", 1000, new StaticPublication("", None)) 
       		with SimpleProcessEventBuilder { 
-      			val channel = processId
-      			val category = None
-      			val steps = 1
+      			val components = List(startCompId)
       		})
       
       val eventBuilder = buildActor.underlyingActor
-      eventBuilder.addEvent(new RequestEvent(startCompId, None, "329380921309", 0L, None, None, Success, 0L))
+      eventBuilder.addEvent(new RequestEvent("329380921309", 0L, "corrId", startCompId, None, None, Success, 0L))
       eventBuilder.isFinished must be === true
 
       eventBuilder.createEvent() match {

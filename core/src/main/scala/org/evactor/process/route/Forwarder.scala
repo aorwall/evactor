@@ -13,15 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.evactor.model.events
+package org.evactor.process.route
+
+import org.evactor.model.events.Event
+import org.evactor.process.Processor
+import org.evactor.process.Publication
+import org.evactor.process.Subscription
+import org.evactor.process.Publisher
 
 /**
- * An event with a measurable value
+ * Forwards events to another channel and category
  */
-case class KpiEvent (
-    override val id: String, 
-    override val timestamp: Long, 
-    val value: Double) 
-  extends Event(id, timestamp)  {
+class Forwarder (
+    override val subscriptions: List[Subscription],
+    val publication: Publication)
+  extends Processor(subscriptions) with Publisher {
+
+  override type T = Event
   
+  def process(event: T) {
+    publish(event)
+  }
+
 }

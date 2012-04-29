@@ -23,16 +23,17 @@ import org.evactor.model.Timeout
 import akka.actor.ActorRef
 import akka.actor.ActorLogging
 import org.evactor.process.Subscription
+import org.evactor.model.Message
+import org.evactor.process.Publication
 
 /**
  * TODO: Check event.timestamp to be really sure about the timeframe between events 
  */
 class AbsenceOfRequestsAnalyser (
     override val subscriptions: List[Subscription], 
-    override val channel: String, 
-    override val category: Option[String], 
+    override val publication: Publication, 
     val timeframe: Long)
-  extends Analyser(subscriptions, channel, category) 
+  extends Analyser(subscriptions, publication) 
   with ActorLogging {
   
   type T = Event
@@ -40,9 +41,8 @@ class AbsenceOfRequestsAnalyser (
   var scheduledFuture: Option[Cancellable] = None
     
   override def receive  = {
-    case event: T => process(event) 
+    case Message(_, _, event) => process(event) 
     case Timeout => alert("No events within the timeframe %s ms".format(timeframe))
-    case actor: ActorRef => testActor = Some(actor) 
     case _ => // skip
   }
   

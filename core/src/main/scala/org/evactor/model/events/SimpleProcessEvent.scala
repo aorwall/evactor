@@ -19,18 +19,13 @@ import org.evactor.model.attributes.HasState
 import org.evactor.model.State
 
 case class SimpleProcessEvent(
-    override val channel: String, 
-    override val category: Option[String],
     override val id: String, 
     override val timestamp: Long,
-    val requests: List[EventRef], // eventRefs
+    val requests: List[String], // eventRefs
     val state: State,    
     val latency: Long) 
-  extends Event(channel, category, id, timestamp) 
+  extends Event(id, timestamp) 
   with HasLatency
   with HasState  {
-  
-  override def clone(newChannel: String, newCategory: Option[String]): Event = 
-    new SimpleProcessEvent(newChannel, newCategory, id, timestamp, requests, state, latency)
   
 }

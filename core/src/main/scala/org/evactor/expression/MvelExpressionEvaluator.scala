@@ -52,8 +52,6 @@ trait MvelExpressionEvaluator extends ExpressionEvaluator with ActorLogging {
       None
     }
               
-    obj.put("channel", event.channel)
-    obj.put("category", event.category.getOrElse(""))
     obj.put("id", event.id)
     obj.put("timestamp", event.timestamp)
     

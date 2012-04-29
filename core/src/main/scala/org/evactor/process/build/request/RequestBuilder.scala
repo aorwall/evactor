@@ -16,44 +16,30 @@
 package org.evactor.process.build.request
 
 import org.evactor.model.events.Event
-import org.evactor.model.events.EventRef
 import org.evactor.model.events.LogEvent
 import org.evactor.model.events.RequestEvent
 import org.evactor.model.Failure
 import org.evactor.model.Start
 import org.evactor.model.Success
-import org.evactor.model.Timeout
-import org.evactor.process.build.EventBuilder
-import org.evactor.process.build.EventCreationException
-import org.evactor.process.Processor
-import org.evactor.process.build.BuildActor
-import org.evactor.process.build.Timed
-import org.evactor.process.build.Builder
-import akka.actor.ActorRef
-import org.evactor.process.ProcessorEventBus
+import org.evactor.process.build._
+import org.evactor.process.{Processor, Subscription, Publication}
 import akka.actor.ActorLogging
-import org.evactor.process.Subscriber
-import akka.actor.Props
-import scala.collection.mutable.HashMap
-import org.evactor.process.Subscription
+import akka.actor.ActorRef
+import org.evactor.model.Timeout
+import java.util.UUID
 
 /**
  * Handles LogEvent objects and creates a RequestEvent object. 
  */
 class RequestBuilder (
-    override val subscriptions: List[Subscription], 
+    override val subscriptions: List[Subscription],
+    val publication: Publication,
     val timeout: Long) 
   extends Builder(subscriptions) 
   with ActorLogging {
   
   type T = LogEvent
        
-  override def receive = {
-    case event: LogEvent => process(event) // TODO: case event: T  doesn't work...
-    case actor: ActorRef => testActor = Some(actor) 
-    case _ => // skip
-  }
-  
   /*
    * Accepts all componentId:s
    */
@@ -62,7 +48,7 @@ class RequestBuilder (
   def getEventId(logevent: LogEvent) = logevent.correlationId
 
   def createBuildActor(id: String): BuildActor = {
-    new BuildActor(id, timeout) with RequestEventBuilder
+    new BuildActor(id, timeout, publication) with RequestEventBuilder
   }
   
 }
@@ -90,9 +76,9 @@ trait RequestEventBuilder extends EventBuilder with ActorLogging {
 
   def createEvent(): Either[Throwable, RequestEvent] = (startEvent, endEvent) match {
     case (Some(start: LogEvent), Some(end: LogEvent)) =>
-      Right(new RequestEvent(end.channel, end.category, end.correlationId, end.timestamp, Some(EventRef(start)), Some(EventRef(end)), end.state, end.timestamp - start.timestamp ))
+      Right(new RequestEvent(UUID.randomUUID.toString, end.timestamp, end.correlationId, end.component, Some(start.id), Some(end.id), end.state, end.timestamp - start.timestamp ))
     case (Some(start: LogEvent), _) =>
-      Right(new RequestEvent(start.channel, start.category, start.correlationId, System.currentTimeMillis, Some(EventRef(start)), None, Timeout, 0L))
+      Right(new RequestEvent(UUID.randomUUID.toString, System.currentTimeMillis, start.correlationId, start.component, Some(start.id), None, Timeout, 0L))
     case (_, end: LogEvent) =>
       Left(new EventCreationException("RequestProcessor was trying to create an event with only an end log event. End event: " + end))
     case (_, _) =>

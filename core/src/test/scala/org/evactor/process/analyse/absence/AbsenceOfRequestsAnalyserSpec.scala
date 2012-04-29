@@ -28,6 +28,9 @@ import org.evactor.model.events.AlertEvent
 import org.evactor.model.events.Event
 import org.scalatest.junit.JUnitRunner
 import org.evactor.EvactorSpec
+import org.evactor.process.StaticPublication
+import org.evactor.process.TestPublication
+import org.evactor.model.Message
 
 @RunWith(classOf[JUnitRunner])
 class AbsenceOfRequestsAnalyserSpec(_system: ActorSystem) 
@@ -50,41 +53,38 @@ class AbsenceOfRequestsAnalyserSpec(_system: ActorSystem)
 
     "alert on timeout" in {
       val time = 100L
+      val testProbe = TestProbe()
 
-      val actor = TestActorRef(new AbsenceOfRequestsAnalyser(Nil, "channel", None, time))
-      val probe = TestProbe()
-      actor ! probe.ref
+      val actor = TestActorRef(new AbsenceOfRequestsAnalyser(Nil, new TestPublication(testProbe.ref), time))
 
-      probe.expectMsgAllClassOf(1 second, classOf[AlertEvent])
+      testProbe.expectMsgAllClassOf(1 second, classOf[AlertEvent])
       actor.stop()
     }
     
     "alert on timeout from set timeframe plus the time when the latest event arrived " in {
       val time = 200L
+      val testProbe = TestProbe()
 
-      val actor = TestActorRef(new AbsenceOfRequestsAnalyser(Nil, "channel", None, time))
-      val probe = TestProbe()
-      actor ! probe.ref
+      val actor = TestActorRef(new AbsenceOfRequestsAnalyser(Nil, new TestPublication(testProbe.ref), time))
 
       Thread.sleep(100)
 
-      actor ! createEvent()
+      actor ! new Message("", None, createEvent())
 
-      probe.expectMsgAllClassOf(1 second, classOf[AlertEvent])
+      testProbe.expectMsgAllClassOf(1 second, classOf[AlertEvent])
       actor.stop()
     }
 
     "alert on timeout, and send \"back to normal\" message when an event arrives" in {
       val time = 100L
+      val testProbe = TestProbe()
 
-      val actor = TestActorRef(new AbsenceOfRequestsAnalyser(Nil, "channel", None, time))
-      val probe = TestProbe()
-      actor ! probe.ref
+      val actor = TestActorRef(new AbsenceOfRequestsAnalyser(Nil, new TestPublication(testProbe.ref), time))
 
-      probe.expectMsgAllClassOf(300 millis, classOf[AlertEvent])
+      testProbe.expectMsgAllClassOf(300 millis, classOf[AlertEvent])
 
-      actor ! createEvent()
-      probe.expectMsgAllClassOf(1 second, classOf[AlertEvent]) // TODO: Need to check back to normal!
+      actor ! new Message("", None, createEvent())
+      testProbe.expectMsgAllClassOf(1 second, classOf[AlertEvent]) // TODO: Need to check back to normal!
 
       actor.stop()
     }

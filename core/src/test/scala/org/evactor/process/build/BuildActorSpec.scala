@@ -15,6 +15,13 @@
  */
 package org.evactor.process.build
 
+import org.evactor.model.events.Event
+import org.evactor.model.events.LogEvent
+import org.evactor.model.events.RequestEvent
+import org.evactor.model.Message
+import org.evactor.process.StaticPublication
+import org.evactor.process.TestPublication
+import org.evactor.EvactorSpec
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.matchers.MustMatchers
@@ -29,12 +36,6 @@ import akka.util.duration._
 import org.evactor.model.Start
 import org.evactor.model.Success
 import org.evactor.model.Timeout
-import org.evactor.model.events.LogEvent
-import org.evactor.model.events.RequestEvent
-import org.mockito.Mockito._
-import org.evactor.process.ProcessorEventBus
-import org.evactor.model.events.Event
-import org.evactor.EvactorSpec
 
 trait TestEventBuilder extends EventBuilder  {  
 
@@ -42,7 +43,7 @@ trait TestEventBuilder extends EventBuilder  {
 
   def isFinished = true
 
-  def createEvent() = Right(new Event("channel", Some("category"), "id", 0L))
+  def createEvent() = Right(new Event("id", 0L))
 
   def clear() {}
     
@@ -67,11 +68,10 @@ class BuildActorSpec(_system: ActorSystem)
    	
       var added = false
       
-      val actor = TestActorRef(new BuildActor("329380921309", 10000) 
+      val actor = TestActorRef(new BuildActor("329380921309", 10000, new StaticPublication("", None)) 
       		with TestEventBuilder { 
       				override def isFinished = false 
       				override def addEvent(event: Event) = added = true
-      				def timeout = None
       		})
 
       val logEvent = createLogEvent(0L, Start)
@@ -84,17 +84,16 @@ class BuildActorSpec(_system: ActorSystem)
     "send the activity to analyser when it's finished " in {
       val probe = TestProbe()
       
-      val logEvent = new LogEvent("channel", Some("category"), "329380921309", 0L, "329380921309", "client", "server", Start, "hello")
-      val reqEvent = new RequestEvent("channel", Some("category"), "329380921309", 0L, None, None, Success, 0L)
+      val logEvent = new LogEvent("329380921309", 0L, "329380921309", "comp", "client", "server", Start, "hello")
+      val reqEvent = new RequestEvent("329380921309", 0L, "329380921309", "comp", None, None, Success, 0L)
+      val reqEventMsg = new Message("channel", Some("category"), reqEvent)
       
-      val actor = TestActorRef(new BuildActor("correlationId", 1000)
+      val actor = TestActorRef(new BuildActor("correlationId", 1000, new TestPublication(probe.ref))
       		with TestEventBuilder { 
       				override def isFinished = true 
       				override def createEvent = Right(reqEvent)
-      				def timeout = None
       		})
 
-      actor ! probe.ref
       actor ! logEvent	     
 
       probe.expectMsg(1 seconds, reqEvent) // The activity returned by activityBuilder should be sent to activityPrope
@@ -107,16 +106,16 @@ class BuildActorSpec(_system: ActorSystem)
     "send an activity with status TIMEOUT to analyser when timed out" in {
       val probe = TestProbe()
 
-      val timedoutEvent = new RequestEvent("channel", Some("category"), "329380921309", 0L, None, None, Timeout, 0L)
+      val timedoutEvent = new RequestEvent("329380921309", 0L, "corrId", "comp", None, None, Timeout, 0L)
 
-      val timeoutEventActor = TestActorRef(new BuildActor("329380921309", 100) with TestEventBuilder { 
+      val timeoutEventActor = TestActorRef(new BuildActor("329380921309", 100, new TestPublication(probe.ref)) with TestEventBuilder { 
       				override def isFinished = true 
       				override def createEvent = Right(timedoutEvent)
       		})
 
       
-      val logEvent = new LogEvent("channel", Some("category"), "329380921309", 0L, "329380921309", "client", "server", Start, "hello")
-      timeoutEventActor ! probe.ref
+      val logEvent = new LogEvent("329380921309", 0L, "329380921309", "comp", "client", "server", Start, "hello")
+      val logEventMsg = new Message("channel", Some("category"), logEvent)
       timeoutEventActor ! logEvent
 
       probe.expectMsg(1 seconds, timedoutEvent)

@@ -25,57 +25,36 @@ import akka.actor.ActorLogging
 import scala.collection._
 
 /**
- * Processes simple processes with requests from subscribed channels. If no request has failed
- * a request from each channel, and category if specified, must be processed before a new simple 
- * process event is created.
- * 
+ * Processes simple processes with requests from subscribed channels from specified
+ * components.
  */
 class SimpleProcessBuilder(
     override val subscriptions: List[Subscription],
-    val _channel: String,
-    val _category: Option[String],
+    val publication: Publication,
+    val _components: List[String],
     val _timeout: Long) 
   extends Builder(subscriptions) 
   with Subscriber 
   with ActorLogging {
 
-  type T = RequestEvent
-  
-  val subscribedChannels: List[String] = subscriptions.map { sub =>
-     sub.channel match {
-       case Some(channel) => channel
-       case None => throw new IllegalArgumentException("A channel must be set in all subscriptions")
-     }
-  }
-   
-  override def receive = {
-    case event: RequestEvent => process(event) 
-    case actor: ActorRef => testActor = Some(actor) 
-    case _ => // skip
-  }
+  override type T = RequestEvent
 
-  def getEventId(logevent: RequestEvent) = logevent.id
+  def getEventId(logevent: RequestEvent) = logevent.correlationId
 
   def createBuildActor(id: String): BuildActor = 
-    new BuildActor(id, _timeout) 
+    new BuildActor(id, _timeout, publication) 
       with SimpleProcessEventBuilder {
-   	  val channel = _channel
-   	  val category = _category
-   	  val steps = subscribedChannels.size
+   	  val components = _components
    	}
-
-  override def toString = "SimpleProcess ( creates event on channel: %s, subscribing to channels: %s)".format(_channel, subscribedChannels)
 
 }
 
 trait SimpleProcessEventBuilder extends EventBuilder with ActorLogging {
     
-  val steps: Int
-  val channel: String 
-  val category: Option[String]
+  val components: List[String]
   
   var requests: List[RequestEvent] = List()
-  var processedChannels: Set[String] = Set()
+  var processedComponents: Set[String] = Set()
   
   var failed = false
   
@@ -85,14 +64,14 @@ trait SimpleProcessEventBuilder extends EventBuilder with ActorLogging {
   }
 
   def addRequestEvent(event: RequestEvent) {
-    if(!processedChannels.contains(event.channel)){
+    if(!processedComponents.contains(event.component) && components.contains(event.component)){
       requests ::= event
-      processedChannels += event.channel
+      processedComponents += event.component
     }
   }
     
   def isFinished(): Boolean = {
-    if(requests.size == steps) true
+    if(requests.size == components.size) true
     else if ( requests.exists(isFailure(_)) ) true
     else false    
   }
@@ -119,10 +98,10 @@ trait SimpleProcessEventBuilder extends EventBuilder with ActorLogging {
     
     val sortedRequests = requests.sortWith((e1, e2) => e1.timestamp < e2.timestamp)
 
-    if (requests.size == steps){
-      Right(new SimpleProcessEvent(channel, category, sortedRequests.last.id, sortedRequests.last.timestamp, sortedRequests.map(EventRef(_)), sortedRequests.last.state, sortedRequests.last.timestamp - sortedRequests.head.timestamp + sortedRequests.head.latency ))
+    if (requests.size == components.size){
+      Right(new SimpleProcessEvent(sortedRequests.last.id, sortedRequests.last.timestamp, sortedRequests.map(_.id), sortedRequests.last.state, sortedRequests.last.timestamp - sortedRequests.head.timestamp + sortedRequests.head.latency ))
     } else if (requests.size > 0){
-      Right(new SimpleProcessEvent(channel, category, sortedRequests.last.id, sortedRequests.last.timestamp, sortedRequests.map(EventRef(_)), getCauseOfFailure(sortedRequests.last), sortedRequests.last.timestamp - sortedRequests.head.timestamp + sortedRequests.head.latency ))
+      Right(new SimpleProcessEvent(sortedRequests.last.id, sortedRequests.last.timestamp, sortedRequests.map(_.id), getCauseOfFailure(sortedRequests.last), sortedRequests.last.timestamp - sortedRequests.head.timestamp + sortedRequests.head.latency ))
     } else {
       Left(new EventCreationException("SimpleProcessEventBuilder was trying to create an event with no request events"))
     }
@@ -136,6 +115,6 @@ trait SimpleProcessEventBuilder extends EventBuilder with ActorLogging {
   
   def clear() {    
     requests = List[RequestEvent]()
-    processedChannels = Set()
+    processedComponents = Set()
   }
 }

@@ -29,6 +29,7 @@ import akka.actor.ActorSystem
 import akka.testkit.TestActorRef
 import org.evactor.process.build.BuildActor
 import org.evactor.EvactorSpec
+import org.evactor.process.StaticPublication
 
 @RunWith(classOf[JUnitRunner])
 class RequestBuilderSpec(_system: ActorSystem) 
@@ -39,7 +40,7 @@ class RequestBuilderSpec(_system: ActorSystem)
   
   val compId = "startComponent"
   
-  val actor = TestActorRef(new RequestBuilder(Nil, 0L))
+  val actor = TestActorRef(new RequestBuilder(Nil, new StaticPublication("", None), 0L))
   val processor = actor.underlyingActor
 
   "A RequestProcessor" must {
@@ -53,9 +54,9 @@ class RequestBuilderSpec(_system: ActorSystem)
   "A RequestEventBuilder" must {
 
     "create a RequestEvent with state SUCCESS when a component is succesfully processed" in {
-      val buildActor = TestActorRef(new BuildActor("329380921309", 1000) 
+      val buildActor = TestActorRef(new BuildActor("329380921309", 1000, new StaticPublication("", None)) 
       		with RequestEventBuilder { 
-      			def timeout = Some(1000L)
+      			//def timeout = Some(1000L)
       		})
       	
       val eventBuilder = buildActor.underlyingActor
@@ -71,9 +72,9 @@ class RequestBuilderSpec(_system: ActorSystem)
     }
 
     "create a RequestEvent with state FAILURE when the LogEvent to the component has state FAILURE" in {
-       val buildActor = TestActorRef(new BuildActor("329380921309", 1000) 
+       val buildActor = TestActorRef(new BuildActor("329380921309", 1000, new StaticPublication("", None))
       		with RequestEventBuilder { 
-      			def timeout = Some(1000L)
+      			//def timeout = Some(1000L)
       		})
       	
       val eventBuilder = buildActor.underlyingActor

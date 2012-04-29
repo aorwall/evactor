@@ -18,15 +18,17 @@ package org.evactor.process.build.request
 import org.evactor.process.ProcessorConfiguration
 import org.evactor.process.Processor
 import org.evactor.process.Subscription
+import org.evactor.process.Publication
 
 class Request (
     override val name: String,
     override val subscriptions: List[Subscription], 
+    val publication: Publication,
     val timeout: Long) 
   extends ProcessorConfiguration(name, subscriptions) {
 
   override def processor: Processor = {
-    new RequestBuilder(subscriptions, timeout: Long)
+    new RequestBuilder(subscriptions, publication, timeout)
   }
   
 }

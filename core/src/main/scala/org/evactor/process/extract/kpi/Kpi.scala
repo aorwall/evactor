@@ -31,6 +31,8 @@ import org.evactor.expression.XPathExpressionEvaluator
 import org.evactor.expression.XPathExpression
 import org.evactor.expression.Expression
 import akka.actor.ActorLogging
+import org.evactor.process.Publisher
+import org.evactor.process.Publication
 
 /**
  * Extracts a value from a message and creates a KPI Event object. Using a specified
@@ -41,14 +43,14 @@ import akka.actor.ActorLogging
 class Kpi (
     override val name: String,
     override val subscriptions: List[Subscription], 
-    val channel: String, 
+    val publication: Publication,
     val expression: Expression) 
   extends ProcessorConfiguration(name, subscriptions) {
    
   override def processor: Processor = expression match {
-	    case MvelExpression(expr) => new KpiExtractor(subscriptions, channel, expr) 
+	    case MvelExpression(expr) => new KpiExtractor(subscriptions, publication, expr) 
 	    	with MvelExpressionEvaluator
-	    case XPathExpression(expr) => new KpiExtractor(subscriptions, channel, expr) 
+	    case XPathExpression(expr) => new KpiExtractor(subscriptions, publication, expr) 
 	    	with XPathExpressionEvaluator
 	    case other => 
 	      throw new IllegalArgumentException("Not a valid expression: " + other)
@@ -57,17 +59,19 @@ class Kpi (
 
 class KpiExtractor(
     override val subscriptions: List[Subscription], 
-    override val channel: String,
+    override val publication: Publication,
     override val expression: String)
-  extends Extractor (subscriptions, channel, expression) with KpiEventCreator {
+  extends Extractor (subscriptions, publication, expression) 
+  with KpiEventCreator 
+  with Publisher {
   
 }
 
 trait KpiEventCreator extends EventCreator {
   
-  def createBean(value: Option[Any], event: Event, newChannel: String): Option[Event] = value match {
+  def createBean(value: Option[Any], event: Event with HasMessage): Option[Event] = value match {
     case Some(value: String) => try {
-      Some(new KpiEvent(newChannel, event.category, event.id, event.timestamp, value.toDouble)) 
+      Some(new KpiEvent(event.id, event.timestamp, value.toDouble)) 
     } catch {
       case _ => None
     }

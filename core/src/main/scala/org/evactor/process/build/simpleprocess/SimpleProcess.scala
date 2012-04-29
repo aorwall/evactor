@@ -18,17 +18,18 @@ package org.evactor.process.build.simpleprocess
 import org.evactor.process.ProcessorConfiguration
 import org.evactor.process.Processor
 import org.evactor.process.Subscription
+import org.evactor.process.Publication
 
 class SimpleProcess (
     override val name: String,
     override val subscriptions: List[Subscription],
-    val channel: String,
-    val category: Option[String],
+    val publication: Publication,
+    val components: List[String],
     val timeout: Long) 
   extends ProcessorConfiguration(name, subscriptions) {
 
   def processor: Processor = {
-    new SimpleProcessBuilder(subscriptions, channel, category, timeout)
+    new SimpleProcessBuilder(subscriptions, publication, components, timeout)
   }
   
 }

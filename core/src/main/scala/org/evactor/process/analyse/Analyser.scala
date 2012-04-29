@@ -19,7 +19,6 @@ import akka.actor.{Actor, ActorRef, ActorLogging}
 import scala.Predef._
 import org.evactor.model.events.{Event, AlertEvent}
 import org.evactor.process._
-import org.evactor.model.events.EventRef
 import java.util.UUID
 
 /**
@@ -33,8 +32,7 @@ import java.util.UUID
  */
 abstract class Analyser(
     override val subscriptions: List[Subscription], 
-    val channel: String, 
-    val category: Option[String]) 
+    val publication: Publication) 
   extends Processor(subscriptions) 
   with Publisher
   with Monitored
@@ -63,7 +61,7 @@ abstract class Analyser(
     val currentTime = System.currentTimeMillis
     
     val eventRef = event match {
-      case Some(e) => Some(EventRef(e))
+      case Some(e) => Some(e.id)
       case None => None
     }
     
@@ -71,8 +69,6 @@ abstract class Analyser(
     
     val alert = 
       new AlertEvent(
-        channel,
-        category,
         uuid,
         currentTime, 
         triggered, 
@@ -81,11 +77,6 @@ abstract class Analyser(
     
     publish(alert)
 
-    // If a test actor exists
-    testActor match {
-      case Some(actor) => actor ! alert
-      case _ =>
-    }
   }
   
 }

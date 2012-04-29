@@ -13,15 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.evactor.model.events
+package org.evactor.process
+
+import akka.actor.ActorRef
 
 /**
- * An event with a measurable value
+ * Trait extended by actors subscribing to the processor event bus  
  */
-case class KpiEvent (
-    override val id: String, 
-    override val timestamp: Long, 
-    val value: Double) 
-  extends Event(id, timestamp)  {
-  
+trait Subscriber extends UseProcessorEventBus {
+
+  def subscribe(subscriber: ActorRef, subscriptions: List[Subscription]) {
+    for(sub <- subscriptions){
+      bus.subscribe(subscriber, sub)
+    }
+  }
+
+  def unsubscribe(subscriber: ActorRef, subscriptions: List[Subscription]) {
+    for(sub <- subscriptions){
+      bus.unsubscribe(subscriber, sub)
+    }
+  }
+
 }

@@ -30,6 +30,8 @@ import org.evactor.model.events.KpiEvent
 import org.evactor.EvactorSpec
 import org.evactor.expression.MvelExpression
 import akka.util.duration._
+import org.evactor.process.TestPublication
+import org.evactor.model.Message
 
 @RunWith(classOf[JUnitRunner])
 class KpiSpec (_system: ActorSystem) 
@@ -38,72 +40,61 @@ class KpiSpec (_system: ActorSystem)
 
   def this() = this(ActorSystem("KeywordSpec"))
 
-	val event = createDataEvent("{ \"doubleField\": \"123.42\", \"intField\": \"123\", \"anotherField\": \"anothervalue\"}");
+  val event = new Message("channel", None, createDataEvent("{ \"doubleField\": \"123.42\", \"intField\": \"123\", \"anotherField\": \"anothervalue\"}"))
 
-	"Kpi" must {
+  "Kpi" must {
 
-		"extract float from json messages" in {
-			val kpi = new Kpi("name", Nil, "channel", MvelExpression("message.doubleField"))			
-			val actor = TestActorRef(kpi.processor)
-			
-			val probe1 = TestProbe()
-      val probe2 = TestProbe()
-      actor ! probe1.ref
-      
-      actor ! event
-            
+    "extract float from json messages" in {
+      val probe = TestProbe()
+
       val dest = TestActorRef(new Actor {
 				def receive = {
-					case e: KpiEvent => probe2.ref ! e.value
+					case e: KpiEvent => probe.ref ! e.value
 					case _ => fail
 				}
 			})
 			
-      probe1.expectMsgAllClassOf(200 millis, classOf[KpiEvent])
-      probe1.forward(dest)
-      probe2.expectMsg(200 millis, 123.42)
-      actor.stop			
-		}
-				
-		"extract int (as float from json messages" in {
-		  val kpi = new Kpi("name", Nil, "channel",  MvelExpression("message.intField"))
+      val kpi = new Kpi("name", Nil, new TestPublication(dest), MvelExpression("message.doubleField"))			
       val actor = TestActorRef(kpi.processor)
-
 			
-	    val probe1 = TestProbe()
-      val probe2 = TestProbe()
-      actor ! probe1.ref
-      
       actor ! event
             
+      probe.expectMsg(200 millis, 123.42)
+      actor.stop			
+    }
+  
+    "extract int (as float from json messages" in {
+      val probe = TestProbe()
+
       val dest = TestActorRef(new Actor {
 				def receive = {
-					case e: KpiEvent => probe2.ref ! e.value
+					case e: KpiEvent => probe.ref ! e.value
 					case _ => fail
 				}
 			})
 			
-      probe1.expectMsgAllClassOf(200 millis, classOf[KpiEvent])
-      probe1.forward(dest)
-      probe2.expectMsg(200 millis, 123)
+      val kpi = new Kpi("name", Nil, new TestPublication(dest), MvelExpression("message.intField"))
+      val actor = TestActorRef(kpi.processor)
+      
+      actor ! event
+            
+      probe.expectMsg(200 millis, 123)
       actor.stop			
 								
-		}
+    }
 				
-		"send None when a non-numeric value is provided" in {
-		  val kpi = new Kpi("name", Nil, "channel", MvelExpression("message.anotherField"))
-	    val actor = TestActorRef(kpi.processor)
-			
-      val probe1 = TestProbe()
-      actor ! probe1.ref
-      
+    "send None when a non-numeric value is provided" in {
+      val probe = TestProbe()
+      val kpi = new Kpi("name", Nil, new TestPublication(probe.ref), MvelExpression("message.anotherField"))
+      val actor = TestActorRef(kpi.processor)
+		
       actor ! event
             
-      probe1.expectNoMsg(200 millis)
+      probe.expectNoMsg(200 millis)
       actor.stop			
 			
-		}
-		
-	}
+    }
+	
+  }
 	
 }

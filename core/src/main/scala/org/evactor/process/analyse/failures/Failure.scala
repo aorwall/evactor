@@ -23,30 +23,29 @@ import org.evactor.process.analyse.window.WindowConf
 import org.evactor.process.ProcessorConfiguration
 import org.evactor.process.Subscription
 import org.evactor.utils.JavaHelpers.any2option
+import org.evactor.process.Publication
 
 class Failure (
     override val name: String,
     override val subscriptions: List[Subscription], 
-    val channel: String, 
-    val category: Option[String],
+    val publication: Publication,
     val maxOccurrences: Long, 
     val window: Option[WindowConf])
   extends ProcessorConfiguration(name, subscriptions) {
   
-  def this(name: String, subscription: Subscription, 
-    channel: String, category: String, 
+  def this(name: String, subscription: Subscription, publication: Publication,
     maxOccurences: Long, window: WindowConf) = {
-    this(name, List(subscription), channel, category, maxOccurences, window)
+    this(name, List(subscription), publication, maxOccurences, window)
   }
   
   def processor = window match {
     case Some(length: LengthWindowConf) => 
-      new FailureAnalyser(subscriptions, channel, category, maxOccurrences) 
+      new FailureAnalyser(subscriptions, publication, maxOccurrences) 
         with LengthWindow { override val noOfRequests = length.noOfRequests }
     case Some(time: TimeWindowConf) => 
-      new FailureAnalyser(subscriptions, channel, category, maxOccurrences) 
+      new FailureAnalyser(subscriptions, publication, maxOccurrences) 
         with TimeWindow { override val timeframe = time.timeframe }
     case None => 
-      new FailureAnalyser(subscriptions, channel, category, maxOccurrences)
+      new FailureAnalyser(subscriptions, publication, maxOccurrences)
   }
 }

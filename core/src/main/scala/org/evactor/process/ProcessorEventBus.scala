@@ -15,20 +15,10 @@
  */
 package org.evactor.process
 
-import akka.actor.actorRef2Scala
-import akka.actor.Actor
-import akka.actor.ActorRef
-import akka.actor.ActorSystem
-import akka.actor.Extension
-import akka.actor.ExtensionId
-import akka.actor.ExtensionIdProvider
+import akka.actor._
 import akka.event.ActorEventBus
 import akka.event.LookupClassification
-import org.evactor.model.events
-import akka.actor.ActorSystemImpl
-import akka.actor.ExtendedActorSystem
-import scala.collection.JavaConversions._
-import akka.actor.ActorLogging
+import org.evactor.model.Message
 
 /**
  * This is a first implementation of the event bus for only sending events
@@ -53,7 +43,7 @@ object ProcessorEventBusExtension extends ExtensionId[ProcessorEventBus] with Ex
 // TODO: Subclassifier or something...
 class ProcessorEventBus extends Extension with ActorEventBus with LookupClassification { 
   
-  type Event = events.Event
+  type Event = Message
   type Classifier = Subscription
     
   val mapSize = 100
@@ -62,54 +52,31 @@ class ProcessorEventBus extends Extension with ActorEventBus with LookupClassifi
     
   //protected def compareClassifiers(a: Classifier, b: Classifier): Int = a.channel compareTo b.channel
     
-  protected def publish(event: events.Event, subscriber: Subscriber) {
+  protected def publish(message: Message, subscriber: Subscriber) {
     //trace("publishing event {} to {}", event.toString, subscriber)
-    subscriber ! event
+    subscriber ! message
   }
   
-  override def publish(event: Event): Unit = {     
-    val sub = classify(event)
+  override def publish(message: Message): Unit = {     
+    val sub = classify(message)
        
     // send to all subscribers who has this specific event subscription with a category is specified
     if(sub.category.isDefined){
       val i = subscribers.valueIterator(sub)
-      while (i.hasNext) { publish(event, i.next()) } 
+      while (i.hasNext) { publish(message, i.next()) } 
     }
        
 	// send to all subscribers who subscribed to all events on this channel
     if(sub.channel.isDefined){
       val channelSub = new Subscription(sub.channel, None)
       val j = subscribers.valueIterator(channelSub)
-      while (j.hasNext) { publish(event, j.next()) } 
+      while (j.hasNext) { publish(message, j.next()) } 
     }
     
     // and send to all subscribers that hasn't specified 
     val k = subscribers.valueIterator(new Subscription())
-    while (k.hasNext) { publish(event, k.next()) }
+    while (k.hasNext) { publish(message, k.next()) }
   }
-}
-
-object Subscriptions {
-
-  def apply(): List[Subscription] = List(new Subscription());
-
-  def apply(channel: String): List[Subscription] = List(new Subscription(channel));
-  
-  def apply(channel: String, category: String): List[Subscription] = List(new Subscription(channel, category));
-  
-  def apply(subscriptions: java.util.Collection[Subscription]): List[Subscription] = subscriptions.toList
-}
-
-case class Subscription(
-    val channel: Option[String],
-    val category: Option[String]) {
-
-  def this() = this(None, None)
-  
-  def this(channel: String) = this(Some(channel), None)
-  
-  def this(channel: String, category: String) = this(Some(channel), Some(category))
-   
 }
     
 trait UseProcessorEventBus extends Actor {
@@ -118,32 +85,3 @@ trait UseProcessorEventBus extends Actor {
 
 }
 
-/**
- * Trait extended by actors publishing events to the processor event bus
- */
-trait Publisher extends UseProcessorEventBus {
-
-  def publish(event: events.Event) {
-    bus.publish(event)
-  }
-
-}
-
-/**
- * Trait extended by actors subscribing to the processor event bus  
- */
-trait Subscriber extends UseProcessorEventBus {
-
-  def subscribe(subscriber: ActorRef, subscriptions: List[Subscription]) {
-    for(sub <- subscriptions){
-      bus.subscribe(subscriber, sub)
-    }
-  }
-
-  def unsubscribe(subscriber: ActorRef, subscriptions: List[Subscription]) {
-    for(sub <- subscriptions){
-      bus.unsubscribe(subscriber, sub)
-    }
-  }
-
-}

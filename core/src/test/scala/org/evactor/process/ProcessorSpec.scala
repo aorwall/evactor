@@ -30,22 +30,20 @@ import akka.util.duration.intToDurationInt
 import org.evactor.model.events.DataEvent
 import org.evactor.EvactorSpec
 
-class TestProcessor (override val subscriptions: List[Subscription]) 
-  extends Processor (subscriptions)  {
+class TestProcessor (
+    override val subscriptions: List[Subscription],
+    val publication: Publication) 
+  extends Processor (subscriptions) with Publisher {
   
   type T = DataEvent
     
   override def receive = {
     case event: DataEvent => process(event)
-    case actor: ActorRef => testActor = Some(actor) 
     case _ => // skip
   }
   
   protected def process(event: DataEvent) {
-    testActor match {
-      case Some(actor) => actor ! event
-      case None => 
-    }
+    publish(event)
   }  
 }
 
@@ -64,10 +62,9 @@ class ProcessorSpec(_system: ActorSystem)
   "A Processor" must {
 
     "process valid event types" in {
-      
-      val processor = TestActorRef(new TestProcessor(Nil))
       val testProbe = TestProbe()
-      processor ! testProbe.ref
+
+      val processor = TestActorRef(new TestProcessor(Nil, new TestPublication(testProbe.ref)))
       
       val testEvent = createDataEvent("")
       
@@ -78,20 +75,17 @@ class ProcessorSpec(_system: ActorSystem)
 
     "process valid event types with the right name" in {
       val testEvent = createDataEvent("")
-      
-      val processor = TestActorRef(new TestProcessor(Nil))
       val testProbe = TestProbe()
-      processor ! testProbe.ref
+      val processor = TestActorRef(new TestProcessor(Nil, new TestPublication(testProbe.ref)))
       
       processor ! testEvent
       
       testProbe.expectMsg(1 seconds, testEvent)
     }
 
-    "not process invalid event types" in {
-      val processor = TestActorRef(new TestProcessor(Nil))
+    "not process invalid event types" in {     
       val testProbe = TestProbe()
-      processor ! testProbe.ref
+      val processor = TestActorRef(new TestProcessor(Nil, new TestPublication(testProbe.ref)))
       
       val testEvent = createEvent()
       

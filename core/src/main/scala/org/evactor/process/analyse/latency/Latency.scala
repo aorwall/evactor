@@ -23,29 +23,28 @@ import org.evactor.process.analyse.window.TimeWindowConf
 import org.evactor.process.analyse.window.LengthWindowConf
 import org.evactor.process.Subscription
 import org.evactor.utils.JavaHelpers.any2option
+import org.evactor.process.Publication
 
 class Latency (
     override val name: String,
     override val subscriptions: List[Subscription], 
-    val channel: String, 
-    val category: Option[String],
+    val publication: Publication,
     val maxLatency: Long, 
     val window: Option[WindowConf])
   extends ProcessorConfiguration(name, subscriptions) {
 
-  def this(name: String, subscription: Subscription, 
-    channel: String, category: String, 
+  def this(name: String, subscription: Subscription, publication: Publication,
     maxLatency: Long, window: WindowConf) = {
-    this(name, List(subscription), channel, category, maxLatency, window)
+    this(name, List(subscription), publication, maxLatency, window)
   }
   
   def processor = window match {
     case Some(length: LengthWindowConf) => 
-      new LatencyAnalyser(subscriptions, channel, category, maxLatency) 
+      new LatencyAnalyser(subscriptions, publication, maxLatency) 
         with LengthWindow { override val noOfRequests = length.noOfRequests }
     case Some(time: TimeWindowConf) => 
-      new LatencyAnalyser(subscriptions, channel, category, maxLatency)
+      new LatencyAnalyser(subscriptions, publication, maxLatency)
         with TimeWindow { override val timeframe = time.timeframe }
-    case None => new LatencyAnalyser(subscriptions, channel, category, maxLatency)
+    case None => new LatencyAnalyser(subscriptions, publication, maxLatency)
   }
 }

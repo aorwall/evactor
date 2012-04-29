@@ -13,15 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.evactor.model.events
+package org.evactor.model
+
+import org.evactor.model.events.Event
 
 /**
- * An event with a measurable value
+ * Encapsulates the event object and handles routing info (channel and category).
+ * 
+ * It's the message object that is published to the event bus
  */
-case class KpiEvent (
-    override val id: String, 
-    override val timestamp: Long, 
-    val value: Double) 
-  extends Event(id, timestamp)  {
-  
+case class Message(
+    val channel: String,
+    val category: Option[String],
+    val event: Event) { 
 }

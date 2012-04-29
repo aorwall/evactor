@@ -31,6 +31,9 @@ import org.evactor.process.Subscription
 import akka.testkit.TestActorRef
 import akka.testkit.TestProbe
 import akka.util.duration._
+import org.evactor.process.Publication
+import org.evactor.process.TestPublication
+import org.evactor.model.Message
 
 @RunWith(classOf[JUnitRunner])
 class ExtractorSpec(_system: ActorSystem) 
@@ -45,42 +48,38 @@ class ExtractorSpec(_system: ActorSystem)
      _system.shutdown()
   }
   
+  val expectedEvent = new Event("foo", 0L)
+  
   class TestExtractor (override val subscriptions: List[Subscription],
-        override val channel: String,
-        override val expression: String ) extends Extractor(subscriptions, channel, expression) with EventCreator {
-         def createBean(value: Option[Any], event: Event, newChannel: String) = Some(event)
+        override val publication: Publication,
+        override val expression: String) extends Extractor(subscriptions, publication, expression) with EventCreator {
+         def createBean(value: Option[Any], event: Event with HasMessage) = Some(expectedEvent)
       } 
   
-  val event = createDataEvent("stuff")
-	   
   "An Extractor" must {
 
     "extract stuff from an events message and send to collector " in {
-             
-      val actor = TestActorRef(new TestExtractor(Nil, "channel", "expr"))
-      
       val eventPrope = TestProbe()
-      actor ! eventPrope.ref
+
+      val actor = TestActorRef(new TestExtractor(Nil, new TestPublication(eventPrope.ref), "expr"))
+      val event = createDataEvent("stuff")
       
-      actor ! event
+      actor !  new Message("", None, event)
       
-      eventPrope.expectMsg(1 seconds, event)
+      eventPrope.expectMsg(1 seconds, expectedEvent)
       actor.stop      
     }
     
     "abort if event doesn't extend the HasMessage trait " in {
-             
-      val actor = TestActorRef(new TestExtractor(Nil, "channel", "expr"))
-      
       val eventPrope = TestProbe()
-      actor ! eventPrope.ref
+
+      val actor = TestActorRef(new TestExtractor(Nil, new TestPublication(eventPrope.ref), "expr"))
+      val event = new Event("id", 0L)
       
-	   val event = createEvent()
-	  
-      actor ! event 
+      actor ! new Message("", None, new Event("id", 0L))
       
       eventPrope.expectNoMsg(1 seconds)
-      actor.stop      
+      actor.stop
     }
 
   }  

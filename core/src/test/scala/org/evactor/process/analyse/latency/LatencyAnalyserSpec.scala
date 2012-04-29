@@ -33,6 +33,8 @@ import org.evactor.model.events.RequestEvent
 import org.evactor.model.Success
 import org.evactor.process.analyse.window.LengthWindow
 import org.evactor.EvactorSpec
+import org.evactor.process.TestPublication
+import org.evactor.model.Message
 
 @RunWith(classOf[JUnitRunner])
 class LatencyAnalyserSpec(_system: ActorSystem) 
@@ -53,14 +55,14 @@ class LatencyAnalyserSpec(_system: ActorSystem)
   "A LatencyAnalyser" must {
 
     "alert when the average latency of the incoming activities exceeds the specified max latency" in {
-      val latencyActor = TestActorRef(new LatencyAnalyser(Nil, "channel", None, 5))
       val probe = TestProbe()
-      latencyActor ! probe.ref
 
-      latencyActor ! createRequestEvent(0L, None, None, Success, 4) // avg latency 4ms
-      latencyActor ! createRequestEvent(1L, None, None, Success, 5)  // avg latency 4.5ms
+      val latencyActor = TestActorRef(new LatencyAnalyser(Nil, new TestPublication(probe.ref), 5))
+
+      latencyActor ! new Message("", None, createRequestEvent(0L, None, None, "corr", "comp", Success, 4)) // avg latency 4ms
+      latencyActor ! new Message("", None, createRequestEvent(1L, None, None, "corr", "comp", Success, 5))  // avg latency 4.5ms
       probe.expectNoMsg
-      latencyActor ! createRequestEvent(3L, None, None, Success, 9) // avg latency 6ms, trig alert!
+      latencyActor ! new Message("", None, createRequestEvent(3L, None, None, "corr", "comp", Success, 9)) // avg latency 6ms, trig alert!
 
 //      probe.expectMsg(200 millis, new Alert(eventName, "Average latency 6ms is higher than the maximum allowed latency 5ms", true))
       probe.expectMsgAllClassOf(200 millis, classOf[AlertEvent])
@@ -69,20 +71,20 @@ class LatencyAnalyserSpec(_system: ActorSystem)
     }
 
     "alert when the average latency of the incoming activities exceeds the max latency within a specified length window" in {
-      val latencyActor = TestActorRef(new LatencyAnalyser(Nil, "channel", None, 60) with LengthWindow {
+      val probe = TestProbe()
+
+      val latencyActor = TestActorRef(new LatencyAnalyser(Nil, new TestPublication(probe.ref), 60) with LengthWindow {
         override val noOfRequests = 2
       })
-      val probe = TestProbe()
-      latencyActor ! probe.ref
-
-      latencyActor ! createRequestEvent(1L, None, None, Success, 10) // avg latency 10ms
-      latencyActor ! createRequestEvent(2L, None, None, Success, 110) // avg latency 55ms
-      latencyActor ! createRequestEvent(3L, None, None, Success, 40) // avg latency 75ms, trig alert!
+      
+      latencyActor ! new Message("", None, createRequestEvent(1L, None, None, "corr", "comp", Success, 10)) // avg latency 10ms
+      latencyActor ! new Message("", None, createRequestEvent(2L, None, None, "corr", "comp", Success, 110)) // avg latency 55ms
+      latencyActor ! new Message("", None, createRequestEvent(3L, None, None, "corr", "comp", Success, 40)) // avg latency 75ms, trig alert!
 
 //      probe.expectMsg(100 millis, new Alert(eventName, "Average latency 75ms is higher than the maximum allowed latency 60ms", true))
       probe.expectMsgAllClassOf(200 millis, classOf[AlertEvent])
 
-      latencyActor ! createRequestEvent(4L, None, None, Success, 60) // avg latency 55ms, back to normal!
+      latencyActor ! new Message("", None, createRequestEvent(4L, None, None, "corr", "comp", Success, 60)) // avg latency 55ms, back to normal!
 
  //     probe.expectMsg(100 millis, new Alert(eventName, "back to normal!", false))
       probe.expectMsgAllClassOf(200 millis, classOf[AlertEvent])

@@ -13,15 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.evactor.model.events
+package org.evactor.process
+
+import akka.actor.ActorRef
 
 /**
- * An event with a measurable value
+ * TODO: The right name for this?
  */
-case class KpiEvent (
-    override val id: String, 
-    override val timestamp: Long, 
-    val value: Double) 
-  extends Event(id, timestamp)  {
+abstract class Publication {
+
+  def channel: String
+  def category: Option[String] 
   
+}
+
+case class StaticPublication (
+    val _channel: String,
+    val _category: Option[String]) extends Publication {
+    
+  def channel = _channel
+  def category = _category
+    
+}
+
+case class TestPublication (val testActor: ActorRef) extends Publication {
+    
+  def channel = "none"
+  def category = None
+    
 }

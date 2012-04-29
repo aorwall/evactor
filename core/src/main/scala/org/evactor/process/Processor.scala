@@ -21,6 +21,7 @@ import akka.actor.ActorRef
 import akka.actor.EmptyLocalActorRef
 import akka.actor.InternalActorRef
 import org.evactor.model.events.Event
+import org.evactor.model.Message
 
 abstract class Processor (
     val subscriptions: List[Subscription]) 
@@ -29,13 +30,10 @@ abstract class Processor (
   with ActorLogging {
   
   type T <: Event
-  
-  protected var testActor: Option[ActorRef] = None // actor used for testing
-  
+    
   def receive = {
-    case event: T => process(event) // TODO: case event: T  doesn't work...
-    case actor: ActorRef => testActor = Some(actor) 
-    case _ => // skip
+    case Message(_, _, event: T) => process(event)
+    case msg => log.warning("Can't handle {}", msg)
   }
 
   protected def process(event: T)

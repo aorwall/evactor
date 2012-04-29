@@ -23,27 +23,22 @@ import org.evactor.model.State
  * Represents a simple log event from a component
  */
 case class LogEvent(
-    override val channel: String, 
-    override val category: Option[String],
     override val id: String,
     override val timestamp: Long,
     val correlationId: String,
+    val component: String,
     val client: String,
     val server: String,
     val state: State,
     val message: String) 
-  extends Event(channel, category, id, timestamp) 
+  extends Event(id, timestamp) 
   with HasMessage 
   with HasState {
 
   private val serialVersionUID = 0L
 
   // Java friendly constructor
-  def this(channel: String, category: String, id: String, timestamp: Long, correlationId: String, client: String, server: String, state: String, message: String) = {
-    this(channel, Some(category), id, timestamp, correlationId, client, server, State(state), message )
+  def this(id: String, timestamp: Long, correlationId: String, component: String, client: String, server: String, state: String, message: String) = {
+    this(id, timestamp, correlationId, component, client, server, State(state), message )
   }
-  
-  override def clone(newChannel: String, newCategory: Option[String]): Event = 
-    new LogEvent(newChannel, newCategory, id, timestamp, correlationId, client, server, state, message)
-  
 }

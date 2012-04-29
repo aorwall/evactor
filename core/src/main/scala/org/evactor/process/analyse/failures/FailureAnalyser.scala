@@ -27,27 +27,21 @@ import akka.actor.ActorLogging
 import org.evactor.process.Subscription
 import scala.collection.immutable.TreeSet
 import org.evactor.model
+import org.evactor.process.Publication
 
 class FailureAnalyser (
     override val subscriptions: List[Subscription], 
-    override val channel: String, 
-    override val category: Option[String],
+    override val publication: Publication,
     val maxOccurrences: Long)
-  extends Analyser(subscriptions, channel, category) 
+  extends Analyser(subscriptions, publication) 
   with Window 
   with ActorLogging {
 
-  type T = Event with HasState
+  override type T = Event with HasState
   type S = State
 
   var allEvents = new TreeMap[Long, State]
   
-  override def receive = {
-    case event: Event with HasState => process(event) 
-    case actor: ActorRef => testActor = Some(actor) 
-    case msg => log.warning("{} is not an event with a state", msg)
-  }
-
   override protected def process(event: T) {
     allEvents += (event.timestamp -> event.state)
       

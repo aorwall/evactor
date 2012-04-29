@@ -23,19 +23,16 @@ import org.evactor.model.State
  * Represents a completed request to a component 
  */
 case class RequestEvent (
-    override val channel: String, 
-    override val category: Option[String],
     override val id: String,
     override val timestamp: Long, 
-    val inboundRef: Option[EventRef],
-    val outboundRef: Option[EventRef],
+    val correlationId: String,
+    val component: String,
+    val inboundRef: Option[String],
+    val outboundRef: Option[String],
     val state: State,
     val latency: Long) 
-  extends Event(channel, category, id, timestamp)
+  extends Event(id, timestamp)
   with HasLatency 
   with HasState {
 
-  override def clone(newChannel: String, newCategory: Option[String]): Event = 
-    new RequestEvent(newChannel, newCategory, id, timestamp, inboundRef, outboundRef, state, latency)
-  
 }

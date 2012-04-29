@@ -22,44 +22,33 @@ import org.evactor.process._
 import org.evactor.expression.ExpressionEvaluator
 
 /**
- * Extract information from messages. 
+ * Extract information from messages and creates new events based on the extracted
+ * value.
  * 
  * It will first evaluate the message in the event with an ExpressionEvaluator
  * and then create a new Event, based on the evaluated message, with an EventCreator.
  */
 abstract class Extractor(
     override val subscriptions: List[Subscription], 
-    val channel: String,
+    val publication: Publication,
     val expression: String) 
   extends Processor(subscriptions) 
   with EventCreator
   with ExpressionEvaluator
-  with Monitored
   with Publisher
   with ActorLogging {
-         
-  type T = Event with HasMessage
-  
-  override def receive  = {
-    case event: Event with HasMessage => process(event)
-    case actor: ActorRef => testActor = Some(actor) 
-    case msg => log.debug("can't handle " + msg )
-  }
-  
-  override protected def process(event: Event with HasMessage) {
-    
-    log.debug("will extract values from {}", event )
-	  
-    createBean(evaluate(event), event, channel) match {
-      case Some(event) => {
-        testActor match {
-          case Some(actor: ActorRef) => actor ! event
-          case None => publish(event)
 
-        }        
-      }
-      case None => log.info("couldn't extract anything from event: {}", event)
-    }
+  type T = Event
+  
+  override protected def process(event: T) = event match {
+    case e: HasMessage => {
+      log.debug("will extract values from {}", e )
     
+      createBean(evaluate(e), e) match {
+        case Some(event) => publish(event)
+        case None => log.info("couldn't extract anything from event: {}", e)
+      }
+    }
+    case msg => log.warning("{} is of wrong type", msg)
   }
 }

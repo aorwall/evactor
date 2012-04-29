@@ -20,7 +20,6 @@ import org.scalatest.junit.JUnitRunner
 import org.scalatest.matchers.MustMatchers
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.FunSuite
-
 import akka.actor.actorRef2Scala
 import akka.actor.ActorSystem
 import akka.actor.Props
@@ -41,16 +40,20 @@ import org.evactor.process.ProcessorEventBusExtension
 import org.evactor.process.ProcessorHandler
 import org.evactor.process.Subscription
 import org.evactor.storage.EventStorageSpec
+import org.evactor.process.Subscriptions
+import org.evactor.model.Message
+import org.evactor.process.StaticPublication
+import org.evactor.process.TestPublication
 
 /**
  * Testing the whole log data flow.
  *
  */
 @RunWith(classOf[JUnitRunner])
-class LogdataIntegrationSuite(_system: ActorSystem) 
+class EvactorIntegrationSuite(_system: ActorSystem) 
 	extends TestKit(_system) with FunSuite with MustMatchers with BeforeAndAfterAll {
   
-  def this() = this(ActorSystem("LogdataIntegrationSuite", EventStorageSpec.storageConf))
+  def this() = this(ActorSystem("EvactorIntegrationSuite", EventStorageSpec.storageConf))
 
   override protected def afterAll(): scala.Unit = {
     system.shutdown()
@@ -58,7 +61,7 @@ class LogdataIntegrationSuite(_system: ActorSystem)
 
   test("Recieve log events and send an alert") {    
     
-  	 val probe = TestProbe()
+  	val probe = TestProbe()
   	 
     var result: AlertEvent = null
     val processId = "processId"
@@ -69,27 +72,27 @@ class LogdataIntegrationSuite(_system: ActorSystem)
     val processor = system.actorOf(Props[ProcessorHandler].withDispatcher(CallingThreadDispatcher.Id), name = "process")
           
     // start the processors
-    val reqSubscriptions = List(new Subscription(Some("startComponent"), None), new Subscription(Some("endComponent"), None))  
+    val reqSubscriptions = Subscriptions("request")  
 
-    processor ! new Request("startComponent", List(new Subscription(Some("startComponent"), None)), 120000L)
-  	processor ! new Request("endComponent", List(new Subscription(Some("endComponent"), None)), 120000L)
-    processor ! new SimpleProcess("simpleProcess", reqSubscriptions, processId, None, 120000l)  
-    processor ! new Latency("latency", List(new Subscription(Some(processId), None)), "latency", None, 2000, Some(new LengthWindowConf(2)))
+    processor ! new Request("startComponent", List(new Subscription(Some("startComponent"), None)), new StaticPublication("request", None), 120000L)
+  	processor ! new Request("endComponent", List(new Subscription(Some("endComponent"), None)), new StaticPublication("request", None), 120000L)
+    processor ! new SimpleProcess("simpleProcess", reqSubscriptions, new StaticPublication(processId, None), List("startComponent", "endComponent"), 120000l)  
+    processor ! new Latency("latency", List(new Subscription(Some(processId), None)), new TestPublication(probe.ref), 2000, Some(new LengthWindowConf(2)))
 
-  	 ProcessorEventBusExtension(system).subscribe(probe.ref, new Subscription(Some("latency"), None))
+    ProcessorEventBusExtension(system).subscribe(probe.ref, new Subscription(Some("latency"), None))
         
     // Collect logs
     val currentTime = System.currentTimeMillis
 
     Thread.sleep(400)
 
-    collector ! new LogEvent("startComponent", None, "329380921309", currentTime, "329380921309", "client", "server", Start, "hello")
-    collector ! new LogEvent("startComponent", None, "329380921309", currentTime+1000, "329380921309", "client", "server" , Success, "") // success
-    collector ! new LogEvent("endComponent", None, "329380921309", currentTime+2000, "329380921309", "client", "server", Start, "")
-    collector ! new LogEvent("endComponent", None, "329380921309",  currentTime+3000, "329380921309", "client", "server", Success, "") // success
+    collector ! new Message("startComponent", None, new LogEvent("329380921309", currentTime, "329380921309", "startComponent", "client", "server", Start, "hello"))
+    collector ! new Message("startComponent", None, new LogEvent("329380921310", currentTime+1000, "329380921309", "startComponent", "client", "server" , Success, "")) // success
+    collector ! new Message("endComponent", None, new LogEvent("329380921311", currentTime+2000, "329380921309", "endComponent", "client", "server", Start, ""))
+    collector ! new Message("endComponent", None, new LogEvent("329380921312",  currentTime+3000, "329380921309", "endComponent", "client", "server", Success, "")) // success
 
     Thread.sleep(400)
     
-  	 probe.expectMsgAllClassOf(1 seconds, classOf[AlertEvent]) // the latency alert
+    probe.expectMsgAllClassOf(1 seconds, classOf[AlertEvent]) // the latency alert
   }
 }

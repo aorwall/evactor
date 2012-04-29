@@ -16,12 +16,13 @@
 package org.evactor.process.extract
 
 import org.evactor.model.events.Event
+import org.evactor.model.attributes.HasMessage
 
 /**
- * Creating new event and adds to new channel
+ * Creating new event with values found in "value"
  */
 trait EventCreator {
 
-  def createBean(value: Option[Any], event: Event, newChannel: String): Option[Event]
+  def createBean(value: Option[Any], event: Event with HasMessage): Option[Event]
   
 }

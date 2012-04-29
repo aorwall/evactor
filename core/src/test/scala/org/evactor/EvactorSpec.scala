@@ -19,6 +19,7 @@ import org.scalatest.matchers.ShouldMatchers
 import org.scalatest.WordSpec
 import org.evactor.model.events._
 import org.evactor.model.State
+import org.evactor.model.Message
 
 object EvactorSpec {
   val channel = "channel"
@@ -30,12 +31,12 @@ object EvactorSpec {
 trait EvactorSpec extends WordSpec with MustMatchers with ShouldMatchers {
   import EvactorSpec._
   
-  def createDataEvent(message: String) = new DataEvent(channel, category, id, timestamp, message)
+  def createDataEvent(message: String) = new DataEvent(id, timestamp, message)
    
-  def createEvent() = new Event(channel, category, id, timestamp)
-  def createLogEvent(timestamp: Long, state: State) = new LogEvent(channel, category, id, timestamp, "329380921309", "client", "server", state, "hello")
+  def createEvent() = new Event(id, timestamp)
+  def createLogEvent(timestamp: Long, state: State) = new LogEvent(id, timestamp, "329380921309", "component", "client", "server", state, "hello")
 
-  def createRequestEvent(timestamp: Long, inboundRef: Option[EventRef], outboundRef: Option[EventRef], state: State, latency: Long) = 
-    new RequestEvent(channel, category, id, timestamp, inboundRef, outboundRef, state, latency)
+  def createRequestEvent(timestamp: Long, inboundRef: Option[String], outboundRef: Option[String], corrId: String, comp: String, state: State, latency: Long) = 
+    new RequestEvent(id, timestamp, corrId, comp, inboundRef, outboundRef, state, latency)
 
 }

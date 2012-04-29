@@ -20,16 +20,18 @@ import akka.actor._
 import akka.util.duration._
 import org.evactor.model.events.Event
 import org.evactor.model.Timeout
-import org.evactor.process.ProcessorEventBus
-import org.evactor.process.ProcessorEventBusExtension
-import org.evactor.process.Publisher
+import org.evactor.process._
 
 /**
  * One build actor for each running event builder
  */
-abstract class BuildActor(id: String, timeout: Long) extends EventBuilder with Publisher with ActorLogging {
-  
-  var testAnalyser: Option[ActorRef] = None // Used for test
+abstract class BuildActor(
+    val id: String, 
+    val timeout: Long,
+    val publication: Publication)
+  extends EventBuilder 
+  with Publisher 
+  with ActorLogging {
 
   var scheduledFuture: Option[Cancellable] = None
   
@@ -48,10 +50,9 @@ abstract class BuildActor(id: String, timeout: Long) extends EventBuilder with P
     }
   }
 
-  def receive = {
+  override def receive = {
     case event: Event => process(event)
     case Timeout => log.debug("%s: timeout!".format(id)); sendEvent(createEvent.fold(throw _, e => e))
-    case actor: ActorRef => testAnalyser = Some(actor)
     case msg => log.info("can't handle: {}", msg)
   }
 
@@ -73,12 +74,6 @@ abstract class BuildActor(id: String, timeout: Long) extends EventBuilder with P
 
     // send the created event back to the processor event bus
     publish(event)
-
-    // If a test actor exists
-    testAnalyser match {
-      case Some(testActor) => testActor ! event
-      case _ =>
-    }
     
     stopScheduler()
     context.stop(context.self)

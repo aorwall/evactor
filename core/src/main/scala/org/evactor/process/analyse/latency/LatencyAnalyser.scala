@@ -23,25 +23,19 @@ import org.evactor.process.analyse.Analyser
 import org.evactor.process.analyse.window.Window
 import akka.actor.ActorLogging
 import org.evactor.process.Subscription
+import org.evactor.process.Publication
 
 class LatencyAnalyser(
     override val subscriptions: List[Subscription], 
-    override val channel: String, 
-    override val category: Option[String],
+    override val publication: Publication,
     val maxLatency: Long)
-  extends Analyser(subscriptions, channel, category) with Window with ActorLogging {
+  extends Analyser(subscriptions, publication) with Window with ActorLogging {
 
   type T = Event with HasLatency
   type S = Long
 
   var events = new TreeMap[Long, Long]()
   var sum = 0L
-
-  override def receive = {
-    case event: Event with HasLatency => process(event) 
-    case actor: ActorRef => testActor = Some(actor) 
-    case msg => log.warning("{} is not an event with a latency value", msg)
-  }
   
   override protected def process(event: T) {
 	

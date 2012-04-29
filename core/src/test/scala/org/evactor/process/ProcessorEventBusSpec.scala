@@ -26,6 +26,7 @@ import org.evactor.model.events.DataEvent
 import akka.util.duration._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
+import org.evactor.model.Message
 
 @RunWith(classOf[JUnitRunner])
 class ProcessorEventBusSpec (_system: ActorSystem) 
@@ -46,8 +47,8 @@ class ProcessorEventBusSpec (_system: ActorSystem)
   val subscriptionCategory = new Subscription(Some("foo"), Some("bar"))
   val subscription = new Subscription(Some("foo"), None)
   
-  val event1 = new DataEvent("foo", Some("bar"), "", 0L, "")
-  val event2 = new DataEvent("bar", None, "", 0L, "")
+  val event1 = new Message("foo", Some("bar"), new DataEvent("", 0L, ""))
+  val event2 = new Message("bar", None, new DataEvent("", 0L, ""))
   
   "A ProcessorEventBus" must {
     
