@@ -15,52 +15,48 @@
  */
 package org.evactor.storage
 
-import org.evactor.model.events.Event;
+import org.evactor.model.events.Event
 import org.evactor.process._
 import akka.actor.Actor
 import akka.actor.ActorLogging
 import akka.actor.Props
 import akka.routing.RoundRobinRouter
+import org.evactor.model.Message
 
 /**
  * Stores events
  */
 
 class StorageProcessorConf (
-    override val name: String, 
-    override val subscriptions: List[Subscription],
-    val maxThreads: Int) 
-  extends ProcessorConfiguration (name, subscriptions) {
+    val name: String, 
+    val subscriptions: List[Subscription],
+    val maxThreads: Int) {
   
   def processor = new StorageProcessorRouter(subscriptions, maxThreads)
   
 }
 
 class StorageProcessorRouter (
-    override val subscriptions: List[Subscription],
+    val subscriptions: List[Subscription],
     val maxThreads: Int)  
-  extends Processor (subscriptions) 
+  extends Actor
   with Subscriber 
   with ActorLogging {
-  
-  type T = Event
   
   val router = context.actorOf(Props[StorageProcessor].withRouter(RoundRobinRouter(nrOfInstances = maxThreads)))
   
   override def receive = {
-    case event: Event => process(event)
-    case msg => log.info("can't handle: {}", msg)
+    case msg: Message =>  router ! msg
+    case o => log.info("can't handle: {}", o)
   }
-  
-  def process(event: Event) = router ! event
   
 }
 
 class StorageProcessor extends Actor with Storage with ActorLogging {
   
   override def receive = {
-    case event: Event => log.debug("storing: {}", event); storeEvent(event) 
-    case msg => log.info("can't handle: {}", msg)
+    case msg: Message => log.debug("storing: {}", msg); storeMessage(msg) 
+    case o => log.info("can't handle: {}", o)
   }
   
 }

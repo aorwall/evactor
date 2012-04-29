@@ -21,6 +21,7 @@ import akka.dispatch.MailboxType
 import org.evactor.model.events.Event
 import org.evactor.model.events.SimpleProcessEvent
 import akka.actor.ActorLogging
+import org.evactor.model.Message
 //import com.twitter.ostrich.stats.Stats
 
 trait Storage extends Actor with ActorLogging {
@@ -35,6 +36,8 @@ trait Storage extends Actor with ActorLogging {
     case Some(storageImpl) => storageImpl.storeEvent(event) 
     case None => log.debug("No storage implementation found") 
   }
+  
+  def storeMessage(message: Message): Unit = {}
   
   def eventExists(event: Event): Boolean = storage.getEventStorage match {
 //    case Some(storageImpl) => Stats.time("check_%s".format(event.getClass.getName)) { storageImpl.eventExists(event) }

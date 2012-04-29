@@ -37,10 +37,8 @@ abstract class Extractor(
   with ExpressionEvaluator
   with Publisher
   with ActorLogging {
-
-  type T = Event
   
-  override protected def process(event: T) = event match {
+  override protected def process(event: Event) = event match {
     case e: HasMessage => {
       log.debug("will extract values from {}", e )
     

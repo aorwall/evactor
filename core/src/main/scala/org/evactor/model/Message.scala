@@ -18,7 +18,7 @@ package org.evactor.model
 import org.evactor.model.events.Event
 
 /**
- * Encapsulates the event object and handles routing info (channel and category).
+ * Encapsulates the event object and handles routing info (channel and category). 
  * 
  * It's the message object that is published to the event bus
  */

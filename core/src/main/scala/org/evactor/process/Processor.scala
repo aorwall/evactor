@@ -22,21 +22,23 @@ import akka.actor.EmptyLocalActorRef
 import akka.actor.InternalActorRef
 import org.evactor.model.events.Event
 import org.evactor.model.Message
+import org.evactor.model.Timeout
 
 abstract class Processor (
     val subscriptions: List[Subscription]) 
   extends Actor
   with Subscriber 
   with ActorLogging {
-  
-  type T <: Event
     
-  def receive = {
-    case Message(_, _, event: T) => process(event)
+  final def receive = {
+    case Message(_, _, event) => process(event)
+    case Timeout => timeout()
     case msg => log.warning("Can't handle {}", msg)
   }
 
-  protected def process(event: T)
+  protected def process(event: Event)
+  
+  protected def timeout() = {}
   
   override def preStart = {
     log.debug("subscribing to: {}", subscriptions)

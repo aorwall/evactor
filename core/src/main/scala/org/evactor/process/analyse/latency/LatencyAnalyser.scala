@@ -37,37 +37,40 @@ class LatencyAnalyser(
   var events = new TreeMap[Long, Long]()
   var sum = 0L
   
-  override protected def process(event: T) {
+  override protected def process(e: Event)  = e match {
+    case event: Event with HasLatency => {
 	
-    log.debug("received: {}", event)
+      log.debug("received: {}", event)
 
-    // Add new
-    val latency = event.latency
-    events += (event.timestamp -> latency)
-    sum += latency
+      // Add new
+      val latency = event.latency
+      events += (event.timestamp -> latency)
+      sum += latency
 
-    // Remove old
-    val inactiveEvents = getInactive(events)
+      // Remove old
+      val inactiveEvents = getInactive(events)
     
-    events = events.drop(inactiveEvents.size)   
+      events = events.drop(inactiveEvents.size)   
     
-    sum += inactiveEvents.foldLeft(0L) {
+      sum += inactiveEvents.foldLeft(0L) {
     	case (a, (k, v)) => a - v
-    }
+      }
     
-    // Count average latency
-    val avgLatency = if (sum > 0) {
-      sum / events.size
-    } else {
-      0
+      // Count average latency
+      val avgLatency = if (sum > 0) {
+        sum / events.size
+      } else {
+        0
+      }
+
+      log.debug("sum: {}, no of events: {}, avgLatency: {}", sum, events.size, avgLatency)
+
+      if (avgLatency > maxLatency) {
+        alert("Average latency %s ms is higher than the maximum allowed latency %s ms".format(avgLatency, maxLatency), Some(event))
+      } else {
+        backToNormal()
+      }
     }
-
-    log.debug("sum: {}, no of events: {}, avgLatency: {}", sum, events.size, avgLatency)
-
-    if (avgLatency > maxLatency) {
-      alert("Average latency %s ms is higher than the maximum allowed latency %s ms".format(avgLatency, maxLatency), Some(event))
-    } else {
-      backToNormal()
-    }    
+    case msg => log.warning("event must extend HasLatency: {}", msg)   
   }
 }

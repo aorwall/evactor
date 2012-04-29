@@ -29,22 +29,17 @@ import akka.testkit.TestKit
 import akka.util.duration.intToDurationInt
 import org.evactor.model.events.DataEvent
 import org.evactor.EvactorSpec
+import org.evactor.model.events.Event
+import org.evactor.model.Message
 
 class TestProcessor (
     override val subscriptions: List[Subscription],
     val publication: Publication) 
   extends Processor (subscriptions) with Publisher {
   
-  type T = DataEvent
-    
-  override def receive = {
-    case event: DataEvent => process(event)
-    case _ => // skip
-  }
-  
-  protected def process(event: DataEvent) {
+  override protected def process(event: Event) {
     publish(event)
-  }  
+  }
 }
 
 @RunWith(classOf[JUnitRunner])
@@ -68,7 +63,7 @@ class ProcessorSpec(_system: ActorSystem)
       
       val testEvent = createDataEvent("")
       
-      processor ! testEvent
+      processor ! new Message("", None, testEvent)
       
       testProbe.expectMsg(1 seconds, testEvent)
     }
@@ -78,21 +73,11 @@ class ProcessorSpec(_system: ActorSystem)
       val testProbe = TestProbe()
       val processor = TestActorRef(new TestProcessor(Nil, new TestPublication(testProbe.ref)))
       
-      processor ! testEvent
+      processor ! new Message("", None, testEvent)
       
       testProbe.expectMsg(1 seconds, testEvent)
     }
 
-    "not process invalid event types" in {     
-      val testProbe = TestProbe()
-      val processor = TestActorRef(new TestProcessor(Nil, new TestPublication(testProbe.ref)))
-      
-      val testEvent = createEvent()
-      
-      processor ! testEvent
-      
-      testProbe.expectNoMsg(1 seconds)
-    }    
 
   }
 }

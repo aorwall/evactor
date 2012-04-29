@@ -37,31 +37,32 @@ class FailureAnalyser (
   with Window 
   with ActorLogging {
 
-  override type T = Event with HasState
   type S = State
 
   var allEvents = new TreeMap[Long, State]
   
-  override protected def process(event: T) {
-    allEvents += (event.timestamp -> event.state)
+  override protected def process(e: Event) = e match {
+    case event: Event with HasState => {
+      allEvents += (event.timestamp -> event.state)
       
-    // Remove old
-    val inactiveEvents = getInactive(allEvents)	
-    allEvents = allEvents.drop(inactiveEvents.size)
+      // Remove old
+      val inactiveEvents = getInactive(allEvents)	
+      allEvents = allEvents.drop(inactiveEvents.size)
 	
-    val failedEvents = allEvents.count { _._2 match {
-      case model.Failure => true
-      case _ => false
-   	 }
-    }
+      val failedEvents = allEvents.count { _._2 match {
+        case model.Failure => true
+        case _ => false
+   	   }
+      }
  
-    log.debug("no of failed events from subscriptions {}: {}", subscriptions, failedEvents)
+      log.debug("no of failed events from subscriptions {}: {}", subscriptions, failedEvents)
 
-    if(failedEvents > maxOccurrences) {
-      alert("%s failed events from subscriptions %s is more than allowed (%s)".format(failedEvents, subscriptions, maxOccurrences), Some(event))
-    } else {
-      backToNormal()
+      if(failedEvents > maxOccurrences) {
+        alert("%s failed events from subscriptions %s is more than allowed (%s)".format(failedEvents, subscriptions, maxOccurrences), Some(event))
+      } else {
+        backToNormal()
+      }
     }
-  
+    case msg => log.warning("event must extend HasState: {}", msg)
   }
 }

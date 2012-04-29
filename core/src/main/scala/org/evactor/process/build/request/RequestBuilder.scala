@@ -34,21 +34,24 @@ import java.util.UUID
 class RequestBuilder (
     override val subscriptions: List[Subscription],
     val publication: Publication,
-    val timeout: Long) 
+    val _timeout: Long) 
   extends Builder(subscriptions) 
   with ActorLogging {
-  
-  type T = LogEvent
        
+  type T = LogEvent
+  
   /*
    * Accepts all componentId:s
    */
-  def handlesEvent(event: LogEvent) = true
+  def handlesEvent(event: Event) = true
 
-  def getEventId(logevent: LogEvent) = logevent.correlationId
+  def getEventId(event: Event) = event match {
+    case l: LogEvent => "%s:%s".format(l.component, l.correlationId)
+    case _ => throw new IllegalArgumentException("can't extract id from %s".format(event))
+  }
 
   def createBuildActor(id: String): BuildActor = {
-    new BuildActor(id, timeout, publication) with RequestEventBuilder
+    new BuildActor(id, _timeout, publication) with RequestEventBuilder
   }
   
 }
@@ -60,7 +63,7 @@ trait RequestEventBuilder extends EventBuilder with ActorLogging {
 
   def addEvent(event: Event) = event match {
     case logevent: LogEvent => addLogEvent(logevent)  
-    case _ =>    
+    case _ => 
   }
 
   def addLogEvent(logevent: LogEvent) {

@@ -36,17 +36,9 @@ class AbsenceOfRequestsAnalyser (
   extends Analyser(subscriptions, publication) 
   with ActorLogging {
   
-  type T = Event
-  
   var scheduledFuture: Option[Cancellable] = None
     
-  override def receive  = {
-    case Message(_, _, event) => process(event) 
-    case Timeout => alert("No events within the timeframe %s ms".format(timeframe))
-    case _ => // skip
-  }
-  
-  override protected def process(event: T) {
+  override protected def process(event: Event) {
     log.debug("received: " + event)
 
     // TODO: Check event.timestamp to be really sure about the timeframe between events
@@ -59,6 +51,10 @@ class AbsenceOfRequestsAnalyser (
     startScheduler()
   }
 
+  override protected def timeout() = {
+    alert("No events within the timeframe %s ms".format(timeframe))
+  }
+  
   def startScheduler() {
     scheduledFuture = Some(context.system.scheduler.scheduleOnce(timeframe milliseconds, self, Timeout))
   }

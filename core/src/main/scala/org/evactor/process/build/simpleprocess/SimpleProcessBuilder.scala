@@ -36,10 +36,16 @@ class SimpleProcessBuilder(
   extends Builder(subscriptions) 
   with Subscriber 
   with ActorLogging {
-
-  override type T = RequestEvent
-
-  def getEventId(logevent: RequestEvent) = logevent.correlationId
+  
+  def handlesEvent(event: Event) = event match {
+    case r: RequestEvent => _components.contains(r.component)
+    case _ => false
+  }
+  
+  def getEventId(event: Event) = event match {
+    case l: RequestEvent => l.correlationId
+    case _ => throw new IllegalArgumentException("can't extract id from %s".format(event))
+  }
 
   def createBuildActor(id: String): BuildActor = 
     new BuildActor(id, _timeout, publication) 

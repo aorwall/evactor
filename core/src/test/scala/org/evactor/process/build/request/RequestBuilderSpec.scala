@@ -30,6 +30,11 @@ import akka.testkit.TestActorRef
 import org.evactor.process.build.BuildActor
 import org.evactor.EvactorSpec
 import org.evactor.process.StaticPublication
+import org.evactor.model.Timeout
+import akka.testkit.TestProbe
+import org.evactor.process.TestPublication
+import org.evactor.model.Message
+import akka.util.duration.intToDurationInt
 
 @RunWith(classOf[JUnitRunner])
 class RequestBuilderSpec(_system: ActorSystem) 
@@ -43,12 +48,41 @@ class RequestBuilderSpec(_system: ActorSystem)
   val actor = TestActorRef(new RequestBuilder(Nil, new StaticPublication("", None), 0L))
   val processor = actor.underlyingActor
 
-  "A RequestProcessor" must {
+  "A RequestBuilder" must {
 
     "should always return true when handlesEvent is called " in {
       processor.handlesEvent(createLogEvent(0L, Start)) must be === true
     }
 
+    "not create a RequestEvent when LogEvents with the same correlationid and component arrives" in {
+      val probe = TestProbe()
+      val buildActor = TestActorRef(new RequestBuilder(Nil, new TestPublication(probe.ref), 1000))
+      
+      buildActor ! new Message("", None, new LogEvent("1", 0L, "329380921309", "component", "client", "server", Start, "hello"))
+      buildActor ! new Message("", None, new LogEvent("2", 1L, "329380921309", "component", "client", "server", Success, "hello"))
+
+      probe.expectMsgAllClassOf(1 seconds, classOf[RequestEvent])
+    }
+    
+    "not create a RequestEvent when LogEvents with different correlation ids arrive" in {
+      val probe = TestProbe()
+      val buildActor = TestActorRef(new RequestBuilder(Nil, new TestPublication(probe.ref), 1000))
+      
+      buildActor ! new Message("", None, new LogEvent("1", 0L, "329380921309", "component", "client", "server", Start, "hello"))
+      buildActor ! new Message("", None, new LogEvent("2", 1L, "329380921310", "component", "client", "server", Success, "hello"))
+
+      probe.expectNoMsg(1 seconds) 
+    }
+    
+    "not create a RequestEvent when LogEvents with the same correlation id but different components arrive" in {
+      val probe = TestProbe()
+      val buildActor = TestActorRef(new RequestBuilder(Nil, new TestPublication(probe.ref), 1000))
+      
+      buildActor ! new Message("", None, new LogEvent("1", 0L, "329380921310", "component1", "client", "server", Start, "hello"))
+      buildActor ! new Message("", None, new LogEvent("2", 1L, "329380921310", "component2", "client", "server", Success, "hello"))
+
+      probe.expectNoMsg(1 seconds)     
+    }
   }
 
   "A RequestEventBuilder" must {
@@ -88,7 +122,7 @@ class RequestBuilderSpec(_system: ActorSystem)
         case _ => fail()
       }     
     }
-
+    
     
   }
 

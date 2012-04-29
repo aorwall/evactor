@@ -26,8 +26,6 @@ class LogAlerter (
     override val subscriptions: List[Subscription])
   extends Alerter (subscriptions) 
   with ActorLogging {
-  
-  type T = Event
 
   protected def process(event: Event) {
     log.error("ALERT: {}", event)

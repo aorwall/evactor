@@ -28,24 +28,30 @@ abstract class Builder (override val subscriptions: List[Subscription])
   with Monitored
   with ActorLogging {
   
-  type T <: Event
   
   override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries = 5, withinTimeRange = 60 seconds) {
 	 case e: EventCreationException => log.warning("stopping on exception!"); Stop
 	 case e: Exception => Restart
   }
 
-  override protected def process(event: T) {
-    if(log.isDebugEnabled) log.debug("about to process event: {} ", event)
+  override protected def process(event: Event) {
+    if(handlesEvent(event)){
+      
+      if(log.isDebugEnabled) log.debug("about to process event: {} ", event)
 
-    val eventId = getEventId(event)    
-    if(log.isDebugEnabled) log.debug("looking for active event builder with id: {}", eventId)
-    val actor = getBuildActor(eventId)
+      val eventId = getEventId(event)    
+      if(log.isDebugEnabled) log.debug("looking for active event builder with id: {}", eventId)
+      val actor = getBuildActor(eventId)
     
-    actor ! event
+      actor ! event
+    } else {
+      log.warning("can't handle event: {}", event)
+    }
   }
 
-  def getEventId(event: T): String
+  def handlesEvent(event: Event): Boolean
+  
+  def getEventId(event: Event): String
   
   def createBuildActor(id: String): BuildActor
   

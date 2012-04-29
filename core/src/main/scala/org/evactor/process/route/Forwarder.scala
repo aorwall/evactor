@@ -29,9 +29,7 @@ class Forwarder (
     val publication: Publication)
   extends Processor(subscriptions) with Publisher {
 
-  override type T = Event
-  
-  def process(event: T) {
+  def process(event: Event) {
     publish(event)
   }
 
