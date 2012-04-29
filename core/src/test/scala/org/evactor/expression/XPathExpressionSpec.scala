@@ -35,23 +35,19 @@ class XPathExpressionEvaluatorSpec (_system: ActorSystem)
   "A XPathExpressionEvaluator" must {
      
     "evaluate xpath expressions and return strings" in {
-      val evaluator = TestActorRef( new XPathExpressionEvaluator{ 
-        override val expression = "//test" 
-        def receive = { case _ => } }).underlyingActor
+      val evaluator = new XPathExpression("//test")
       val event = createDataEvent("<test>foo</test>")
       evaluator.evaluate(event) must be (Some("foo"))
     }
      
     "not evaluate empty xpath expressions" in {
-      val evaluator = TestActorRef( new XPathExpressionEvaluator{ override val expression = "//fail" 
-        def receive = { case _ => } }).underlyingActor
+      val evaluator = new XPathExpression("//fail") 
       val event = createDataEvent("<test>foo</test>")
       evaluator.evaluate(event) must be (None)
     }
      
     "not evaluate invalid xml" in {
-      val evaluator = TestActorRef( new XPathExpressionEvaluator{ override val expression = "//fail" 
-        def receive = { case _ => } }).underlyingActor
+      val evaluator = new XPathExpression("//fail") 
       val event = createDataEvent("<test>foo")
       evaluator.evaluate(event) must be (None)
     }

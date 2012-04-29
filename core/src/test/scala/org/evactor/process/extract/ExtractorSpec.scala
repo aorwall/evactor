@@ -34,6 +34,8 @@ import akka.util.duration._
 import org.evactor.process.Publication
 import org.evactor.process.TestPublication
 import org.evactor.model.Message
+import org.evactor.expression.Expression
+import org.evactor.expression.StaticExpression
 
 @RunWith(classOf[JUnitRunner])
 class ExtractorSpec(_system: ActorSystem) 
@@ -52,7 +54,7 @@ class ExtractorSpec(_system: ActorSystem)
   
   class TestExtractor (override val subscriptions: List[Subscription],
         override val publication: Publication,
-        override val expression: String) extends Extractor(subscriptions, publication, expression) with EventCreator {
+        override val expression: Expression) extends Extractor(subscriptions, publication, expression) with EventCreator {
          def createBean(value: Option[Any], event: Event with HasMessage) = Some(expectedEvent)
       } 
   
@@ -61,7 +63,7 @@ class ExtractorSpec(_system: ActorSystem)
     "extract stuff from an events message and send to collector " in {
       val eventPrope = TestProbe()
 
-      val actor = TestActorRef(new TestExtractor(Nil, new TestPublication(eventPrope.ref), "expr"))
+      val actor = TestActorRef(new TestExtractor(Nil, new TestPublication(eventPrope.ref), new StaticExpression("expr")))
       val event = createDataEvent("stuff")
       
       actor !  new Message("", None, event)
@@ -73,7 +75,7 @@ class ExtractorSpec(_system: ActorSystem)
     "abort if event doesn't extend the HasMessage trait " in {
       val eventPrope = TestProbe()
 
-      val actor = TestActorRef(new TestExtractor(Nil, new TestPublication(eventPrope.ref), "expr"))
+      val actor = TestActorRef(new TestExtractor(Nil, new TestPublication(eventPrope.ref), new StaticExpression("expr")))
       val event = new Event("id", 0L)
       
       actor ! new Message("", None, new Event("id", 0L))

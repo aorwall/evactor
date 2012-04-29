@@ -19,7 +19,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef}
 import org.evactor.model.attributes.HasMessage
 import org.evactor.model.events.Event
 import org.evactor.process._
-import org.evactor.expression.ExpressionEvaluator
+import org.evactor.expression.Expression
 
 /**
  * Extract information from messages and creates new events based on the extracted
@@ -31,10 +31,9 @@ import org.evactor.expression.ExpressionEvaluator
 abstract class Extractor(
     override val subscriptions: List[Subscription], 
     val publication: Publication,
-    val expression: String) 
+    val expression: Expression) 
   extends Processor(subscriptions) 
   with EventCreator
-  with ExpressionEvaluator
   with Publisher
   with ActorLogging {
   
@@ -42,7 +41,7 @@ abstract class Extractor(
     case e: HasMessage => {
       log.debug("will extract values from {}", e )
     
-      createBean(evaluate(e), e) match {
+      createBean(expression.evaluate(e), e) match {
         case Some(event) => publish(event)
         case None => log.info("couldn't extract anything from event: {}", e)
       }

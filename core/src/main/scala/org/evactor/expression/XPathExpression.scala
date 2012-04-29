@@ -32,8 +32,8 @@ import akka.actor.ActorLogging
  * 
  * 
  */
-trait XPathExpressionEvaluator extends ExpressionEvaluator with ActorLogging {
- 
+case class XPathExpression(val expression: String) extends Expression {
+
   val factory = XPathFactory.newInstance
   val xpath = factory.newXPath
   lazy val xpathExpr = xpath.compile(expression) 
@@ -54,11 +54,10 @@ trait XPathExpressionEvaluator extends ExpressionEvaluator with ActorLogging {
         case _ => None
       }
     } catch {
-      case e: Exception => log.warning("Failed to execute expression " + expression + " on " + event.message, e); None
+      case e: Exception => None 
     }
     
   }
 
 }
 
-case class XPathExpression (val expression: String) extends Expression

@@ -21,17 +21,6 @@ import akka.actor.Actor
 import org.evactor.process.extract.Extractor
 import org.evactor.process.Processor
 
-/**
- * 
- */
-trait ExpressionEvaluator extends Actor { // TODO: Change Actor to Processor?
-    
-  val expression: String //TODO: Expression instead of String?
-    
-  def evaluate(event: Event with HasMessage): Option[Any] = {
-    None
-  }
-  
+abstract class Expression {
+  def evaluate(event: Event with HasMessage): Option[Any] 
 }
-
-abstract class Expression 

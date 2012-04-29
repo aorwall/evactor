@@ -15,30 +15,19 @@
  */
 package org.evactor.expression
 
-import org.scalatest.matchers.MustMatchers
-import org.scalatest.WordSpec
 import org.evactor.model.events.Event
-import org.evactor.model.events.DataEvent
+import org.evactor.EvactorSpec
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
-import org.evactor.EvactorSpec
-import akka.testkit.TestActorRef
-import akka.testkit.TestKit
-import akka.actor.ActorSystem
+import org.scalatest.WordSpec
 
 @RunWith(classOf[JUnitRunner])
-class MvelExpressionEvaluatorSpec(_system: ActorSystem) 
-  extends TestKit(_system) 
-  with EvactorSpec {
-  
-  def this() = this(ActorSystem("MvelExpressionEvaluatorSpec"))
+class MvelExpressionSpec extends EvactorSpec {
   
   "A MvelExpressionEvaluator" must {
      
     "evaluate and return strings" in {
-      val evaluator = TestActorRef( new MvelExpressionEvaluator { 
-        override val expression = "message.replace('%','&')"
-        def receive = { case _ => } }).underlyingActor
+      val evaluator = new MvelExpression("message.replace('%','&')")
       val event = createDataEvent("%foo%bar%")
       evaluator.evaluate(event) must be (Some("&foo&bar&"))
     }
@@ -55,15 +44,13 @@ class MvelExpressionEvaluatorSpec(_system: ActorSystem)
 	 */
      
     "evaluate json and return string" in {
-      val evaluator = TestActorRef ( new MvelExpressionEvaluator { override val expression ="message.foo.bar" 
-        def receive = { case _ => } }).underlyingActor
+      val evaluator =  new MvelExpression("message.foo.bar")
       val event1 = createDataEvent("{ \"foo\": { \"bar\": \"value\" } }")
       evaluator.evaluate(event1) must be (Some("value"))
     }
      
     "evaluate date in json and return Int" in {
-      val evaluator = TestActorRef ( new MvelExpressionEvaluator { override val expression = "new java.text.SimpleDateFormat(\"yyyy-MM-dd'T'HH:mm:ss\").parse(message.second).getTime() - new java.text.SimpleDateFormat(\"yyyy-MM-dd'T'HH:mm:ss\").parse(message.first).getTime()"
-        def receive = { case _ => } }).underlyingActor 
+      val evaluator = new MvelExpression("new java.text.SimpleDateFormat(\"yyyy-MM-dd'T'HH:mm:ss\").parse(message.second).getTime() - new java.text.SimpleDateFormat(\"yyyy-MM-dd'T'HH:mm:ss\").parse(message.first).getTime()")
       val event1 = createDataEvent("{ \"first\": \"2012-01-27T15:57:00+01:00\", \"second\": \"2012-01-27T16:01:00+01:00\" }")
       evaluator.evaluate(event1) must be (Some((4 * 60 * 1000).toString))
     }

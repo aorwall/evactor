@@ -13,25 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.evactor.process
+package org.evactor.expression
 
 import org.evactor.model.events.Event
-import org.evactor.model.Message
-import akka.actor.ActorRef
+import org.evactor.model.attributes.HasMessage
+import akka.actor.Actor
+import org.evactor.process.extract.Extractor
+import org.evactor.process.Processor
 
-/**
- * Trait extended by actors publishing events to the processor event bus
- */
-trait Publisher extends UseProcessorEventBus {
- 
-  val publication: Publication
+class StaticExpression (val value: Any) extends Expression {
   
-  def publish(event: Event) {
-    publication match {
-      case TestPublication(testActor) => testActor ! event
-      case pub: Publication => bus.publish(new Message(pub.channel(event), pub.category(event), event))
-    }
-    
-  }
-
+  def evaluate(event: Event with HasMessage) = Some(value)
+  
 }

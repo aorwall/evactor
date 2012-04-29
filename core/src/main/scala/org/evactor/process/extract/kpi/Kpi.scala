@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 package org.evactor.process.extract.kpi
+
 import org.codehaus.jackson.JsonFactory
 import org.codehaus.jackson.JsonParser
 import org.codehaus.jackson.JsonToken
@@ -23,11 +24,9 @@ import org.evactor.model.events.KpiEvent
 import org.evactor.process.extract.Extractor
 import org.evactor.process.Processor
 import org.evactor.process.ProcessorConfiguration
-import org.evactor.expression.MvelExpressionEvaluator
 import org.evactor.process.Subscription
 import org.evactor.process.extract.EventCreator
 import org.evactor.expression.MvelExpression
-import org.evactor.expression.XPathExpressionEvaluator
 import org.evactor.expression.XPathExpression
 import org.evactor.expression.Expression
 import akka.actor.ActorLogging
@@ -48,20 +47,13 @@ class Kpi (
     val expression: Expression) 
   extends ProcessorConfiguration(name, subscriptions) {
    
-  override def processor: Processor = expression match {
-	    case MvelExpression(expr) => new KpiExtractor(subscriptions, publication, expr) 
-	    	with MvelExpressionEvaluator
-	    case XPathExpression(expr) => new KpiExtractor(subscriptions, publication, expr) 
-	    	with XPathExpressionEvaluator
-	    case other => 
-	      throw new IllegalArgumentException("Not a valid expression: " + other)
-  }
+  override def processor: Processor = new KpiExtractor(subscriptions, publication, expression) 
 }
 
 class KpiExtractor(
     override val subscriptions: List[Subscription], 
     override val publication: Publication,
-    override val expression: String)
+    override val expression: Expression)
   extends Extractor (subscriptions, publication, expression) 
   with KpiEventCreator 
   with Publisher {
