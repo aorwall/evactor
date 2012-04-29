@@ -15,13 +15,15 @@
  */
 package org.evactor.model.events
 
+import org.evactor.model.attributes.HasLong
+
 /**
  * An event with a measurable value
  */
 case class KpiEvent (
     override val id: String, 
     override val timestamp: Long, 
-    val value: Double) 
-  extends Event(id, timestamp)  {
+    val value: Long) 
+  extends Event(id, timestamp) with HasLong {
   
 }

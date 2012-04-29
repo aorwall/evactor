@@ -29,13 +29,14 @@ import unfiltered.response.NotFound
 import org.evactor.storage.LatencyStorage
 import org.evactor.storage.StateStorage
 import org.evactor.storage.EventStorageExtension
+import org.evactor.storage.KpiStorage
 
 class EventAPI (val system: ActorSystem) {
   
   // TODO: Some other system to decide which storage solutions that is available.
   // Maybe a LatencyAPI and StateAPI trait extending this one
-  val storage: EventStorage with LatencyStorage with StateStorage = EventStorageExtension(system).getEventStorage() match {
-    case Some(s: EventStorage with LatencyStorage with StateStorage) => s
+  val storage: EventStorage with LatencyStorage with StateStorage with KpiStorage = EventStorageExtension(system).getEventStorage() match {
+    case Some(s: EventStorage with LatencyStorage with StateStorage with KpiStorage) => s
     case Some(s) => throw new RuntimeException("Storage impl is of the wrong type: %s".format(s))
     case None => throw new RuntimeException("No storage impl found")
   }
@@ -51,6 +52,8 @@ class EventAPI (val system: ActorSystem) {
    	  case "event" :: id :: Nil => getEvent(id) 
    	  case "latency" :: channel :: Nil => getAvgLatency(decode(channel), None, getInterval(params.get("interval")))
    	  case "latency" :: channel :: category :: Nil => getAvgLatency(decode(channel), Some(decode(category)), getInterval(params.get("interval")))
+      case "avg" :: channel :: Nil => getAverage(decode(channel), None, getInterval(params.get("interval")))
+      case "avg" :: channel :: category :: Nil => getAverage(decode(channel), Some(decode(category)), getInterval(params.get("interval")))
    	  case _ => BadRequest
   }
   
@@ -83,6 +86,10 @@ class EventAPI (val system: ActorSystem) {
   
   protected[api] def getAvgLatency(channel: String, category: Option[String], interval: String): Map[String, Any] = 
     average(storage.getLatencyStatistics(channel, None, Some(0L), Some(now), interval))
+  
+  protected def getAverage(channel: String, category: Option[String], interval: String) = {
+    average(storage.getSumStatistics(channel, category, Some(0L), Some(now), interval))
+  }
   
   protected[api] def average ( sum: (Long, List[(Long, Long)])) = 
     Map ("timestamp" -> sum._1, 

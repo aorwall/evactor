@@ -17,6 +17,6 @@ package org.evactor.model.attributes
 
 import org.evactor.model.events.Event
 
-trait HasKpi {
-  val value: Double //?
+trait HasLong {
+  val value: Long
 }

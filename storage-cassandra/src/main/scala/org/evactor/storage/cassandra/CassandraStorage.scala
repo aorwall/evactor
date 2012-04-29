@@ -41,8 +41,15 @@ import akka.actor.ExtendedActorSystem
 import org.evactor.storage.LatencyStorage
 import org.evactor.storage.StateStorage
 import org.evactor.model.Message
+import org.evactor.model.attributes.HasLong
+import org.evactor.storage.KpiStorage
 
-class CassandraStorage(override val system: ActorSystem) extends EventStorage(system) with LatencyStorage with StateStorage with Logging {
+class CassandraStorage(override val system: ActorSystem) 
+  extends EventStorage(system) 
+  with LatencyStorage 
+  with StateStorage 
+  with KpiStorage 
+  with Logging {
     
   private val settings = CassandraStorageExtension(system)
   
@@ -56,6 +63,7 @@ class CassandraStorage(override val system: ActorSystem) extends EventStorage(sy
   val STATS_CF = "Statistics"
   val CATEGORY_CF = "Category"
   val LATENCY_CF = "Latency"
+  val SUM_CF = "Sum"
 
   val HOUR = "hour"
   val DAY = "day"
@@ -137,6 +145,11 @@ class CassandraStorage(override val system: ActorSystem) extends EventStorage(sy
       case _ => 
     }
     
+    event match {
+      case kpiEvent: Event with HasLong => storeLongValue(message.channel, message.category, kpiEvent)
+      case _ =>
+    }
+    
     mutator.execute()
   }
   
@@ -208,35 +221,23 @@ class CassandraStorage(override val system: ActorSystem) extends EventStorage(sy
   }
   
   protected def storeLatency(channel: String, category: Option[String], event: Event with HasLatency) {
-    storeLatency(channel, event)
+    storeSum(channel, LATENCY_CF, event.timestamp, event.latency)
     
     category match {
-      case Some(cat) => storeLatency(createKey(channel, category), event)
+      case Some(cat) => storeSum(createKey(channel, category), LATENCY_CF, event.timestamp, event.latency)
       case _ =>
     }
   }
   
-  protected def storeLatency(key: String, event: Event with HasLatency) {
-	  val mutator = HFactory.createMutator(keyspace, StringSerializer.get)
-	  
-    // column family: RequestEventLatency
-    // row key: event name + state + ["year";"month":"day":"hour"]
-    // column key: timestamp
-    // value: counter
-    val time = new DateTime(event.timestamp)
-    val year = new java.lang.Long(new DateTime(time.getYear, 1, 1, 0, 0).toDate.getTime)
-    val month = new java.lang.Long(new DateTime(time.getYear, time.getMonthOfYear, 1, 0, 0).toDate.getTime)
-    val dayDate = new DateTime(time.getYear, time.getMonthOfYear, time.getDayOfMonth, 0, 0)
-    val day = new java.lang.Long(dayDate.toDate.getTime)
-    val hour = new java.lang.Long(new DateTime(time.getYear, time.getMonthOfYear, time.getDayOfMonth, time.getHourOfDay, 0).toDate.getTime)
+  protected def storeLongValue(channel: String, category: Option[String], event: Event with HasLong) {
+    storeSum(channel, SUM_CF, event.timestamp, event.value)
     
-    mutator.incrementCounter("%s/%s".format(key, YEAR), LATENCY_CF, year, event.latency)
-    mutator.incrementCounter("%s/%s".format(key, MONTH), LATENCY_CF, month, event.latency)
-    mutator.incrementCounter("%s/%s".format(key, DAY), LATENCY_CF, day, event.latency)
-    mutator.incrementCounter("%s/%s".format(key, HOUR), LATENCY_CF, hour, event.latency)
-	}
-   
-	def getLatencyStatistics(
+    category match {
+      case Some(cat) => storeSum(createKey(channel, category), SUM_CF, event.timestamp, event.value)
+      case _ =>
+    }
+  }
+  def getLatencyStatistics(
 	    channel: String, 
 	    category: Option[String], 
 	    fromTimestamp: Option[Long], 
@@ -245,48 +246,13 @@ class CassandraStorage(override val system: ActorSystem) extends EventStorage(sy
 	  
   
     (fromTimestamp, toTimestamp) match {
-      case (None, None) => getLatencyStatisticsFromInterval(channel, category, 0, System.currentTimeMillis, interval)
-      case (Some(from), None) => getLatencyStatisticsFromInterval(channel, category, from, System.currentTimeMillis, interval)
+      case (None, None) => getSumStatisticsFromInterval(LATENCY_CF, channel, category, 0, System.currentTimeMillis, interval)
+      case (Some(from), None) => getSumStatisticsFromInterval(LATENCY_CF, channel, category, from, System.currentTimeMillis, interval)
       case (None, Some(to)) => throw new IllegalArgumentException("Reading statistics with just a toTimestamp provided isn't implemented yet") //TODO
-      case (Some(from), Some(to)) => getLatencyStatisticsFromInterval(channel, category, from, to, interval)
+      case (Some(from), Some(to)) => getSumStatisticsFromInterval(LATENCY_CF, channel, category, from, to, interval)
     }
 	  
-	}
-  
-  protected def getLatencyStatisticsFromInterval(channel: String, category: Option[String], from: Long, to: Long, interval: String): (Long, List[(Long, Long)]) = {
-	  val stats = readStatisticsFromInterval(channel, category, None, from, to, interval)
-	  val key = createKey(channel, category)
-	  	  
-    val period = interval match {
-    	case YEAR => Years.ONE
-    	case MONTH => Months.ONE
-    	case DAY => Days.ONE
-    	case HOUR => Hours.ONE
-    	case _ => throw new IllegalArgumentException("Couldn't handle request")
-     }  
-
-	  var fromDate = new DateTime(stats._1) 
-	  
-	  val sumList = stats._2.map { count =>
-	     val sum = getLatency("%s/%s".format(key, interval), fromDate.toDate.getTime)
-	     fromDate = fromDate.plus(period)
-	     (count, sum)
-	  } 
-	  
-	  (stats._1, sumList)
-  }
-  
-	protected def getLatency(rowKey: String, colKey: Long): Long = {  
-	  val currentCountCol = HFactory.createCounterColumnQuery(keyspace, StringSerializer.get, LongSerializer.get)
-            .setColumnFamily(LATENCY_CF)
-            .setKey(rowKey)
-            .setName(colKey)
-            .execute()
-            .get()
-         
-    if(currentCountCol != null) currentCountCol.getValue
-    else 0
-	}
+  }  
 	
   def getEvents(channel: String, category: Option[String], fromTimestamp: Option[Long], toTimestamp: Option[Long], count: Int, start: Int): List[Event] = {
     getEvents(channel, category, None, fromTimestamp, toTimestamp, count, start)
@@ -475,5 +441,68 @@ class CassandraStorage(override val system: ActorSystem) extends EventStorage(sy
   
   def toMillis(date: DateTime) = date.toDate.getTime
 
+  protected def storeSum(key: String, cf: String, timestamp: Long, value: Long) {
   
+    // row key: event name + state + ["year";"month":"day":"hour"]
+    // column key: timestamp
+    // value: counter
+    val time = new DateTime(timestamp)
+    val count = new java.lang.Long(1L)
+    val year = new java.lang.Long(new DateTime(time.getYear, 1, 1, 0, 0).toDate.getTime)
+    val month = new java.lang.Long(new DateTime(time.getYear, time.getMonthOfYear, 1, 0, 0).toDate.getTime)
+    val dayDate = new DateTime(time.getYear, time.getMonthOfYear, time.getDayOfMonth, 0, 0)
+    val day = new java.lang.Long(dayDate.toDate.getTime)
+    val hour = new java.lang.Long(new DateTime(time.getYear, time.getMonthOfYear, time.getDayOfMonth, time.getHourOfDay, 0).toDate.getTime)
+
+    val mutator = HFactory.createMutator(keyspace, StringSerializer.get)
+    mutator.incrementCounter("%s/%s".format(key, YEAR), cf, year, value)
+    mutator.incrementCounter("%s/%s".format(key, MONTH), cf, month, value)
+    mutator.incrementCounter("%s/%s".format(key, DAY), cf, day, value)
+    mutator.incrementCounter("%s/%s".format(key, HOUR), cf, hour, value)
+  }
+  
+  protected def getSum(cf: String, rowKey: String, colKey: Long): Long = {
+	 val currentCountCol = HFactory.createCounterColumnQuery(keyspace, StringSerializer.get, LongSerializer.get)
+            .setColumnFamily(cf)
+            .setKey(rowKey)
+            .setName(colKey)
+            .execute()
+            .get()
+         
+    if(currentCountCol != null) currentCountCol.getValue()
+    else 0
+  }
+	
+  def getSumStatistics(channel: String, category: Option[String], fromTimestamp: Option[Long], toTimestamp: Option[Long], interval: String): (Long, List[(Long, Long)]) = {    
+    
+    (fromTimestamp, toTimestamp) match {
+      case (None, None) => getSumStatisticsFromInterval(SUM_CF, channel, category, 0, System.currentTimeMillis, interval)
+      case (Some(from), None) => getSumStatisticsFromInterval(SUM_CF, channel, category, from, System.currentTimeMillis, interval)
+      case (None, Some(to)) => throw new IllegalArgumentException("Reading statistics with just a toTimestamp provided isn't implemented yet") //TODO
+      case (Some(from), Some(to)) => getSumStatisticsFromInterval(SUM_CF, channel, category, from, to, interval)
+    }
+    
+  }
+  
+  protected def getSumStatisticsFromInterval(cf: String, channel: String, category: Option[String], from: Long, to: Long, interval: String): (Long, List[(Long, Long)]) = {
+    val stats = readStatisticsFromInterval(channel, category, None, from, to, interval)
+    val key = createKey(channel, category)
+    val period = interval match {
+      case YEAR => Years.ONE
+      case MONTH => Months.ONE
+      case DAY => Days.ONE
+      case HOUR => Hours.ONE
+      case _ => throw new IllegalArgumentException("Couldn't handle request")
+    }  
+
+	var fromDate = new DateTime(stats._1) 
+	  
+	val sumList = stats._2.map { count =>
+	  val sum = getSum(cf, "%s/%s".format(key, interval), fromDate.toDate.getTime)
+	  fromDate = fromDate.plus(period)
+	  (count, sum)
+	} 
+	  
+	(stats._1, sumList)
+  }
 }

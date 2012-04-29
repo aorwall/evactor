@@ -72,7 +72,7 @@ trait KpiEventCreator extends EventCreator {
   
   def createBean(value: Option[Any], event: Event with HasMessage): Option[Event] = value match {
     case Some(value: String) => try {
-      Some(new KpiEvent(UUID.randomUUID.toString, event.timestamp, value.toDouble)) 
+      Some(new KpiEvent(UUID.randomUUID.toString, event.timestamp, value.toLong)) 
     } catch {
       case _ => None
     }
