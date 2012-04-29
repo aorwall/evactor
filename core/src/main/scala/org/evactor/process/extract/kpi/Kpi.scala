@@ -33,6 +33,7 @@ import org.evactor.expression.Expression
 import akka.actor.ActorLogging
 import org.evactor.process.Publisher
 import org.evactor.process.Publication
+import java.util.UUID
 
 /**
  * Extracts a value from a message and creates a KPI Event object. Using a specified
@@ -71,11 +72,11 @@ trait KpiEventCreator extends EventCreator {
   
   def createBean(value: Option[Any], event: Event with HasMessage): Option[Event] = value match {
     case Some(value: String) => try {
-      Some(new KpiEvent(event.id, event.timestamp, value.toDouble)) 
+      Some(new KpiEvent(UUID.randomUUID.toString, event.timestamp, value.toDouble)) 
     } catch {
       case _ => None
     }
     case a => None
   }
-    
+
 }

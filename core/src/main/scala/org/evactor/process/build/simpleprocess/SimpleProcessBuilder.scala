@@ -23,6 +23,7 @@ import akka.actor.ActorRef
 import org.evactor.process.ProcessorEventBus
 import akka.actor.ActorLogging
 import scala.collection._
+import java.util.UUID
 
 /**
  * Processes simple processes with requests from subscribed channels from specified
@@ -105,9 +106,9 @@ trait SimpleProcessEventBuilder extends EventBuilder with ActorLogging {
     val sortedRequests = requests.sortWith((e1, e2) => e1.timestamp < e2.timestamp)
 
     if (requests.size == components.size){
-      Right(new SimpleProcessEvent(sortedRequests.last.id, sortedRequests.last.timestamp, sortedRequests.map(_.id), sortedRequests.last.state, sortedRequests.last.timestamp - sortedRequests.head.timestamp + sortedRequests.head.latency ))
+      Right(new SimpleProcessEvent(UUID.randomUUID.toString, sortedRequests.last.timestamp, sortedRequests.map(_.id), sortedRequests.last.state, sortedRequests.last.timestamp - sortedRequests.head.timestamp + sortedRequests.head.latency ))
     } else if (requests.size > 0){
-      Right(new SimpleProcessEvent(sortedRequests.last.id, sortedRequests.last.timestamp, sortedRequests.map(_.id), getCauseOfFailure(sortedRequests.last), sortedRequests.last.timestamp - sortedRequests.head.timestamp + sortedRequests.head.latency ))
+      Right(new SimpleProcessEvent(UUID.randomUUID.toString, sortedRequests.last.timestamp, sortedRequests.map(_.id), getCauseOfFailure(sortedRequests.last), sortedRequests.last.timestamp - sortedRequests.head.timestamp + sortedRequests.head.latency ))
     } else {
       Left(new EventCreationException("SimpleProcessEventBuilder was trying to create an event with no request events"))
     }
