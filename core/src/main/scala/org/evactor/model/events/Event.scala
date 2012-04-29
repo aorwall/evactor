@@ -30,7 +30,5 @@ class Event (
     val id: String,
     val timestamp: Long) 
   extends Serializable {
-  
-  private val serialVersionUID = 0L
-  
+    
 }

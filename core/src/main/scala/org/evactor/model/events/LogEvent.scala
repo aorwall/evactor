@@ -35,8 +35,6 @@ case class LogEvent(
   with HasMessage 
   with HasState {
 
-  private val serialVersionUID = 0L
-
   // Java friendly constructor
   def this(id: String, timestamp: Long, correlationId: String, component: String, client: String, server: String, state: String, message: String) = {
     this(id, timestamp, correlationId, component, client, server, State(state), message )

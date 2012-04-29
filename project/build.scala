@@ -103,7 +103,7 @@ object Dependencies {
   
   val core = Seq(akkaActor, jacksonCore, jacksonMapper, mvel2, 
       Test.scalatest, Test.junit, Test.mockito, Test.akkaTestkit)
-  val api = Seq (grizzled, jerkson, unfilteredFilter, unfilteredNetty, unfilteredNettyServer)
+  val api = Seq (grizzled, jacksonCore, jacksonMapper, jacksonScala, unfilteredFilter, unfilteredNetty, unfilteredNettyServer)
   val example = Seq (akkaKernel, camelCore, camelIrc, camelAtom, grizzled, unfilteredNettyServer)
   val benchmark = Seq(akkaKernel, akkaRemote, grizzled, netty, protobuf, Test.scalatest, Test.junit, Test.akkaTestkit)
   val storageCassandra = Seq(cassandraAll, cassandraThrift, grizzled, guava, hectorCore, jodaConvert, jodaTime, perf4j, thrift, uuid, Test.scalatest, Test.junit) //highScaleLib
@@ -141,7 +141,7 @@ object Dependency {
   val highScaleLib = "org.cliffc.high_scale_lib" % "high-scale-lib" % "1.0"
   val jacksonMapper = "org.codehaus.jackson" % "jackson-mapper-asl" % V.Jackson
   val jacksonCore = "org.codehaus.jackson" % "jackson-core-asl" % V.Jackson
-  val jerkson = "com.codahale" % "jerkson_2.9.1" % "0.5.0"
+  val jacksonScala = "com.fasterxml" % "jackson-module-scala" % "1.9.3"
   val jodaConvert = "org.joda" % "joda-convert" % "1.1"
   val jodaTime = "joda-time" % "joda-time" % "2.0"
   val log4j = "log4j" % "log4j" % "1.2.14"

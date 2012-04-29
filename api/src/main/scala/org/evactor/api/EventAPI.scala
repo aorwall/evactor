@@ -15,24 +15,31 @@
  */
 package org.evactor.api
 
-import akka.actor.ActorSystem
-import org.evactor.storage.EventStorage
-import unfiltered.response.ResponseFunction
-import org.jboss.netty.handler.codec.http.HttpResponse
-import unfiltered.response.ResponseString
-import com.codahale.jerkson.Json.generate
 import java.net.URLDecoder
-import org.evactor.model.State
-import unfiltered.response.BadRequest
+
+import org.codehaus.jackson.map.ObjectMapper
 import org.evactor.model.events.Event
-import unfiltered.response.NotFound
-import org.evactor.storage.LatencyStorage
-import org.evactor.storage.StateStorage
+import org.evactor.model.State
+import org.evactor.storage.EventStorage
 import org.evactor.storage.EventStorageExtension
 import org.evactor.storage.KpiStorage
+import org.evactor.storage.LatencyStorage
+import org.evactor.storage.StateStorage
+import org.jboss.netty.handler.codec.http.HttpResponse
+
+import com.fasterxml.jackson.module.scala.DefaultScalaModule
+
+import akka.actor.ActorSystem
+import unfiltered.response.BadRequest
+import unfiltered.response.NotFound
+import unfiltered.response.ResponseFunction
+import unfiltered.response.ResponseString
 
 class EventAPI (val system: ActorSystem) {
-  
+
+  val mapper = new ObjectMapper()
+  mapper.registerModule(DefaultScalaModule)
+
   // TODO: Some other system to decide which storage solutions that is available.
   // Maybe a LatencyAPI and StateAPI trait extending this one
   val storage: EventStorage with LatencyStorage with StateStorage with KpiStorage = EventStorageExtension(system).getEventStorage() match {
@@ -95,17 +102,14 @@ class EventAPI (val system: ActorSystem) {
     Map ("timestamp" -> sum._1, 
          "stats" -> sum._2.map { 
     case (x,y) => if(x > 0) y/x
-    					 else 0
+                  else 0
   })
   
   implicit protected[api] def anyToResponse(any: AnyRef): ResponseFunction[HttpResponse] = any match {
     case None => NotFound
-    case _ => ResponseString(generate(any))
-  }
-  
-//  implicit protected[api] def toMap(events: List[Event]): List[Map[String, Event]] = events.map(_.toMap)
-   
-  //implicit protected[api] def toMap(event: Event): Map[String, Any] 
+    case Some(obj) => println(obj); ResponseString(mapper.writeValueAsString(obj))
+    case _ => ResponseString(mapper.writeValueAsString(any))
+  }  
   	
   protected[api] def decode(name: String) = {
     URLDecoder.decode(name, "UTF-8")
