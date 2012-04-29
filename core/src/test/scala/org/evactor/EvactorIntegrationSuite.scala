@@ -37,7 +37,7 @@ import org.evactor.process.analyse.window.LengthWindowConf
 import org.evactor.process.build.request.Request
 import org.evactor.process.build.simpleprocess.SimpleProcess
 import org.evactor.process.ProcessorEventBusExtension
-import org.evactor.process.ProcessorHandler
+import org.evactor.process.ProcessorManager
 import org.evactor.process.Subscription
 import org.evactor.storage.EventStorageSpec
 import org.evactor.process.Subscriptions
@@ -69,7 +69,7 @@ class EvactorIntegrationSuite(_system: ActorSystem)
 
     // Start up the modules
     val collector = system.actorOf(Props[Collector].withDispatcher(CallingThreadDispatcher.Id), name = "collect")
-    val processor = system.actorOf(Props[ProcessorHandler].withDispatcher(CallingThreadDispatcher.Id), name = "process")
+    val processor = system.actorOf(Props[ProcessorManager].withDispatcher(CallingThreadDispatcher.Id), name = "process")
           
     // start the processors
     val reqSubscriptions = Subscriptions("request")  

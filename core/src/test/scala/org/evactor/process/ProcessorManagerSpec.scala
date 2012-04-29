@@ -31,12 +31,12 @@ import akka.dispatch.Await
 import org.evactor.model.events.Event
 
 @RunWith(classOf[JUnitRunner])
-class ProcessorHandlerSpec(_system: ActorSystem) 
+class ProcessorManagerSpec(_system: ActorSystem) 
   extends TestKit(_system) 
   with EvactorSpec   
   with BeforeAndAfterAll {
 
-  def this() = this(ActorSystem("ProcessorHandlerSpec"))
+  def this() = this(ActorSystem("ProcessorManagerSpec"))
 
   override protected def afterAll(): scala.Unit = {
     _system.shutdown()
@@ -54,40 +54,40 @@ class ProcessorHandlerSpec(_system: ActorSystem)
   "A Processor handler" must {
 	
 	  "must report if it successfully started a new processor" in {
-	    val handler = TestActorRef[ProcessorHandler]
-	    val future = handler ? testConf 
+	    val manager = TestActorRef[ProcessorManager]
+	    val future = manager ? testConf 
       future onFailure {
         case _ => fail
       }
 	  }
      
     "must report a failure on attempts to add a processor with the same name twice" in {
-      val handler = TestActorRef[ProcessorHandler]
-      val future1 = handler ? testConf 
+      val manager = TestActorRef[ProcessorManager]
+      val future1 = manager ? testConf 
       future1 onFailure {
         case _ => fail
       }
-      val future2 = handler ? testConf 
+      val future2 = manager ? testConf 
       future2 onSuccess {
         case _ => fail
       }
     }
       
     "must report if it successfully removed a processor" in {
-      val handler = TestActorRef[ProcessorHandler]
-      val future1 = handler ? testConf 
+      val manager = TestActorRef[ProcessorManager]
+      val future1 = manager ? testConf 
       future1 onFailure {
         case _ => fail
       }
-      val future2 = handler ? "name" 
+      val future2 = manager ? "name" 
       future2 onFailure {
         case _ => fail
       }
     }
     
     "must report if it couldn't remove a processor" in {
-      val handler = TestActorRef[ProcessorHandler]
-      val future = handler ? "name" 
+      val manager = TestActorRef[ProcessorManager]
+      val future = manager ? "name" 
       future onSuccess {
         case _ => fail
       }

@@ -1,3 +1,5 @@
 package org.evactor.process
 
-case class PublishException (msg: String) extends Exception 
+import org.evactor.EvactorException
+
+case class PublishException (msg: String) extends EvactorException

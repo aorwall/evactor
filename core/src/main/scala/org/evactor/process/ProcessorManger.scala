@@ -26,7 +26,7 @@ import org.evactor.storage.StorageProcessorRouter
 /**
  * Handles all processors.
  */
-class ProcessorHandler extends Actor with ActorLogging  {
+class ProcessorManager extends Actor with ActorLogging  {
   
   override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries = 10, withinTimeRange = 1 minute) {
     case _: IllegalArgumentException => Stop
