@@ -66,7 +66,7 @@ class ExtractorSpec(_system: ActorSystem)
       val actor = TestActorRef(new TestExtractor(Nil, new TestPublication(eventPrope.ref), new StaticExpression("expr")))
       val event = createDataEvent("stuff")
       
-      actor !  new Message("", None, event)
+      actor !  new Message("", Set(), event)
       
       eventPrope.expectMsg(1 seconds, expectedEvent)
       actor.stop      
@@ -78,7 +78,7 @@ class ExtractorSpec(_system: ActorSystem)
       val actor = TestActorRef(new TestExtractor(Nil, new TestPublication(eventPrope.ref), new StaticExpression("expr")))
       val event = new Event("id", 0L)
       
-      actor ! new Message("", None, new Event("id", 0L))
+      actor ! new Message("", Set(), new Event("id", 0L))
       
       eventPrope.expectNoMsg(1 seconds)
       actor.stop

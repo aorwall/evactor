@@ -69,7 +69,7 @@ class AbsenceOfRequestsAnalyserSpec(_system: ActorSystem)
 
       Thread.sleep(100)
 
-      actor ! new Message("", None, createEvent())
+      actor ! new Message("", Set(), createEvent())
 
       testProbe.expectMsgAllClassOf(1 second, classOf[AlertEvent])
       actor.stop()
@@ -83,7 +83,7 @@ class AbsenceOfRequestsAnalyserSpec(_system: ActorSystem)
 
       testProbe.expectMsgAllClassOf(300 millis, classOf[AlertEvent])
 
-      actor ! new Message("", None, createEvent())
+      actor ! new Message("", Set(), createEvent())
       testProbe.expectMsgAllClassOf(1 second, classOf[AlertEvent]) // TODO: Need to check back to normal!
 
       actor.stop()

@@ -8,4 +8,4 @@ create column family Timeline with comparator = UUIDType;
 create column family StateTimeline with comparator = UUIDType;
 create column family Statistics with default_validation_class=CounterColumnType and comparator = LongType and replicate_on_write=true;
 create column family Latency with default_validation_class=CounterColumnType and comparator = LongType and replicate_on_write=true;
-//create column family Sum with comparator = LongType;
+create column family KpiSum with comparator = LongType;

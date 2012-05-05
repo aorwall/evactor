@@ -129,24 +129,21 @@ class CassandraStorage(override val system: ActorSystem)
     storeEventTimeline(mutator, event, message.channel, timeuuid)
     storeEventCounters(mutator, event, message.channel)
 
-    message.category match {
-      case Some(category) => {
-        storeEventTimeline(mutator, event, createKey(message.channel, message.category), timeuuid)
-        storeEventCounters(mutator, event, createKey(message.channel, message.category))
+    message.categories.foreach { category =>
+        storeEventTimeline(mutator, event, createKey(message.channel, Some(category)), timeuuid)
+        storeEventCounters(mutator, event, createKey(message.channel, Some(category)))
         mutator.incrementCounter(message.channel, CATEGORY_CF, category, 1)
-      }
-      case _ =>
     }    
     
     mutator.incrementCounter("channels", CHANNEL_CF, message.channel, 1)
     
     event match {
-      case latencyEvent: Event with HasLatency => storeLatency(message.channel, message.category, latencyEvent)
+      case latencyEvent: Event with HasLatency => storeLatency(message.channel, message.categories, latencyEvent)
       case _ => 
     }
     
     event match {
-      case kpiEvent: Event with HasLong => storeLongValue(message.channel, message.category, kpiEvent)
+      case kpiEvent: Event with HasLong => storeLongValue(message.channel, message.categories, kpiEvent)
       case _ =>
     }
     
@@ -220,21 +217,19 @@ class CassandraStorage(override val system: ActorSystem)
     }
   }
   
-  protected def storeLatency(channel: String, category: Option[String], event: Event with HasLatency) {
+  protected def storeLatency(channel: String, categories: Set[String], event: Event with HasLatency) {
     storeSum(channel, LATENCY_CF, event.timestamp, event.latency)
     
-    category match {
-      case Some(cat) => storeSum(createKey(channel, category), LATENCY_CF, event.timestamp, event.latency)
-      case _ =>
+    categories.foreach { category =>
+     storeSum(createKey(channel, Some(category)), LATENCY_CF, event.timestamp, event.latency)
     }
   }
   
-  protected def storeLongValue(channel: String, category: Option[String], event: Event with HasLong) {
+  protected def storeLongValue(channel: String, categories: Set[String], event: Event with HasLong) {
     storeSum(channel, SUM_CF, event.timestamp, event.value)
     
-    category match {
-      case Some(cat) => storeSum(createKey(channel, category), SUM_CF, event.timestamp, event.value)
-      case _ =>
+    categories.foreach { category =>
+      storeSum(createKey(channel, Some(category)), SUM_CF, event.timestamp, event.value)
     }
   }
   def getLatencyStatistics(

@@ -23,6 +23,6 @@ import org.evactor.process.Processor
 
 class StaticExpression (val value: Any) extends Expression {
   
-  def evaluate(event: Event with HasMessage) = Some(value)
+  def evaluate(event: Event) = Some(value)
   
 }

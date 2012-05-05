@@ -29,7 +29,7 @@ trait Publisher extends UseProcessorEventBus {
   def publish(event: Event) {
     publication match {
       case TestPublication(testActor) => testActor ! event
-      case pub: Publication => bus.publish(new Message(pub.channel(event), pub.category(event), event))
+      case pub: Publication => bus.publish(new Message(pub.channel(event), pub.categories(event), event))
     }
     
   }

@@ -46,7 +46,7 @@ class SimpleProcessSpec(_system: ActorSystem)
 
   val subscriptions = List(new Subscription(Some(startCompId), None), new Subscription(Some(startCompId), None))  
     
-  val actor = TestActorRef(new SimpleProcessBuilder(subscriptions, new StaticPublication(processId, None), List(startCompId, endCompId), 120000L))
+  val actor = TestActorRef(new SimpleProcessBuilder(subscriptions, new StaticPublication(processId, Set()), List(startCompId, endCompId), 120000L))
   val processor = actor.underlyingActor
 
 
@@ -54,7 +54,7 @@ class SimpleProcessSpec(_system: ActorSystem)
 
     "create an event with state SUCCESS when flow is succesfully processed" in {
       
-      val buildActor = TestActorRef(new BuildActor("corrId", 1000, new StaticPublication("", None)) 
+      val buildActor = TestActorRef(new BuildActor("corrId", 1000, new StaticPublication("", Set())) 
         with SimpleProcessEventBuilder { 
      	  val components = List(startCompId, endCompId)
         })
@@ -73,7 +73,7 @@ class SimpleProcessSpec(_system: ActorSystem)
 
     "create an activity with state FAILURE when a log event has the state FAILURE" in {
       
-      val buildActor = TestActorRef(new BuildActor("corrId", 1000, new StaticPublication("", None)) 
+      val buildActor = TestActorRef(new BuildActor("corrId", 1000, new StaticPublication("", Set())) 
       		with SimpleProcessEventBuilder { 
               val components = List(startCompId, endCompId)
       		})
@@ -90,7 +90,7 @@ class SimpleProcessSpec(_system: ActorSystem)
     
     "create an event with state SUCCESS when flow with just one component succesfully processed" in {
       
-      val buildActor = TestActorRef(new BuildActor("corrId", 1000, new StaticPublication("", None)) 
+      val buildActor = TestActorRef(new BuildActor("corrId", 1000, new StaticPublication("", Set())) 
       		with SimpleProcessEventBuilder { 
       			val components = List(startCompId)
       		})

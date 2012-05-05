@@ -68,7 +68,7 @@ class BuildActorSpec(_system: ActorSystem)
    	
       var added = false
       
-      val actor = TestActorRef(new BuildActor("329380921309", 10000, new StaticPublication("", None)) 
+      val actor = TestActorRef(new BuildActor("329380921309", 10000, new StaticPublication("", Set())) 
       		with TestEventBuilder { 
       				override def isFinished = false 
       				override def addEvent(event: Event) = added = true
@@ -86,7 +86,7 @@ class BuildActorSpec(_system: ActorSystem)
       
       val logEvent = new LogEvent("329380921309", 0L, "329380921309", "comp", "client", "server", Start, "hello")
       val reqEvent = new RequestEvent("329380921309", 0L, "329380921309", "comp", None, None, Success, 0L)
-      val reqEventMsg = new Message("channel", Some("category"), reqEvent)
+      val reqEventMsg = new Message("channel", Set("category"), reqEvent)
       
       val actor = TestActorRef(new BuildActor("correlationId", 1000, new TestPublication(probe.ref))
       		with TestEventBuilder { 
@@ -115,7 +115,7 @@ class BuildActorSpec(_system: ActorSystem)
 
       
       val logEvent = new LogEvent("329380921309", 0L, "329380921309", "comp", "client", "server", Start, "hello")
-      val logEventMsg = new Message("channel", Some("category"), logEvent)
+      val logEventMsg = new Message("channel", Set("category"), logEvent)
       timeoutEventActor ! logEvent
 
       probe.expectMsg(1 seconds, timedoutEvent)

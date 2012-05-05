@@ -40,7 +40,7 @@ class KpiSpec (_system: ActorSystem)
 
   def this() = this(ActorSystem("KeywordSpec"))
 
-  val event = new Message("channel", None, createDataEvent("{ \"doubleField\": \"123.42\", \"intField\": \"123\", \"anotherField\": \"anothervalue\"}"))
+  val event = new Message("channel", Set(), createDataEvent("{ \"doubleField\": \"123.42\", \"intField\": \"123\", \"anotherField\": \"anothervalue\"}"))
 
   "Kpi" must {
 

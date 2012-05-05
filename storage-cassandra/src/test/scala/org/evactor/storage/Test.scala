@@ -25,7 +25,6 @@ import org.evactor.model.events.SimpleProcessEvent
 import org.evactor.model.Start
 import org.evactor.model.Success
 import org.evactor.model.events.KpiEvent
-import org.evactor.storage.cassandra.KpiEventCassandraStorage
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.FunSuite
@@ -101,8 +100,8 @@ class Test extends FunSuite with Logging {
     
   }
 */
-  val log1 = new Message("channel", None, new LogEvent("329380921338", System.currentTimeMillis, "329380921308", "component", "client", "server", Start, "message"))
-  val log2 = new Message("channel", None, new LogEvent("329380921339", System.currentTimeMillis, "329380921308", "component", "client", "server", Success, "message"))
+  val log1 = new Message("channel", Set(), new LogEvent("329380921338", System.currentTimeMillis, "329380921308", "component", "client", "server", Start, "message"))
+  val log2 = new Message("channel", Set(), new LogEvent("329380921339", System.currentTimeMillis, "329380921308", "component", "client", "server", Success, "message"))
      
   test("Log event"){
    
@@ -111,8 +110,8 @@ class Test extends FunSuite with Logging {
     info("LogEventStorage: " + storage.getEvents("channel", None, None, None, 10, 0))
   }     
   
-  val req1 = new Message("channel2", None, new RequestEvent("329380921328", System.currentTimeMillis, "329380921328", "component", Some("329380921338"), Some("329380921338"), Start, 10L))
-  val req2 = new Message("channel2", None, new RequestEvent("329380921329", System.currentTimeMillis+1, "329380921328", "component", Some("329380921338"), Some("329380921338"), Start, 10L))
+  val req1 = new Message("channel2", Set(), new RequestEvent("329380921328", System.currentTimeMillis, "329380921328", "component", Some("329380921338"), Some("329380921338"), Start, 10L))
+  val req2 = new Message("channel2", Set(), new RequestEvent("329380921329", System.currentTimeMillis+1, "329380921328", "component", Some("329380921338"), Some("329380921338"), Start, 10L))
     
   test("Request event") {
    

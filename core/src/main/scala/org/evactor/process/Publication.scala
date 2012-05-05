@@ -15,10 +15,11 @@
  */
 package org.evactor.process
 
-import akka.actor.ActorRef
-import org.evactor.model.events.Event
 import org.evactor.expression.Expression
 import org.evactor.model.attributes.HasMessage
+import org.evactor.model.events.Event
+
+import akka.actor.ActorRef
 
 /**
  * Specifies how the event should be published
@@ -26,7 +27,7 @@ import org.evactor.model.attributes.HasMessage
 abstract class Publication {
 
   def channel(event: Event): String
-  def category(event: Event): Option[String] 
+  def categories(event: Event): Set[String] 
   
 }
 
@@ -35,10 +36,10 @@ abstract class Publication {
  */
 case class StaticPublication (
     val channel: String,
-    val category: Option[String]) extends Publication {
+    val categories: Set[String]) extends Publication {
     
   def channel(event: Event) = channel
-  def category(event: Event) = category
+  def categories(event: Event) = categories
     
 }
 
@@ -46,25 +47,24 @@ case class StaticPublication (
  * Extracting values from events with the HasMessage trait
  * to decide where to publish the event.
  */
-case class DynamicCategoryPublication (
+case class DynamicPublication (
     val channelExpr: Expression,
     val categoryExpr: Option[Expression]) extends Publication {
   
-  def channel(event: Event) = extract(channelExpr, event).get
-  
-  def category(event: Event) = categoryExpr match {
-    case Some(expr) => extract(expr, event)
-    case None => None
+  def channel(event: Event) = channelExpr.evaluate(event) match {
+      case Some(v: Any) => v.toString
+      case _ => throw new PublishException("couldn't extract a channel from event %s with expression %s".format(event, channelExpr))
   }
   
-  private[this] def extract(expr: Expression, event: Event) = event match {
-    case e: Event with HasMessage => expr.evaluate(e) match {
-      case Some(v: String) => Some(v)
-      case _ => throw new PublishException("couldn't extract a category from event %s with expression %s".format(e, expr))
+  def categories(event: Event): Set[String] = categoryExpr match {
+    case Some(expr) => expr.evaluate(event) match {
+      case Some(t: Traversable[String]) => t.toSet
+      case Some(l: Traversable[Any]) => l.map(_.toString).toSet
+      case Some(v: Any) => Set(v.toString)
+      case _ => throw new PublishException("couldn't extract a category from event %s with expression %s".format(event, expr))
     }
-    case e => throw new PublishException("event %s must extend HasMessage".format(e))
+    case None => Set()
   }
-  
 }
 
 /**
@@ -73,7 +73,7 @@ case class DynamicCategoryPublication (
 case class TestPublication (val testActor: ActorRef) extends Publication {
     
   def channel(event: Event) = "none"
-  def category(event: Event) = None
+  def categories(event: Event) = Set()
     
 }
 

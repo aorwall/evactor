@@ -15,14 +15,18 @@
  */
 package org.evactor.expression
 
+import java.util.HashMap
+
 import scala.Double._
 import scala.collection.JavaConversions.asJavaSet
+
+import org.codehaus.jackson.map.ObjectMapper
 import org.evactor.model.attributes.HasMessage
 import org.evactor.model.events.Event
-import akka.actor.ActorLogging
-import org.codehaus.jackson.map.ObjectMapper
 import org.mvel2.MVEL
-import java.util.HashMap
+import scala.collection.JavaConversions.asJavaMap
+
+import akka.actor.ActorLogging
 
 /**
  * Evaluate MVEL Expressions. Supports JSON and strings in message. XML to come...?
@@ -34,42 +38,59 @@ case class MvelExpression(val expression: String) extends Expression {
 
   lazy val compiledExp = MVEL.compileExpression(expression); 
 
-  override def evaluate(event: Event with HasMessage): Option[String] = {
+  override def evaluate(event: Event): Option[Any] = {
     
-    val obj = new HashMap[String,Any]
+    val obj = getCaseClassParams(event) // add all variables from the case class to the map
+    // extra attention to Event's with HasMessage trait
     
-    // assume json if message starts and ends with curly brackets
-    val msg = if(event.message.startsWith("{") && event.message.endsWith("}")){
-      val mapper = new ObjectMapper
-      
-      try {
-      	Some(mapper.readValue(event.message, classOf[HashMap[String,Object]]))
-      } catch {
-        case _ => None
+    event match {
+      case h: HasMessage => {
+        // assume json if message starts and ends with curly brackets
+        val msg = if(h.message.startsWith("{") && h.message.endsWith("}")){
+          val mapper = new ObjectMapper
+          
+          try {
+            Some(mapper.readValue(h.message, classOf[HashMap[String,Object]]))
+          } catch {
+            case _ => None
+          }
+        } else {
+          None
+        }
+    
+        
+        msg match {
+          case Some(map) => obj.put("message", map)
+          case _ => obj.put("message", h.message)
+        }
       }
-    } else {
-      None
+      case _ =>
     }
               
     obj.put("id", event.id)
     obj.put("timestamp", event.timestamp)
     
-    msg match {
-      case Some(map) => obj.put("message", map)
-      case _ => obj.put("message", event.message)
-    }
-    
-    
     val result = try {
-      MVEL.executeExpression(compiledExp, obj)
+      Some(MVEL.executeExpression(compiledExp, obj))
     } catch {
       case e => None
     }
     
-    result match {
-      case v: Any => Some(v.toString)
-      case _ => None
-    }    
+    result
   }
+  
+  private[this] def getCaseClassParams(cc: AnyRef) = {
+    val map = new HashMap[String, Any]()
+    
+    val fields = cc.getClass.getDeclaredFields
+    
+    fields.foreach { f =>
+      f.setAccessible(true)
+      map.put(f.getName, f.get(cc))
+    }
+    map
+  }
+  
+
 }
 

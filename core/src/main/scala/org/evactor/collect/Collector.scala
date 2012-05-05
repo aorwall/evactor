@@ -15,54 +15,76 @@
  */
 package org.evactor.collect
 
-import akka.actor.Actor
+import akka.actor._
+import akka.actor.SupervisorStrategy._
+import akka.util.duration._
 import org.evactor.model.events.Event
 import org.evactor.process.Processor
 import org.evactor.storage.Storage
 import org.evactor.process.ProcessorEventBus
-import akka.actor.ActorLogging
 import org.evactor.process.Publisher
 import org.evactor.model.Message
 import org.evactor.process.UseProcessorEventBus
 import org.evactor.process.ProcessorEventBusExtension
+import org.evactor.process.Publication
+import org.evactor.listen.Listener
+import org.evactor.transform.Transformer
+import org.evactor.listen.ListenerConfiguration
+import org.evactor.transform.TransformerConfiguration
+
 
 //import com.twitter.ostrich.stats.Stats
 
 /**
  * Collecting incoming events
  */
-class Collector extends Actor with Storage with ActorLogging {
+class Collector(
+    val listener: Option[ListenerConfiguration], 
+    val transformer: Option[TransformerConfiguration], 
+    val publication: Publication) 
+  extends Actor 
+  with Storage 
+  with Publisher
+  with ActorLogging {
   
-  private[this] val bus = ProcessorEventBusExtension(context.system)
-
+  override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries = 10, withinTimeRange = 1 minute) {
+    case _: IllegalArgumentException => Stop
+    case _: Exception => Restart
+  }
+  
   def receive = {
-    case message: Message => collect(message)
+    case event: Event => collect(event)
     case msg => log.debug("can't handle {}", msg)
   }
 
-  def collect(message: Message) {
+  def collect(event: Event) {
    
-    log.debug("collecting: {}", message)
+    log.debug("collecting: {}", event)
 
-    if(!eventExists(message.event)) {
-      bus.publish(message)
+    if(!eventExists(event)) {
+      publish(event)
     } else {
-      log.warning("The event is already processed: {}", message.event) 
+      log.warning("The event is already processed: {}", event) 
+    }
+    
+  }
+  
+  override def preStart = { 
+    // Start transformer and set collector to it
+    val sendTo = transformer match {
+      case Some(t) => context.actorOf(Props(t.transformer(context.self)))
+      case None => context.self
+    }
+    
+    // Start listener and set a  transformer to it
+    listener match {
+      case Some(l) => context.actorOf(Props(l.listener(sendTo)))
+      case None => log.warning("No listener")
     }
     
   }
 
-  private[this] def sendEvent(event: Event) {
-    // send event to processors
-    context.actorFor("../process") ! event    
+  override def postStop = {
+    // Stop transformer and listener?
   }
-  
-// TODO: Not used atm:
-//  override def preStart = { 
-//    Stats.setLabel(context.self.toString, "running")
-//  }
-//
-//  override def postStop = {
-//    Stats.setLabel(context.self.toString, "stopped")
-//  }
 }

@@ -30,7 +30,7 @@ import akka.actor.ActorLogging
 /**
  * Evaluate XPath Expressions. 
  * 
- * 
+ * Just returning strings...
  */
 case class XPathExpression(val expression: String) extends Expression {
 
@@ -42,21 +42,22 @@ case class XPathExpression(val expression: String) extends Expression {
   //domFactory.setNamespaceAware(true); 
   val builder = domFactory.newDocumentBuilder(); 
   
-  override def evaluate(event: Event with HasMessage): Option[String] = {
-          
-    try {
-      val doc = builder.parse(new ByteArrayInputStream(event.message.getBytes())) //"UTF-8"
-      val result = xpathExpr.evaluate(doc, XPathConstants.STRING)
-
-      result match {
-        case "" => None
-        case s: String => Some(s)
-        case _ => None
+  override def evaluate(e: Event): Option[String] = e match {
+    case event: Event with HasMessage => {    
+      try {
+        val doc = builder.parse(new ByteArrayInputStream(event.message.getBytes())) //"UTF-8"
+        val result = xpathExpr.evaluate(doc, XPathConstants.STRING)
+  
+        result match {
+          case "" => None
+          case s: String => Some(s)
+          case _ => None
+        }
+      } catch {
+        case e: Exception => None 
       }
-    } catch {
-      case e: Exception => None 
     }
-    
+    case _ => None // TODO: Throw exception?
   }
 
 }

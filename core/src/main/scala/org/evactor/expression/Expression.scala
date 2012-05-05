@@ -22,5 +22,5 @@ import org.evactor.process.extract.Extractor
 import org.evactor.process.Processor
 
 abstract class Expression {
-  def evaluate(event: Event with HasMessage): Option[Any] 
+  def evaluate(event: Event): Option[Any] 
 }

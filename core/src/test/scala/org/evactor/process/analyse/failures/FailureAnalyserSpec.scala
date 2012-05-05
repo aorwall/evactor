@@ -59,11 +59,11 @@ class FailureAnalyserSpec(_system: ActorSystem)
       val testProbe = TestProbe()
       val failureActor = TestActorRef(new FailureAnalyser(Nil, new TestPublication(testProbe.ref), 2))
 
-      failureActor ! new Message("", None, createLogEvent(0L, Success))
-      failureActor ! new Message("", None, createLogEvent(1L, model.Failure))
-      failureActor ! new Message("", None, createLogEvent(2L, model.Failure))
+      failureActor ! new Message("", Set(), createLogEvent(0L, Success))
+      failureActor ! new Message("", Set(), createLogEvent(1L, model.Failure))
+      failureActor ! new Message("", Set(), createLogEvent(2L, model.Failure))
       testProbe.expectNoMsg // nothing happens
-      failureActor ! new Message("", None, createLogEvent(3L, model.Failure)) //  trig alert!
+      failureActor ! new Message("", Set(), createLogEvent(3L, model.Failure)) //  trig alert!
 
       //probe.expectMsg(100 millis, new AlertEvent(eventName, "3 failed events with name " + eventName + " is more than allowed (2)", true)) TODO FIX!
       testProbe.expectMsgAllClassOf(400 millis, classOf[AlertEvent])
@@ -79,10 +79,10 @@ class FailureAnalyserSpec(_system: ActorSystem)
 
       val failureActor = TestActorRef(new FailureAnalyser(Nil, new TestPublication(testProbe.ref), 2) with TimeWindow {override val timeframe = time} )
 
-      failureActor ! new Message("", None, createLogEvent(currentTime-50, model.Failure))
-      failureActor ! new Message("", None, createLogEvent(currentTime-40, model.Failure))
-      failureActor ! new Message("", None, createLogEvent(currentTime-1000, model.Failure)) // to old, nothing happens
-      failureActor ! new Message("", None, createLogEvent(currentTime-30, model.Failure))
+      failureActor ! new Message("", Set(), createLogEvent(currentTime-50, model.Failure))
+      failureActor ! new Message("", Set(), createLogEvent(currentTime-40, model.Failure))
+      failureActor ! new Message("", Set(), createLogEvent(currentTime-1000, model.Failure)) // to old, nothing happens
+      failureActor ! new Message("", Set(), createLogEvent(currentTime-30, model.Failure))
       //  probe.expectMsg(time*2 millis, new Alert(eventName, "3 failed events with name " + eventName + " is more than allowed (2)", true)) TODO FIX!
       testProbe.expectMsgAllClassOf(400 millis, classOf[AlertEvent])
 
@@ -95,14 +95,14 @@ class FailureAnalyserSpec(_system: ActorSystem)
         override val noOfRequests = 2
       })
 
-      latencyActor ! new Message("", None, createRequestEvent(1L, None, None, "corr", "comp", model.Failure, 10)) 
-      latencyActor ! new Message("", None, createRequestEvent(2L, None, None, "corr", "comp", model.Failure, 110)) // trig alert!
+      latencyActor ! new Message("", Set(), createRequestEvent(1L, None, None, "corr", "comp", model.Failure, 10)) 
+      latencyActor ! new Message("", Set(), createRequestEvent(2L, None, None, "corr", "comp", model.Failure, 110)) // trig alert!
 
 //      probe.expectMsg(100 millis, new Alert(eventName, "Average latency 75ms is higher than the maximum allowed latency 60ms", true))
       testProbe.expectMsgAllClassOf(50 millis, classOf[AlertEvent])
 
-      latencyActor ! new Message("", None, createRequestEvent(4L, None, None, "corr", "comp", Success, 60))
-      latencyActor ! new Message("", None, createRequestEvent(4L, None, None, "corr", "comp", Success, 60)) // back to normal
+      latencyActor ! new Message("", Set(), createRequestEvent(4L, None, None, "corr", "comp", Success, 60))
+      latencyActor ! new Message("", Set(), createRequestEvent(4L, None, None, "corr", "comp", Success, 60)) // back to normal
 
  //     probe.expectMsg(100 millis, new Alert(eventName, "back to normal!", false))
       testProbe.expectMsgAllClassOf(50 millis, classOf[AlertEvent])

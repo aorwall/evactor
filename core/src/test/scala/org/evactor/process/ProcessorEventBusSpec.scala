@@ -47,8 +47,8 @@ class ProcessorEventBusSpec (_system: ActorSystem)
   val subscriptionCategory = new Subscription(Some("foo"), Some("bar"))
   val subscription = new Subscription(Some("foo"), None)
   
-  val event1 = new Message("foo", Some("bar"), new DataEvent("", 0L, ""))
-  val event2 = new Message("bar", None, new DataEvent("", 0L, ""))
+  val event1 = new Message("foo", Set("bar"), new DataEvent("", 0L, ""))
+  val event2 = new Message("bar", Set(), new DataEvent("", 0L, ""))
   
   "A ProcessorEventBus" must {
     

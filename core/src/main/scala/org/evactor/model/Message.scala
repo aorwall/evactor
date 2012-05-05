@@ -24,6 +24,6 @@ import org.evactor.model.events.Event
  */
 case class Message(
     val channel: String,
-    val category: Option[String],
+    val categories: Set[String],
     val event: Event) { 
 }

@@ -15,10 +15,11 @@
  */
 package org.evactor.process
 
+import org.evactor.model.Message
+
 import akka.actor._
 import akka.event.ActorEventBus
 import akka.event.LookupClassification
-import org.evactor.model.Message
 
 /**
  * This is a first implementation of the event bus for only sending events
@@ -48,7 +49,7 @@ class ProcessorEventBus extends Extension with ActorEventBus with LookupClassifi
     
   val mapSize = 100
     
-  def classify(event: Event): Classifier = new Subscription(Some(event.channel), event.category)
+  protected def classify(e: Event): Classifier = new Subscription() // TODO: Not used?
     
   //protected def compareClassifiers(a: Classifier, b: Classifier): Int = a.channel compareTo b.channel
     
@@ -57,25 +58,22 @@ class ProcessorEventBus extends Extension with ActorEventBus with LookupClassifi
     subscriber ! message
   }
   
-  override def publish(message: Message): Unit = {     
-    val sub = classify(message)
-       
-    // send to all subscribers who has this specific event subscription with a category is specified
-    if(sub.category.isDefined){
-      val i = subscribers.valueIterator(sub)
-      while (i.hasNext) { publish(message, i.next()) } 
-    }
-       
-	// send to all subscribers who subscribed to all events on this channel
-    if(sub.channel.isDefined){
-      val channelSub = new Subscription(sub.channel, None)
-      val j = subscribers.valueIterator(channelSub)
-      while (j.hasNext) { publish(message, j.next()) } 
-    }
+  override def publish(message: Message): Unit = {
     
-    // and send to all subscribers that hasn't specified 
+    // and send to processors subscribing to all events
     val k = subscribers.valueIterator(new Subscription())
     while (k.hasNext) { publish(message, k.next()) }
+    
+    // send to processors who subscribed to all events on this channel
+    val j = subscribers.valueIterator(new Subscription(Some(message.channel), None))
+    while (j.hasNext) { publish(message, j.next()) } 
+    
+    // send to processors who subscribed to a specific category
+    message.categories.foreach { cat => 
+      val i = subscribers.valueIterator(new Subscription(Some(message.channel), Some(cat)))
+      while (i.hasNext) { publish(message, i.next()) }
+    }
+    
   }
 }
     

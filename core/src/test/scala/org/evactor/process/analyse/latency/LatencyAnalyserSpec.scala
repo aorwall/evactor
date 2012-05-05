@@ -59,10 +59,10 @@ class LatencyAnalyserSpec(_system: ActorSystem)
 
       val latencyActor = TestActorRef(new LatencyAnalyser(Nil, new TestPublication(probe.ref), 5))
 
-      latencyActor ! new Message("", None, createRequestEvent(0L, None, None, "corr", "comp", Success, 4)) // avg latency 4ms
-      latencyActor ! new Message("", None, createRequestEvent(1L, None, None, "corr", "comp", Success, 5))  // avg latency 4.5ms
+      latencyActor ! new Message("", Set(), createRequestEvent(0L, None, None, "corr", "comp", Success, 4)) // avg latency 4ms
+      latencyActor ! new Message("", Set(), createRequestEvent(1L, None, None, "corr", "comp", Success, 5))  // avg latency 4.5ms
       probe.expectNoMsg
-      latencyActor ! new Message("", None, createRequestEvent(3L, None, None, "corr", "comp", Success, 9)) // avg latency 6ms, trig alert!
+      latencyActor ! new Message("", Set(), createRequestEvent(3L, None, None, "corr", "comp", Success, 9)) // avg latency 6ms, trig alert!
 
 //      probe.expectMsg(200 millis, new Alert(eventName, "Average latency 6ms is higher than the maximum allowed latency 5ms", true))
       probe.expectMsgAllClassOf(200 millis, classOf[AlertEvent])
@@ -77,14 +77,14 @@ class LatencyAnalyserSpec(_system: ActorSystem)
         override val noOfRequests = 2
       })
       
-      latencyActor ! new Message("", None, createRequestEvent(1L, None, None, "corr", "comp", Success, 10)) // avg latency 10ms
-      latencyActor ! new Message("", None, createRequestEvent(2L, None, None, "corr", "comp", Success, 110)) // avg latency 55ms
-      latencyActor ! new Message("", None, createRequestEvent(3L, None, None, "corr", "comp", Success, 40)) // avg latency 75ms, trig alert!
+      latencyActor ! new Message("", Set(), createRequestEvent(1L, None, None, "corr", "comp", Success, 10)) // avg latency 10ms
+      latencyActor ! new Message("", Set(), createRequestEvent(2L, None, None, "corr", "comp", Success, 110)) // avg latency 55ms
+      latencyActor ! new Message("", Set(), createRequestEvent(3L, None, None, "corr", "comp", Success, 40)) // avg latency 75ms, trig alert!
 
 //      probe.expectMsg(100 millis, new Alert(eventName, "Average latency 75ms is higher than the maximum allowed latency 60ms", true))
       probe.expectMsgAllClassOf(200 millis, classOf[AlertEvent])
 
-      latencyActor ! new Message("", None, createRequestEvent(4L, None, None, "corr", "comp", Success, 60)) // avg latency 55ms, back to normal!
+      latencyActor ! new Message("", Set(), createRequestEvent(4L, None, None, "corr", "comp", Success, 60)) // avg latency 55ms, back to normal!
 
  //     probe.expectMsg(100 millis, new Alert(eventName, "back to normal!", false))
       probe.expectMsgAllClassOf(200 millis, classOf[AlertEvent])
