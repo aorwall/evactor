@@ -15,19 +15,16 @@
  */
 package org.evactor.twitter.listener
 
-import org.apache.http.client.methods.HttpGet
-import org.apache.http.impl.client.DefaultHttpClient
-import org.apache.commons.httpclient.util.EncodingUtil
-import org.apache.commons.codec.binary.Base64
 import java.io.BufferedReader
 import java.io.InputStreamReader
-import akka.actor.ActorRef
+import org.apache.http.client.methods.HttpGet
+import org.apache.http.impl.client.DefaultHttpClient
 import org.evactor.listen.Listener
-import akka.actor.ActorLogging
-import akka.util.duration._
-import java.io.Reader
 import org.evactor.listen.ListenerConfiguration
 import com.twitter.ostrich.stats.Stats
+import akka.actor.ActorLogging
+import akka.actor.ActorRef
+import org.apache.commons.codec.binary.Base64
 
 class TwitterListenerConfig(url: String, credentials: String) extends ListenerConfiguration {
   
@@ -76,7 +73,7 @@ class TwitterListener(url: String, credentials: String, sendTo: ActorRef) extend
     
     val client = new DefaultHttpClient();
     val method = new HttpGet(url);
-    val encoded = EncodingUtil.getAsciiString(Base64.encodeBase64(EncodingUtil.getAsciiBytes(credentials)))
+    val encoded = Base64.encodeBase64String(credentials.getBytes)
     method.setHeader("Authorization", "Basic " + encoded);
     method.setHeader("Content-Type", "text/xml;charset=UTF-8") 
     

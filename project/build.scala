@@ -17,6 +17,8 @@ import sbt._
 import Keys._
 import akka.sbt.AkkaKernelPlugin
 import akka.sbt.AkkaKernelPlugin.{ Dist, outputDirectory, distJvmOptions}
+import sbtassembly.Plugin._
+import AssemblyKeys._
 
 object BamBuild extends Build {
   
@@ -56,7 +58,7 @@ object BamBuild extends Build {
   lazy val example = Project(
     id = "example",
     base = file("example"),
-    settings = defaultSettings ++ AkkaKernelPlugin.distSettings ++ Seq(
+    settings = defaultSettings ++ exampleAssemblySettings ++ Seq(
       libraryDependencies ++= Dependencies.example
     )
   ) dependsOn (core, storageCassandra, api)
@@ -78,7 +80,32 @@ object BamBuild extends Build {
   lazy val defaultSettings = buildSettings ++ Seq(
 	  scalacOptions ++= Seq("-encoding", "UTF-8", "-deprecation", "-unchecked"),
 	  javacOptions  ++= Seq("-Xlint:unchecked", "-Xlint:deprecation")
-  )  	
+  )  
+
+  lazy val exampleAssemblySettings = assemblySettings ++ Seq(
+    test in assembly := {},
+	excludedJars in assembly <<= (fullClasspath in assembly) map { cp => 
+	  cp filter { _.data.getName == "uuid-3.2.0.jar" }},
+	excludedFiles in assembly := { (bases: Seq[File]) =>
+	  bases flatMap { base =>
+	    (base / "META-INF" * "*").get collect {
+	      case f if f.getName.toLowerCase == "license" => f
+	      case f if f.getName.toLowerCase == "license.txt" => f
+	      case f if f.getName.toLowerCase == "manifest.mf" => f
+	      case f if f.getName.toLowerCase == "notice.txt" => f
+	      case f if f.getName.toLowerCase == "notice" => f
+	    }
+	  }
+	},
+	mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
+	  {
+	    case "application.conf" => MergeStrategy.concat
+	    case x => old(x)
+	  }
+	},
+	mainClass in assembly := Some("org.evactor.ExampleKernel"),
+	jarName in assembly := "evactorExample.jar"
+  )
 }
 
 
@@ -87,8 +114,8 @@ object Dependencies {
   
   val core = Seq(akkaActor, jacksonCore, jacksonMapper, mvel2, ostrich, Test.scalatest, Test.junit, Test.mockito, Test.akkaTestkit)
   val api = Seq (grizzled, jacksonCore, jacksonMapper, jacksonScala, unfilteredFilter, unfilteredNetty, unfilteredNettyServer)
-  val example = Seq (akkaKernel, camelCore, camelIrc, camelAtom, grizzled, unfilteredNettyServer, Test.scalatest, Test.junit, Test.akkaTestkit)
-  val storageCassandra = Seq(cassandraAll, cassandraThrift, grizzled, guava, hectorCore, jodaConvert, jodaTime, perf4j, thrift, uuid, Test.scalatest, Test.junit)
+  val example = Seq (akkaKernel, grizzled, httpClient, unfilteredNettyServer, Test.scalatest, Test.junit, Test.akkaTestkit)
+  val storageCassandra = Seq(akkaActor, cassandraThrift, grizzled, guava, hectorCore, jodaConvert, jodaTime, perf4j, thrift, Test.scalatest, Test.junit)
   val camel = Seq(camelCore)
 
 }
@@ -121,6 +148,7 @@ object Dependency {
   val hector = "me.prettyprint" % "hector" % V.Hector
   val hectorCore = "me.prettyprint" % "hector-core" % V.Hector
   val highScaleLib = "org.cliffc.high_scale_lib" % "high-scale-lib" % "1.0"
+  val httpClient = "org.apache.httpcomponents" % "httpclient" % "4.1"
   val jacksonMapper = "org.codehaus.jackson" % "jackson-mapper-asl" % V.Jackson
   val jacksonCore = "org.codehaus.jackson" % "jackson-core-asl" % V.Jackson
   val jacksonScala = "com.fasterxml" % "jackson-module-scala" % "1.9.3"
@@ -141,7 +169,6 @@ object Dependency {
   val unfilteredFilter = "net.databinder" % "unfiltered-filter_2.9.1" % V.Unfiltered
   val unfilteredNetty = "net.databinder" % "unfiltered-netty_2.9.1" % V.Unfiltered
   val unfilteredNettyServer = "net.databinder" % "unfiltered-netty-server_2.9.1" % V.Unfiltered
-  val uuid = "com.eaio.uuid" % "uuid" % "3.2"
   
   object Test {
     val junit = "junit" % "junit" % "4.4" % "test"
