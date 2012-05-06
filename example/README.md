@@ -32,7 +32,7 @@ Installation
 ---------------------
 1. Install [Apache Cassandra](http://wiki.apache.org/cassandra/GettingStarted)
 2. Add the column families to Cassandra with *cassandra-cli*:
-```
+```text
 create keyspace Evactor;
 use Evactor;
 create column family Channel with default_validation_class=CounterColumnType and comparator = UTF8Type and replicate_on_write=true;
@@ -48,7 +48,7 @@ create column family KpiSum with comparator = LongType;
 4. Clone the Evactor repository `git clone git@github.com:aorwall/evactor.git`
 5. Set your own Twitter username and password in `evactor/example/src/main/resources/application.conf`
 6. Run *sbt* and build the example jar:
-``` 
+```text
 $ sbt
 > project example
 > assembly
