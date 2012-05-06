@@ -10,31 +10,31 @@ Flow
     of all status updates on Twitter) and publishes them on the channel 
     `[twitter]`.
     
-2.  A *Filter processor* subscribes to `[twitter]` and filters out
+2.  A [*Filter*](https://github.com/aorwall/evactor/blob/master/core/src/main/scala/org/evactor/process/route/Filter.scala) subscribes to `[twitter]` and filters out
     all status updates containing hashtags and publish them to the channel
     `[twitter:hashtag]` and categorize the events by hashtag.
     
-3.  A *Counter analyser* subscribes to `[twitter:hashtag]` and publish an
+3.  A [*Count analyser*](https://github.com/aorwall/evactor/blob/master/core/src/main/scala/org/evactor/process/analyse/count/CountAnalyser.scala) subscribes to `[twitter:hashtag]` and publish an
     alert event to `[twitter:hashtag:popular]` when an event with the same 
     category arrives more than ten times within an hour.    
     
-4. 'TODO:' A *Alerter* subscribes to `[twitter:hashtag]` and the specific 
+4.  *TODO:* An *Alerter* subscribes to `[twitter:hashtag]` and the specific 
     categories `scala`, `cassandra` and `akka` and sends alerts to external
     consumers.
     
-5.  A *Filter processor* subscribes to `[twitter]` and filters out
+5.  A [*Filter*](https://github.com/aorwall/evactor/blob/master/core/src/main/scala/org/evactor/process/route/Filter.scala)  subscribes to `[twitter]` and filters out
     all status updates containing url's and publish them to the channel
     `[twitter:url]` and categorize the events by url.
     
-3.2. A *Counter analyser* subscribes to `[twitter:url]` and alerts when an
+6.  A [*Count analyser*](https://github.com/aorwall/evactor/blob/master/core/src/main/scala/org/evactor/process/analyse/count/CountAnalyser.scala) subscribes to `[twitter:url]` and alerts when an
      event with the same category arrives more than five times within an hour.    
 
 Installation
 ---------------------
-Apache Cassandra must be installed and running to run this example. It can be
-found [here](http://http://cassandra.apache.org/). 
+[Apache Cassandra](http://http://cassandra.apache.org/) must be installed and
+running to run this example. 
 
-To run the application just run the command `dist` in *sbt* and then start 
+To run the application just run the command `dist` with *sbt* and then start 
 the application by running the command: `bin/start org.evactor.ExampleKernel` in
 `target/dist`.
 
