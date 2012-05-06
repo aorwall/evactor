@@ -19,30 +19,40 @@ import org.evactor.model.events.Event
 import org.evactor.model.Message
 import org.evactor.model.Timeout
 import org.evactor.monitor.Monitored
-import org.evactor.subscribe._
+import org.evactor.subscribe.Subscriber
+import org.evactor.subscribe.Subscription
+
 import akka.actor.ActorLogging
 import akka.actor.Terminated
 
 /**
- * Abstract class all standard processors should extend
+ * Creates sub processors for each category. To use this processor type, an implementation of
+ * SubProcessor must be created.
  */
-abstract class Processor (
-    val subscriptions: List[Subscription]) 
+abstract class CategoryProcessor (
+    val subscriptions: List[Subscription],
+    val categorize: Boolean) 
   extends ProcessorBase
   with Subscriber 
   with Monitored
+  with ProcessorWithChildren
   with ActorLogging {
     
   final def receive = {
-    case Message(_, _, event) => incr("process"); process(event)
-    case Timeout => timeout()
+    case Message(channel, categories, event) => {
+      incr("process"); 
+      if(categorize){
+        categories foreach { category => getSubProcessor(category) ! event }  
+      } else {
+        getSubProcessor(channel) ! event
+      }
+      
+    } 
     case Terminated(supervised) => handleTerminated(supervised)
     case msg => log.warning("Can't handle {}", msg)
   }
 
-  protected def process(event: Event)
-  
-  protected def timeout() = {}
+  protected def createSubProcessor(id: String): SubProcessor
   
 }
 

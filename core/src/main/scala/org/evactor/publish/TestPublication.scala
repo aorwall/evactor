@@ -16,16 +16,14 @@
 package org.evactor.publish
 
 import akka.actor.ActorRef
-import org.evactor.expression.Expression
 import org.evactor.model.events.Event
 
 /**
- * Specifies how the event should be published
+ * Publishing events to a specified actor (used for testing)
  */
-abstract class Publication {
-
-  def channel(event: Event): String
-  def categories(event: Event): Set[String] 
-  
+case class TestPublication (val testActor: ActorRef) extends Publication {
+    
+  def channel(event: Event) = "none"
+  def categories(event: Event) = Set()
+    
 }
-

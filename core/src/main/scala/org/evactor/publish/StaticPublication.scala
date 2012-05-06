@@ -15,17 +15,16 @@
  */
 package org.evactor.publish
 
-import akka.actor.ActorRef
-import org.evactor.expression.Expression
 import org.evactor.model.events.Event
 
 /**
- * Specifies how the event should be published
+ * Publishing events to a specified channel and category
  */
-abstract class Publication {
-
-  def channel(event: Event): String
-  def categories(event: Event): Set[String] 
-  
+case class StaticPublication (
+    val channel: String,
+    val categories: Set[String]) extends Publication {
+    
+  def channel(event: Event) = channel
+  def categories(event: Event) = categories
+    
 }
-

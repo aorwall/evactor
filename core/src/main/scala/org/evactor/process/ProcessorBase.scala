@@ -61,7 +61,7 @@ trait ProcessorWithChildren extends ProcessorBase with Monitored {
     }
   }
   
-  def createSubProcessor(id: String): SubProcessor
+  protected def createSubProcessor(id: String): SubProcessor
   
   private[this] def createNewActor(id: String): ActorRef = {
       val newActor = context.actorOf(Props(createSubProcessor(id)))
@@ -72,7 +72,7 @@ trait ProcessorWithChildren extends ProcessorBase with Monitored {
       newActor 
   }
   
-  def getSubProcessor(id: String): ActorRef = 
+  protected def getSubProcessor(id: String): ActorRef = 
     children.getOrElseUpdate(id, createNewActor(id))
   
   abstract override def preStart {

@@ -34,5 +34,4 @@ trait Publisher extends UseProcessorEventBus {
     }
     
   }
-
 }

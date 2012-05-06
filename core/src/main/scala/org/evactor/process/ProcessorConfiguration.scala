@@ -26,6 +26,6 @@ abstract class ProcessorConfiguration (
     val name: String,
     val subscriptions: List[Subscription]) {
   
-  def processor: Processor
+  def processor: ProcessorBase
   
 }
