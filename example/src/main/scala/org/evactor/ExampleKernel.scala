@@ -61,6 +61,8 @@ class ExampleKernel extends Bootable {
   lazy val username = system.settings.config.getString("akka.evactor.example.twitter.username")
   lazy val password = system.settings.config.getString("akka.evactor.example.twitter.password")
   
+  lazy val storageImpl = system.settings.config.getString("akka.evactor.storage.implementation")
+
   // managers
   lazy val pm = system.actorOf(Props[ProcessorManager], name = "process")
   lazy val cm = system.actorOf(Props[CollectorManager], name = "collect")
@@ -99,8 +101,10 @@ class ExampleKernel extends Bootable {
     //    val subs = List(new Subscription("twitter:keywords", "scala"), new Subscription("twitter:keywords", "akka"), new Subscription("twitter:keywords", "cassandra"), new Subscription("twitter:url:alert"))
     //    val logger = system.actorOf(Props(new LogAlerter(subs)), name = "logger")
     
-    // store everything
-    sm ! new StorageProcessorConfig(None, 10)
+    if(storageImpl != null){
+      // store everything
+      sm ! new StorageProcessorConfig(None, 10)  
+    }
     
     // start api server
     nettyServer.start()
