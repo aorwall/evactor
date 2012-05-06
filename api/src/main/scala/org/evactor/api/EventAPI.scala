@@ -107,7 +107,7 @@ class EventAPI (val system: ActorSystem) {
   
   implicit protected[api] def anyToResponse(any: AnyRef): ResponseFunction[HttpResponse] = any match {
     case None => NotFound
-    case Some(obj) => println(obj); ResponseString(mapper.writeValueAsString(obj))
+    case Some(obj) => ResponseString(mapper.writeValueAsString(obj))
     case _ => ResponseString(mapper.writeValueAsString(any))
   }  
   	

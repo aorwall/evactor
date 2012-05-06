@@ -45,8 +45,8 @@ abstract class ProcessorBase
  */
 trait ProcessorWithChildren extends ProcessorBase with Monitored {
   
-  private val children = new HashMap[String, ActorRef]
-  private val idMapping = new HashMap[ActorRef, String]
+  private val children = new HashMap[String, ActorRef] 
+  private val idMapping = new HashMap[ActorRef, String] // TODO: Fix bidirectional map instead
   
   override protected def handleTerminated(child: ActorRef) {
     val id = idMapping.remove(child)
