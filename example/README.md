@@ -65,4 +65,4 @@ $ sbt
 > exit
 ```
 
-A executable jar can now be found in evactor/example/target and is executed with the command `java -jar evactorExample.jar`. 8. The server will now start listen for tweets. An API server will also be started on port 8080 and an [Ostrich](https://github.com/twitter/ostrich) server on port 8888.
+A executable jar can now be found in evactor/example/target and is executed with the command `java -jar evactorExample.jar`. The server will now start listen for tweets. An API server will also be started on port 8080 and an [Ostrich](https://github.com/twitter/ostrich) server on port 8888.

@@ -19,7 +19,6 @@ import scala.collection.JavaConversions._
 
 import org.evactor.model.events.DataEvent
 import org.evactor.model.events.Event
-import org.evactor.twitter.StatusEvent
 import org.evactor.EvactorSpec
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
@@ -43,16 +42,12 @@ class MvelExpressionSpec extends EvactorSpec {
     }
     
     "evaluate case class and return list variable" in {
-      val evaluator = new MvelExpression("urls")
-      val urls = List("http://www.svd.se")
-      val event = new StatusEvent("foo", 0L, "user", "message", urls, List())
-      evaluator.evaluate(event) must be (Some(urls))
+      (pending)
     }
     
     "evaluate case class and return string boolean (fail)" in {
-      val evaluator = new MvelExpression("urls.size() > 0")
-      val urls = List("http://www.svd.se")
-      val event = new StatusEvent("foo", 0L, "user", "message", urls, List())
+      val evaluator = new MvelExpression("timestamp > 0")
+      val event = new Event("id", 1L)
       evaluator.evaluate(event) must be (Some(true))
     }
     /*

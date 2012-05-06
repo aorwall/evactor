@@ -1,7 +1,7 @@
 package org.evactor.twitter
 
-import org.evactor.model.events.Event
 import org.evactor.model.attributes.HasMessage
+import org.evactor.model.events.Event
 
 case class StatusEvent (
     override val id: String,
