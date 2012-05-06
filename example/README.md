@@ -30,8 +30,11 @@ Flow
 
 Installation
 ---------------------
-1. Install [Apache Cassandra](http://wiki.apache.org/cassandra/GettingStarted)
-2. Add the column families to Cassandra with *cassandra-cli*:
+
+### Apache Cassandra
+Install [Apache Cassandra](http://wiki.apache.org/cassandra/GettingStarted)
+
+Add the column families to Cassandra with *cassandra-cli*:
 ```text
 create keyspace Evactor;
 use Evactor;
@@ -44,15 +47,22 @@ create column family Statistics with default_validation_class=CounterColumnType 
 create column family Latency with default_validation_class=CounterColumnType and comparator = LongType and replicate_on_write=true;
 create column family KpiSum with comparator = LongType;
 ``` 
-3. Install [sbt](https://github.com/harrah/xsbt/wiki/Getting-Started-Setup)
-4. Clone the Evactor repository `git clone git@github.com:aorwall/evactor.git`
-5. Set your own Twitter username and password in `evactor/example/src/main/resources/application.conf`
-6. Run *sbt* and build the example jar:
+
+### sbt
+Install [sbt](https://github.com/harrah/xsbt/wiki/Getting-Started-Setup)
+
+### Install the evactor example
+
+Clone the Evactor repository `git clone git@github.com:aorwall/evactor.git`
+
+Set your own Twitter username and password in `evactor/example/src/main/resources/application.conf`
+
+Run *sbt* and build the example jar:
 ```text
 $ sbt
 > project example
 > assembly
 > exit
 ```
-7. A executable jar can now be found in evactor/example/target and is executed with the command `java -jar evactorExample.jar`
-8. The server will now start listen for tweets. An API server will also be started on port 8080 and an [Ostrich](https://github.com/twitter/ostrich) server on port 8888.
+
+A executable jar can now be found in evactor/example/target and is executed with the command `java -jar evactorExample.jar`. 8. The server will now start listen for tweets. An API server will also be started on port 8080 and an [Ostrich](https://github.com/twitter/ostrich) server on port 8888.
