@@ -27,7 +27,7 @@ object BamBuild extends Build {
   lazy val bam = Project(
     id = "evactor",
     base = file(".")
-  ) aggregate (core, storageCassandra, api, example, benchmark)
+  ) aggregate (core, storageCassandra, api, example)
 
   lazy val core = Project(
     id = "core",
