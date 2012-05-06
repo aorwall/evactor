@@ -100,26 +100,29 @@ class Test extends FunSuite with Logging {
     
   }
 */
-  val log1 = new Message("channel", Set(), new LogEvent("329380921338", System.currentTimeMillis, "329380921308", "component", "client", "server", Start, "message"))
-  val log2 = new Message("channel", Set(), new LogEvent("329380921339", System.currentTimeMillis, "329380921308", "component", "client", "server", Success, "message"))
+  val log1 = new Message("logs", Set("1", "2", "3"), new LogEvent("329380921338", System.currentTimeMillis, "329380921308", "component", "client", "server", Start, "message"))
+  val log2 = new Message("logs", Set("1"), new LogEvent("329380921339", System.currentTimeMillis, "329380921308", "component", "client", "server", Success, "message"))
      
   test("Log event"){
    
     storage.storeMessage(log1)
     storage.storeMessage(log2)
-    info("LogEventStorage: " + storage.getEvents("channel", None, None, None, 10, 0))
+    println("LogEventStorage 1: " + storage.getEvents("logs", Some("1"), None, None, 10, 0))
+    println("LogEventStorage 2: " + storage.getEvents("logs", Some("2"), None, None, 10, 0))
+    println("LogEventStorage 3: " + storage.getEvents("logs", Some("3"), None, None, 10, 0))
+    println("LogEventStorage: " + storage.getEvents("logs", None, None, None, 10, 0))
   }     
   
   val req1 = new Message("channel2", Set(), new RequestEvent("329380921328", System.currentTimeMillis, "329380921328", "component", Some("329380921338"), Some("329380921338"), Start, 10L))
   val req2 = new Message("channel2", Set(), new RequestEvent("329380921329", System.currentTimeMillis+1, "329380921328", "component", Some("329380921338"), Some("329380921338"), Start, 10L))
     
-  test("Request event") {
-   
-    storage.storeMessage(req1)
-    storage.storeMessage(req2)
-    info("RequestEventStorage: " + storage.getEvents("channel", None, None, None, 10, 0))
-    
-  }
+//  test("Request event") {
+//   
+//    storage.storeMessage(req1)
+//    storage.storeMessage(req2)
+//    info("RequestEventStorage: " + storage.getEvents("channel", None, None, None, 10, 0))
+//    
+//  }
   /*
   test("Simple process event"){
     val simpleStorage = new SimpleProcessEventCassandraStorage(system)    
