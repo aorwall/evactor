@@ -53,14 +53,6 @@ object BamBuild extends Build {
     )
   ) dependsOn (core)
                      
-  lazy val camel = Project(
-    id = "camel",
-    base = file("camel"),
-    settings = defaultSettings ++ Seq(
-      libraryDependencies ++= Dependencies.camel
-    )
-  ) dependsOn (core)
-
   lazy val example = Project(
     id = "example",
     base = file("example"),
@@ -68,15 +60,7 @@ object BamBuild extends Build {
       libraryDependencies ++= Dependencies.example
     )
   ) dependsOn (core, storageCassandra, api)
-                           
-  lazy val benchmark = Project(
-    id = "benchmark",
-    base = file("benchmark"),
-    settings = defaultSettings ++ AkkaKernelPlugin.distSettings ++ Seq(
-      libraryDependencies ++= Dependencies.benchmark
-    )
-  ) dependsOn (core, storageCassandra, api)
-                            
+                                       
   override lazy val settings = super.settings ++ Seq(
         resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/",
         resolvers += "Twitter Repository" at "http://maven.twttr.com/",
@@ -104,8 +88,7 @@ object Dependencies {
   val core = Seq(akkaActor, jacksonCore, jacksonMapper, mvel2, ostrich, Test.scalatest, Test.junit, Test.mockito, Test.akkaTestkit)
   val api = Seq (grizzled, jacksonCore, jacksonMapper, jacksonScala, unfilteredFilter, unfilteredNetty, unfilteredNettyServer)
   val example = Seq (akkaKernel, camelCore, camelIrc, camelAtom, grizzled, unfilteredNettyServer, Test.scalatest, Test.junit, Test.akkaTestkit)
-  val benchmark = Seq(akkaKernel, akkaRemote, grizzled, netty, protobuf, Test.scalatest, Test.junit, Test.akkaTestkit)
-  val storageCassandra = Seq(cassandraAll, cassandraThrift, grizzled, guava, hectorCore, jodaConvert, jodaTime, perf4j, thrift, uuid, Test.scalatest, Test.junit) //highScaleLib
+  val storageCassandra = Seq(cassandraAll, cassandraThrift, grizzled, guava, hectorCore, jodaConvert, jodaTime, perf4j, thrift, uuid, Test.scalatest, Test.junit)
   val camel = Seq(camelCore)
 
 }
