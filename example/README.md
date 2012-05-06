@@ -1,14 +1,14 @@
 Twitter Example
 ====================
 This is an example implementation that analyses and stores status updates 
-from Twitter. It uses the Twitter Stream API and to run the application 
-one must specify a Twitter username and password in the application.conf.
+from Twitter. To receive tweets it uses the [Twitter Streaming API](https://dev.twitter.com/docs/streaming-api).
 
 Flow
 ---------------------
-1.  A *Collector* receives status uploads from Twitters 'Spritzer' API (1% 
-    of all status updates on Twitter) and publishes them on the channel 
-    `twitter`.
+The flow is configured in [ExampleKernel.scala](https://github.com/aorwall/evactor/blob/master/example/src/main/scala/org/evactor/ExampleKernel.scala).
+
+1.  A *Collector* receives status uploads from Twitter's 'Spritzer' API (1% 
+    of all status updates on Twitter) and publishes them to the channel `twitter`.
     
 2.  A [*Filter*](https://github.com/aorwall/evactor/blob/master/core/src/main/scala/org/evactor/process/route/Filter.scala) subscribes to `twitter` and filters out
     all status updates containing hashtags and publish them to the channel
