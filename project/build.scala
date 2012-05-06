@@ -21,11 +21,11 @@ import akka.sbt.AkkaKernelPlugin.{ Dist, outputDirectory, distJvmOptions}
 object BamBuild extends Build {
   
   val Organization = "org.evactor"
-  val Version      = "0.1-SNAPSHOT"
+  val Version      = "0.2-SNAPSHOT"
   val ScalaVersion = "2.9.2"
     
   lazy val bam = Project(
-    id = "bam",
+    id = "evactor",
     base = file(".")
   ) aggregate (core, storageCassandra, api, example, benchmark)
 
@@ -101,10 +101,9 @@ object BamBuild extends Build {
 object Dependencies {
   import Dependency._
   
-  val core = Seq(akkaActor, jacksonCore, jacksonMapper, mvel2, 
-      Test.scalatest, Test.junit, Test.mockito, Test.akkaTestkit)
+  val core = Seq(akkaActor, jacksonCore, jacksonMapper, mvel2, ostrich, Test.scalatest, Test.junit, Test.mockito, Test.akkaTestkit)
   val api = Seq (grizzled, jacksonCore, jacksonMapper, jacksonScala, unfilteredFilter, unfilteredNetty, unfilteredNettyServer)
-  val example = Seq (akkaKernel, camelCore, camelIrc, camelAtom, grizzled, unfilteredNettyServer)
+  val example = Seq (akkaKernel, camelCore, camelIrc, camelAtom, grizzled, unfilteredNettyServer, Test.scalatest, Test.junit, Test.akkaTestkit)
   val benchmark = Seq(akkaKernel, akkaRemote, grizzled, netty, protobuf, Test.scalatest, Test.junit, Test.akkaTestkit)
   val storageCassandra = Seq(cassandraAll, cassandraThrift, grizzled, guava, hectorCore, jodaConvert, jodaTime, perf4j, thrift, uuid, Test.scalatest, Test.junit) //highScaleLib
   val camel = Seq(camelCore)
