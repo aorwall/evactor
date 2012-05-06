@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.evactor.process
+package org.evactor.subscribe
 
-import scala.collection.JavaConversions._
+import org.evactor.subscribe.Subscription
+import scala.collection.JavaConversions.collectionAsScalaIterable
 
 object Subscriptions {
 

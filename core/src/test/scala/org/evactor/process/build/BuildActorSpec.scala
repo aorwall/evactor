@@ -19,8 +19,6 @@ import org.evactor.model.events.Event
 import org.evactor.model.events.LogEvent
 import org.evactor.model.events.RequestEvent
 import org.evactor.model.Message
-import org.evactor.process.StaticPublication
-import org.evactor.process.TestPublication
 import org.evactor.EvactorSpec
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
@@ -36,6 +34,8 @@ import akka.util.duration._
 import org.evactor.model.Start
 import org.evactor.model.Success
 import org.evactor.model.Timeout
+import org.evactor.publish.StaticPublication
+import org.evactor.publish.TestPublication
 
 trait TestEventBuilder extends EventBuilder  {  
 

@@ -29,12 +29,12 @@ import akka.actor.ActorSystem
 import akka.testkit.TestActorRef
 import org.evactor.process.build.BuildActor
 import org.evactor.EvactorSpec
-import org.evactor.process.StaticPublication
 import org.evactor.model.Timeout
 import akka.testkit.TestProbe
-import org.evactor.process.TestPublication
 import org.evactor.model.Message
 import akka.util.duration.intToDurationInt
+import org.evactor.publish.StaticPublication
+import org.evactor.publish.TestPublication
 
 @RunWith(classOf[JUnitRunner])
 class RequestBuilderSpec(_system: ActorSystem) 

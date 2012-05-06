@@ -22,11 +22,12 @@ import org.evactor.model.Failure
 import org.evactor.model.Start
 import org.evactor.model.Success
 import org.evactor.process.build._
-import org.evactor.process.{Processor, Subscription, Publication}
 import akka.actor.ActorLogging
 import akka.actor.ActorRef
 import org.evactor.model.Timeout
 import java.util.UUID
+import org.evactor.publish.Publication
+import org.evactor.subscribe.Subscription
 
 /**
  * Handles LogEvent objects and creates a RequestEvent object. 

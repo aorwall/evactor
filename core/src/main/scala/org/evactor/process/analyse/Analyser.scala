@@ -20,6 +20,9 @@ import scala.Predef._
 import org.evactor.model.events.{Event, AlertEvent}
 import org.evactor.process._
 import java.util.UUID
+import org.evactor.publish.Publication
+import org.evactor.subscribe.Subscription
+import org.evactor.publish.Publisher
 
 /**
  * An analyser analyses event flows and creates alert events when 

@@ -17,7 +17,7 @@ package org.evactor.process.alert
 
 import org.evactor.process.Processor
 import akka.actor.ActorLogging
-import org.evactor.process.Subscription
+import org.evactor.subscribe.Subscription
 
 /**
  * Alerter sends alerts about events to external parties and

@@ -31,6 +31,10 @@ import org.evactor.model.events.DataEvent
 import org.evactor.EvactorSpec
 import org.evactor.model.events.Event
 import org.evactor.model.Message
+import org.evactor.publish.Publication
+import org.evactor.subscribe.Subscription
+import org.evactor.publish.TestPublication
+import org.evactor.publish.Publisher
 
 class TestProcessor (
     override val subscriptions: List[Subscription],

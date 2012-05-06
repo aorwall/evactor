@@ -13,13 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.evactor.process
+package org.evactor.bus
 
-import org.evactor.model.Message
-
-import akka.actor._
+import akka.actor.actorRef2Scala
+import akka.actor.Actor
+import akka.actor.ExtendedActorSystem
+import akka.actor.Extension
+import akka.actor.ExtensionId
+import akka.actor.ExtensionIdProvider
 import akka.event.ActorEventBus
 import akka.event.LookupClassification
+import org.evactor.model.Message
+import org.evactor.subscribe.Subscription
 
 /**
  * This is a first implementation of the event bus for only sending events
@@ -79,7 +84,7 @@ class ProcessorEventBus extends Extension with ActorEventBus with LookupClassifi
     
 trait UseProcessorEventBus extends Actor {
 
-  private[process] val bus = ProcessorEventBusExtension(context.system)
+  private[evactor] val bus = ProcessorEventBusExtension(context.system)
 
 }
 

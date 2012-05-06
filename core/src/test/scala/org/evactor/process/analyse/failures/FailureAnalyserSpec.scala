@@ -33,9 +33,8 @@ import org.evactor.model.Success
 import org.evactor.process.analyse.window.TimeWindow
 import org.evactor.EvactorSpec
 import org.evactor.process.analyse.window.LengthWindow
-import org.evactor.process.StaticPublication
-import org.evactor.process.TestPublication
 import org.evactor.model.Message
+import org.evactor.publish.TestPublication
 
 @RunWith(classOf[JUnitRunner])
 class FailureAnalyserSpec(_system: ActorSystem) 

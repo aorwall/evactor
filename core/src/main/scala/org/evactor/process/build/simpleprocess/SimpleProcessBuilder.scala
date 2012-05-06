@@ -20,10 +20,12 @@ import org.evactor.model._
 import org.evactor.process._
 import org.evactor.process.build._
 import akka.actor.ActorRef
-import org.evactor.process.ProcessorEventBus
 import akka.actor.ActorLogging
 import scala.collection._
 import java.util.UUID
+import org.evactor.publish.Publication
+import org.evactor.subscribe.Subscription
+import org.evactor.subscribe.Subscriber
 
 /**
  * Processes simple processes with requests from subscribed channels from specified

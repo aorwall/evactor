@@ -33,8 +33,8 @@ import org.evactor.model.events.RequestEvent
 import org.evactor.model.Success
 import org.evactor.process.analyse.window.LengthWindow
 import org.evactor.EvactorSpec
-import org.evactor.process.TestPublication
 import org.evactor.model.Message
+import org.evactor.publish.TestPublication
 
 @RunWith(classOf[JUnitRunner])
 class LatencyAnalyserSpec(_system: ActorSystem) 

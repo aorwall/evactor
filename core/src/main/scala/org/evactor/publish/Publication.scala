@@ -13,13 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.evactor.process
-
-import org.evactor.expression.Expression
-import org.evactor.model.attributes.HasMessage
-import org.evactor.model.events.Event
+package org.evactor.publish
 
 import akka.actor.ActorRef
+import org.evactor.expression.Expression
+import org.evactor.model.events.Event
 
 /**
  * Specifies how the event should be published

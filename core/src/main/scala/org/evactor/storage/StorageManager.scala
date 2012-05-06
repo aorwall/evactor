@@ -1,16 +1,15 @@
 package org.evactor.storage
 
-import akka.actor.Actor
-import org.evactor.process.UseProcessorEventBus
-import akka.actor.OneForOneStrategy
+import org.evactor.subscribe.Subscription
+
 import akka.actor.SupervisorStrategy._
+import akka.actor.Actor
+import akka.actor.ActorLogging
+import akka.actor.OneForOneStrategy
 import akka.actor.Props
 import akka.actor.Status
 import akka.util.duration._
-import akka.actor.ActorLogging
-import org.evactor.process.Subscriptions
-import org.evactor.process.Subscription
-
+import org.evactor.subscribe.Subscription
 
 /**
  * Manages the storage processors

@@ -21,6 +21,8 @@ import akka.util.duration._
 import org.evactor.model.events.Event
 import org.evactor.model.Timeout
 import org.evactor.process._
+import org.evactor.publish.Publication
+import org.evactor.publish.Publisher
 
 /**
  * One build actor for each running event builder

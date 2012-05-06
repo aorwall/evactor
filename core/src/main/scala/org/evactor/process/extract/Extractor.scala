@@ -20,6 +20,9 @@ import org.evactor.model.attributes.HasMessage
 import org.evactor.model.events.Event
 import org.evactor.process._
 import org.evactor.expression.Expression
+import org.evactor.publish.Publication
+import org.evactor.subscribe.Subscription
+import org.evactor.publish.Publisher
 
 /**
  * Extract information from messages and creates new events based on the extracted

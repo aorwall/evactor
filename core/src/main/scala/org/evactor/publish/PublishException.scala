@@ -1,4 +1,4 @@
-package org.evactor.process
+package org.evactor.publish
 
 import org.evactor.EvactorException
 

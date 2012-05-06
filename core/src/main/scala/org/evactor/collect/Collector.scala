@@ -21,12 +21,9 @@ import akka.util.duration._
 import org.evactor.model.events.Event
 import org.evactor.process.Processor
 import org.evactor.storage.Storage
-import org.evactor.process.ProcessorEventBus
-import org.evactor.process.Publisher
+import org.evactor.bus._
+import org.evactor.publish._
 import org.evactor.model.Message
-import org.evactor.process.UseProcessorEventBus
-import org.evactor.process.ProcessorEventBusExtension
-import org.evactor.process.Publication
 import org.evactor.listen.Listener
 import org.evactor.transform.Transformer
 import org.evactor.listen.ListenerConfiguration

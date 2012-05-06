@@ -17,9 +17,9 @@ package org.evactor.process.analyse.absence
 
 import akka.actor.Actor._
 import org.evactor.process.ProcessorConfiguration
-import org.evactor.process.Subscription
+import org.evactor.subscribe.Subscription
 import org.evactor.utils.JavaHelpers.any2option
-import org.evactor.process.Publication
+import org.evactor.publish.Publication
 
 class AbsenceOfRequests (
     override val name: String,

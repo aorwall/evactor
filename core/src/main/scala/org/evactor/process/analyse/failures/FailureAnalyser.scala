@@ -24,10 +24,10 @@ import org.evactor.process.analyse.window.Window
 import org.evactor.process.analyse.Analyser
 import akka.actor.ActorRef
 import akka.actor.ActorLogging
-import org.evactor.process.Subscription
+import org.evactor.subscribe.Subscription
 import scala.collection.immutable.TreeSet
 import org.evactor.model
-import org.evactor.process.Publication
+import org.evactor.publish.Publication
 
 class FailureAnalyser (
     override val subscriptions: List[Subscription], 

@@ -30,8 +30,8 @@ import org.evactor.model.events.KpiEvent
 import org.evactor.EvactorSpec
 import org.evactor.expression.MvelExpression
 import akka.util.duration._
-import org.evactor.process.TestPublication
 import org.evactor.model.Message
+import org.evactor.publish.TestPublication
 
 @RunWith(classOf[JUnitRunner])
 class KpiSpec (_system: ActorSystem) 

@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.evactor.process
+package org.evactor.subscribe
 
 import akka.actor.ActorLogging
 import org.evactor.monitor.Monitored
+import org.evactor.bus.UseProcessorEventBus
 
 /**
  * Trait extended by actors subscribing to the processor event bus  

@@ -19,8 +19,8 @@ import org.evactor.process.Processor
 import org.evactor.process.alert.Alerter
 import org.evactor.model.events.Event
 import akka.actor.ActorLogging
-import org.evactor.process.Subscription
 import org.evactor.process.ProcessorConfiguration
+import org.evactor.subscribe.Subscription
 
 class LogAlerter (
     override val subscriptions: List[Subscription])

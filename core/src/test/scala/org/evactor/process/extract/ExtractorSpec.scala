@@ -27,15 +27,15 @@ import org.evactor.model.attributes.HasMessage
 import org.evactor.model.events.DataEvent
 import org.evactor.model.events.Event
 import org.evactor.EvactorSpec
-import org.evactor.process.Subscription
+import org.evactor.subscribe.Subscription
 import akka.testkit.TestActorRef
 import akka.testkit.TestProbe
 import akka.util.duration._
-import org.evactor.process.Publication
-import org.evactor.process.TestPublication
+import org.evactor.publish.Publication
 import org.evactor.model.Message
 import org.evactor.expression.Expression
 import org.evactor.expression.StaticExpression
+import org.evactor.publish.TestPublication
 
 @RunWith(classOf[JUnitRunner])
 class ExtractorSpec(_system: ActorSystem) 

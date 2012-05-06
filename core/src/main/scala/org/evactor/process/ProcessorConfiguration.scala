@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 package org.evactor.process
-import akka.actor.Actor
+
+import org.evactor.subscribe.Subscription
 
 /**
  * Base class for process configurations. 

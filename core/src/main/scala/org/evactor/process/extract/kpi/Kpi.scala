@@ -24,15 +24,15 @@ import org.evactor.model.events.KpiEvent
 import org.evactor.process.extract.Extractor
 import org.evactor.process.Processor
 import org.evactor.process.ProcessorConfiguration
-import org.evactor.process.Subscription
+import org.evactor.subscribe.Subscription
 import org.evactor.process.extract.EventCreator
 import org.evactor.expression.MvelExpression
 import org.evactor.expression.XPathExpression
 import org.evactor.expression.Expression
 import akka.actor.ActorLogging
-import org.evactor.process.Publisher
-import org.evactor.process.Publication
+import org.evactor.publish.Publication
 import java.util.UUID
+import org.evactor.publish.Publisher
 
 /**
  * Extracts a value from a message and creates a KPI Event object. Using a specified

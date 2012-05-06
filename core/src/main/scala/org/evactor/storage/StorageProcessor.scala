@@ -22,6 +22,8 @@ import akka.actor.ActorLogging
 import akka.actor.Props
 import akka.routing.RoundRobinRouter
 import org.evactor.model.Message
+import org.evactor.subscribe.Subscription
+import org.evactor.subscribe.Subscriber
 
 /**
  * Stores events

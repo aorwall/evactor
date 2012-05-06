@@ -21,7 +21,7 @@ import akka.util.duration._
 import org.evactor.model.events.Event
 import org.evactor.process.Processor
 import scala.collection.mutable.HashMap
-import org.evactor.process.Subscription
+import org.evactor.subscribe.Subscription
 
 abstract class Builder (override val subscriptions: List[Subscription]) 
   extends Processor (subscriptions) 

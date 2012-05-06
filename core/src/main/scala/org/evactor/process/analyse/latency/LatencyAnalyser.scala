@@ -22,8 +22,8 @@ import org.evactor.model.attributes.HasLatency
 import org.evactor.process.analyse.Analyser
 import org.evactor.process.analyse.window.Window
 import akka.actor.ActorLogging
-import org.evactor.process.Subscription
-import org.evactor.process.Publication
+import org.evactor.subscribe.Subscription
+import org.evactor.publish.Publication
 
 class LatencyAnalyser(
     override val subscriptions: List[Subscription], 

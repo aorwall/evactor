@@ -28,9 +28,8 @@ import org.evactor.model.events.AlertEvent
 import org.evactor.model.events.Event
 import org.scalatest.junit.JUnitRunner
 import org.evactor.EvactorSpec
-import org.evactor.process.StaticPublication
-import org.evactor.process.TestPublication
 import org.evactor.model.Message
+import org.evactor.publish.TestPublication
 
 @RunWith(classOf[JUnitRunner])
 class AbsenceOfRequestsAnalyserSpec(_system: ActorSystem) 

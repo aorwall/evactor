@@ -15,16 +15,13 @@
  */
 package org.evactor.process
 
-import akka.actor.Actor
-import akka.actor.ActorLogging
-import akka.actor.ActorRef
-import akka.actor.EmptyLocalActorRef
-import akka.actor.InternalActorRef
 import org.evactor.model.events.Event
 import org.evactor.model.Message
 import org.evactor.model.Timeout
-import akka.actor.Terminated
 import org.evactor.monitor.Monitored
+import org.evactor.subscribe._
+import akka.actor.ActorLogging
+import akka.actor.Terminated
 
 /**
  * Abstract class all event processors should extend

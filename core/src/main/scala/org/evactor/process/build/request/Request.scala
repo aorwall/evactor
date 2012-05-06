@@ -17,8 +17,8 @@ package org.evactor.process.build.request
 
 import org.evactor.process.ProcessorConfiguration
 import org.evactor.process.Processor
-import org.evactor.process.Subscription
-import org.evactor.process.Publication
+import org.evactor.subscribe.Subscription
+import org.evactor.publish.Publication
 
 class Request (
     override val name: String,

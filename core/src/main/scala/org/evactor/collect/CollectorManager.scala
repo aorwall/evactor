@@ -3,7 +3,7 @@ package org.evactor.collect
 import org.evactor.listen.Listener
 import org.evactor.listen.ListenerConfiguration
 import org.evactor.model.events.Event
-import org.evactor.process.Publication
+import org.evactor.publish.Publication
 import org.evactor.transform.Transformer
 import org.evactor.transform.TransformerConfiguration
 

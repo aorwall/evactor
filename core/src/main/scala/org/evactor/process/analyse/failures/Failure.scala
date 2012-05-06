@@ -21,9 +21,9 @@ import org.evactor.process.analyse.window.TimeWindow
 import org.evactor.process.analyse.window.TimeWindowConf
 import org.evactor.process.analyse.window.WindowConf
 import org.evactor.process.ProcessorConfiguration
-import org.evactor.process.Subscription
+import org.evactor.subscribe.Subscription
 import org.evactor.utils.JavaHelpers.any2option
-import org.evactor.process.Publication
+import org.evactor.publish.Publication
 
 class Failure (
     override val name: String,

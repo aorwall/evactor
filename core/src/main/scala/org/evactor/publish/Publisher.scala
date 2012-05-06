@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.evactor.process
+package org.evactor.publish
 
+import akka.actor.actorRef2Scala
 import org.evactor.model.events.Event
 import org.evactor.model.Message
-import akka.actor.ActorRef
+import org.evactor.bus.UseProcessorEventBus
 
 /**
  * Trait extended by actors publishing events to the processor event bus

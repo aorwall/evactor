@@ -22,9 +22,9 @@ import org.evactor.process.analyse.Analyser
 import org.evactor.model.Timeout
 import akka.actor.ActorRef
 import akka.actor.ActorLogging
-import org.evactor.process.Subscription
 import org.evactor.model.Message
-import org.evactor.process.Publication
+import org.evactor.publish.Publication
+import org.evactor.subscribe.Subscription
 
 /**
  * TODO: Check event.timestamp to be really sure about the timeframe between events 

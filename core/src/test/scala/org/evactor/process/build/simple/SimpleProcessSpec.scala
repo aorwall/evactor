@@ -16,7 +16,7 @@
 package org.evactor.process.build.simple
 
 import org.evactor.process.build.simpleprocess.SimpleProcessBuilder
-import org.evactor.process.Subscription
+import org.evactor.subscribe.Subscription
 import org.evactor.EvactorSpec
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
@@ -25,13 +25,13 @@ import org.scalatest.WordSpec
 import akka.actor.ActorSystem
 import akka.testkit.TestActorRef
 import akka.testkit.TestKit
-import org.evactor.process.StaticPublication
 import org.evactor.process.build.BuildActor
 import org.evactor.process.build.simpleprocess.SimpleProcessEventBuilder
 import org.evactor.model.events.RequestEvent
 import org.evactor.model.Success
 import org.evactor.model.events.SimpleProcessEvent
 import org.evactor.model.Failure
+import org.evactor.publish.StaticPublication
 
 @RunWith(classOf[JUnitRunner])
 class SimpleProcessSpec(_system: ActorSystem) 

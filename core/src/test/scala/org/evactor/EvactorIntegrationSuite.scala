@@ -23,19 +23,15 @@ import org.evactor.process.analyse.latency.Latency
 import org.evactor.process.analyse.window.LengthWindowConf
 import org.evactor.process.build.request.Request
 import org.evactor.process.build.simpleprocess.SimpleProcess
-import org.evactor.process.ProcessorEventBusExtension
 import org.evactor.process.ProcessorManager
-import org.evactor.process.StaticPublication
-import org.evactor.process.Subscription
-import org.evactor.process.Subscriptions
-import org.evactor.process.TestPublication
+import org.evactor.subscribe.Subscription
+import org.evactor.subscribe.Subscriptions
 import org.evactor.storage.EventStorageSpec
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.matchers.MustMatchers
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.FunSuite
-
 import akka.actor.ActorSystem
 import akka.actor.Props
 import akka.actor.actorRef2Scala
@@ -43,6 +39,9 @@ import akka.testkit.CallingThreadDispatcher
 import akka.testkit.TestKit
 import akka.testkit.TestProbe
 import akka.util.duration.intToDurationInt
+import org.evactor.bus.ProcessorEventBusExtension
+import org.evactor.publish.StaticPublication
+import org.evactor.publish.TestPublication
 
 /**
  * Testing the whole log data flow.

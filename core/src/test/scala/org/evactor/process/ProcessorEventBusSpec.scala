@@ -27,6 +27,8 @@ import akka.util.duration._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.evactor.model.Message
+import org.evactor.bus.ProcessorEventBusExtension
+import org.evactor.subscribe.Subscription
 
 @RunWith(classOf[JUnitRunner])
 class ProcessorEventBusSpec (_system: ActorSystem) 
