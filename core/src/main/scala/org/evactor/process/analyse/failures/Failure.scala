@@ -42,9 +42,9 @@ class Failure (
     case Some(length: LengthWindowConf) => 
       new FailureAnalyser(subscriptions, publication, maxOccurrences) 
         with LengthWindow { override val noOfRequests = length.noOfRequests }
-    case Some(time: TimeWindowConf) => 
+    case Some(timewindow: TimeWindowConf) => 
       new FailureAnalyser(subscriptions, publication, maxOccurrences) 
-        with TimeWindow { override val timeframe = time.timeframe }
+        with TimeWindow { override val timeframe = timewindow.timeframe }
     case None => 
       new FailureAnalyser(subscriptions, publication, maxOccurrences)
   }

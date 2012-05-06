@@ -42,9 +42,9 @@ class Latency (
     case Some(length: LengthWindowConf) => 
       new LatencyAnalyser(subscriptions, publication, maxLatency) 
         with LengthWindow { override val noOfRequests = length.noOfRequests }
-    case Some(time: TimeWindowConf) => 
+    case Some(timewindow: TimeWindowConf) => 
       new LatencyAnalyser(subscriptions, publication, maxLatency)
-        with TimeWindow { override val timeframe = time.timeframe }
+        with TimeWindow { override val timeframe = timewindow.timeframe }
     case None => new LatencyAnalyser(subscriptions, publication, maxLatency)
   }
 }

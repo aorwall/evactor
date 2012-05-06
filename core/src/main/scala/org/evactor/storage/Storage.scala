@@ -22,9 +22,9 @@ import org.evactor.model.events.Event
 import org.evactor.model.events.SimpleProcessEvent
 import akka.actor.ActorLogging
 import org.evactor.model.Message
-//import com.twitter.ostrich.stats.Stats
+import org.evactor.monitor.Monitored
 
-trait Storage extends Actor with ActorLogging {
+trait Storage extends Actor with Monitored with ActorLogging {
 
   val storage = EventStorageExtension(context.system)
 
@@ -32,14 +32,12 @@ trait Storage extends Actor with ActorLogging {
    * Store an event and returns true if successful.
    */
   def storeMessage(message: Message): Unit = storage.getEventStorage match {
-//    case Some(storageImpl) => Stats.time("store_%s".format(event.getClass.getName)) { storageImpl.storeEvent(event) }
-    case Some(storageImpl) => storageImpl.storeMessage(message) 
+    case Some(storageImpl) => time ("storeMessage") { storageImpl.storeMessage(message) } 
     case None => log.debug("No storage implementation found") 
   }
   
   def eventExists(event: Event): Boolean = storage.getEventStorage match {
-//    case Some(storageImpl) => Stats.time("check_%s".format(event.getClass.getName)) { storageImpl.eventExists(event) }
-    case Some(storageImpl) => storageImpl.eventExists(event)
+    case Some(storageImpl) => time ("eventExists") { storageImpl.eventExists(event) }
     case None => {
       log.debug("No storage implementation found") 
       false // Return false if no storage implementation is found

@@ -20,6 +20,17 @@ import org.evactor.process.Processor
 import org.evactor.process.Publication
 import org.evactor.process.Subscription
 import org.evactor.process.Publisher
+import org.evactor.process.ProcessorConfiguration
+
+class ForwarderConfig(
+    override val name: String,
+    override val subscriptions: List[Subscription],
+    val publication: Publication)
+  extends ProcessorConfiguration(name, subscriptions) {
+  
+  def processor = new Forwarder(subscriptions, publication)
+  
+}
 
 /**
  * Forwards events to another channel and category.

@@ -31,6 +31,7 @@ import org.evactor.listen.Listener
 import org.evactor.transform.Transformer
 import org.evactor.listen.ListenerConfiguration
 import org.evactor.transform.TransformerConfiguration
+import org.evactor.monitor.Monitored
 
 
 //import com.twitter.ostrich.stats.Stats
@@ -45,6 +46,7 @@ class Collector(
   extends Actor 
   with Storage 
   with Publisher
+  with Monitored
   with ActorLogging {
   
   override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries = 10, withinTimeRange = 1 minute) {
@@ -62,8 +64,10 @@ class Collector(
     log.debug("collecting: {}", event)
 
     if(!eventExists(event)) {
+      incr("new")
       publish(event)
     } else {
+      incr("old")
       log.warning("The event is already processed: {}", event) 
     }
     

@@ -26,6 +26,7 @@ import org.evactor.model.Timeout
 import akka.actor.Props
 import akka.actor.Terminated
 import scala.collection.mutable.HashMap
+import org.evactor.monitor.Monitored
 
 /**
  * Base class for processors. Contains supporting functions for Processors
@@ -42,17 +43,20 @@ abstract class ProcessorBase
 /** 
  * Trait used by processors that handles it own children processors (sub processors)
  */
-trait ProcessorWithChildren extends ProcessorBase{
+trait ProcessorWithChildren extends ProcessorBase with Monitored {
   
   private val children = new HashMap[String, ActorRef]
   private val idMapping = new HashMap[ActorRef, String]
-  
   
   override protected def handleTerminated(child: ActorRef) {
     val id = idMapping.remove(child)
     
     id match {
-      case Some(s) => log.debug("Removing actor with id {}", s); children.remove(s)
+      case Some(s) => {
+        log.debug("Removing actor with id {}", s)
+        children.remove(s)
+        addMetric("children", children.size)
+      }
       case None => log.warning("No id found for actor {}", child)
     }
   }
@@ -64,9 +68,21 @@ trait ProcessorWithChildren extends ProcessorBase{
       children.put(id, newActor)
       idMapping.put(newActor, id)
       context.watch(newActor)
+      addMetric("children", children.size)
       newActor 
   }
   
   def getSubProcessor(id: String): ActorRef = 
     children.getOrElseUpdate(id, createNewActor(id))
+  
+  abstract override def preStart {
+    super.preStart()
+    addMetric("children", 0)
+  }
+  
+  abstract override def postStop {
+    super.postStop()
+    removeMetric("children")
+  }
+  
 }

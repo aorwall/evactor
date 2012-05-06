@@ -26,7 +26,7 @@ import org.evactor.model.Message
 /**
  * Stores events
  */
-case class StorageProcessorConf (
+case class StorageProcessorConfig (
     val channel: Option[String],
     val maxThreads: Int)
 

@@ -73,11 +73,11 @@ class FailureAnalyserSpec(_system: ActorSystem)
 
     "alert when the number of failed incoming events exceeds max within a specified time window" in {
 
-      val time = 100L
+      val _timeframe = 100L
       val currentTime = System.currentTimeMillis()
       val testProbe = TestProbe()
 
-      val failureActor = TestActorRef(new FailureAnalyser(Nil, new TestPublication(testProbe.ref), 2) with TimeWindow {override val timeframe = time} )
+      val failureActor = TestActorRef(new FailureAnalyser(Nil, new TestPublication(testProbe.ref), 2) with TimeWindow {override val timeframe = _timeframe} )
 
       failureActor ! new Message("", Set(), createLogEvent(currentTime-50, model.Failure))
       failureActor ! new Message("", Set(), createLogEvent(currentTime-40, model.Failure))

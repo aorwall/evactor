@@ -21,6 +21,19 @@ import org.evactor.process.Publication
 import org.evactor.process.Subscription
 import org.evactor.process.Publisher
 import org.evactor.expression.Expression
+import org.evactor.process.ProcessorConfiguration
+
+class FilterConfig(
+    override val name: String,
+    override val subscriptions: List[Subscription],
+    val publication: Publication,
+    val expression: Expression,
+    val accept: Boolean)
+  extends ProcessorConfiguration(name, subscriptions) {
+  
+  def processor = new Filter(subscriptions, publication, expression, accept)
+  
+}
 
 /**
  * Filter out all events that do or don't match the specified expression
@@ -35,8 +48,8 @@ class Filter (
   def process(event: Event) {
     
     expression.evaluate(event) match {
-      case Some("true") if(accept) => publish(event)
-      case Some("false") if(!accept) => publish(event)
+      case Some(true) if(accept) => publish(event)
+      case Some(false) if(!accept) => publish(event)
       case _ => // do nothing
     }
     

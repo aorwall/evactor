@@ -25,12 +25,12 @@ class StorageManager extends Actor with ActorLogging {
   }
   
   def receive = {
-    case configuration: StorageProcessorConf => setStorageProcessor(configuration)
+    case configuration: StorageProcessorConfig => setStorageProcessor(configuration)
     // TODO: Remove configuration
     case msg => log.warning("can't handle: {}", msg); sender ! Status.Failure
   }
   
-  private[this] def setStorageProcessor(c: StorageProcessorConf){
+  private[this] def setStorageProcessor(c: StorageProcessorConfig){
     val name = c.channel match {
       case Some(channel) => channel
       case None => "all"

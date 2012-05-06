@@ -16,24 +16,30 @@
 package org.evactor.process
 
 import akka.actor.ActorLogging
+import org.evactor.monitor.Monitored
 
 /**
  * Trait extended by actors subscribing to the processor event bus  
  */
-trait Subscriber extends UseProcessorEventBus with ActorLogging {
+trait Subscriber extends UseProcessorEventBus with Monitored with ActorLogging {
 
   val subscriptions: List[Subscription]
   
-  override def preStart = {
+  abstract override def preStart = {
+    super.preStart()
     log.info("subscribing to: {}", subscriptions)
+    addLabel("subscriptions to: %s".format(subscriptions))
 
     for(sub <- subscriptions){
       bus.subscribe(context.self, sub)
     }
+    
   }
 
-  override def postStop = {
+  abstract override def postStop = {
+    super.postStop()
     log.info("unsubscribing")
+    removeLabel()
 
     for(sub <- subscriptions){
       bus.unsubscribe(context.self, sub)

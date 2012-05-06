@@ -35,7 +35,6 @@ abstract class Analyser(
     val publication: Publication) 
   extends Processor(subscriptions) 
   with Publisher
-  with Monitored
   with ActorLogging {
 
   var triggered = false 

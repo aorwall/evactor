@@ -24,6 +24,7 @@ import org.evactor.model.events.Event
 import org.evactor.model.Message
 import org.evactor.model.Timeout
 import akka.actor.Terminated
+import org.evactor.monitor.Monitored
 
 /**
  * Abstract class all event processors should extend
@@ -32,10 +33,11 @@ abstract class Processor (
     val subscriptions: List[Subscription]) 
   extends ProcessorBase
   with Subscriber 
+  with Monitored
   with ActorLogging {
     
   final def receive = {
-    case Message(_, _, event) => process(event)
+    case Message(_, _, event) => incr("process"); process(event)
     case Timeout => timeout()
     case Terminated(supervised) => handleTerminated(supervised)
     case msg => log.warning("Can't handle {}", msg)
@@ -47,34 +49,3 @@ abstract class Processor (
   
 }
 
-/**
- * Extended by processors that should be monitored by
- * Ostrich (https://github.com/twitter/ostrich)
- * 
- * TODO: This trait should use an extension instead to be able to
- * use other statistics libraries..
- * 
- */
-trait Monitored extends Processor with ActorLogging {
-  
-  abstract override def preStart = {
-    // set label context.self + running
-//    Stats.setLabel(context.self.toString, "running") //TODO: Ostrich stuff, removed atm...
-    super.preStart()
-  }
-
-  abstract override def postStop = {
-    // set label context.self + stopped
-//    Stats.setLabel(context.self.toString, "stopped") //TODO: Ostrich stuff, removed atm...
-    super.postStop()
-  }
-  
-  //TODO: This doesn't work, try intercepting the receive method instead if that's possible...
-  
-  //abstract override def receive = {
-  //  case _: T => Stats.incr(context.self.toString)
-    // count
-    
- // }
-
-}

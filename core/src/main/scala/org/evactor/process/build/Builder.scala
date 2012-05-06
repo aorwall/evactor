@@ -19,13 +19,12 @@ import akka.actor._
 import akka.actor.SupervisorStrategy._
 import akka.util.duration._
 import org.evactor.model.events.Event
-import org.evactor.process.{Processor, Monitored}
+import org.evactor.process.Processor
 import scala.collection.mutable.HashMap
 import org.evactor.process.Subscription
 
 abstract class Builder (override val subscriptions: List[Subscription]) 
   extends Processor (subscriptions) 
-  with Monitored
   with ActorLogging {
   
   
