@@ -15,20 +15,67 @@
  */
 package org.evactor.collect
 
-import akka.actor.Actor
-import Actor._
-import org.scalatest.{WordSpec, FunSuite}
-import org.scalatest.matchers.MustMatchers
+import org.evactor.process.TestProcessor
+import org.evactor.EvactorSpec
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
+import org.scalatest.BeforeAndAfterAll
+import akka.actor.ActorSystem
+import akka.testkit.TestKit
+import akka.testkit.TestProbe
+import akka.testkit.TestActorRef
+import akka.util.duration.intToDurationInt
+import org.evactor.publish.TestPublication
+import org.evactor.model.events.Event
 
 @RunWith(classOf[JUnitRunner])
-class CollectorSpec extends WordSpec with MustMatchers {
+class CollectorSpec(_system: ActorSystem) 
+  extends TestKit(_system) 
+  with EvactorSpec   
+  with BeforeAndAfterAll {
+  
+  def this() = this(ActorSystem("CollectorSpec"))
+
+  override protected def afterAll(): scala.Unit = {
+    _system.shutdown()
+  }
+  
   "A Collector" must {
 
-    "create a log event when receiving a log object and send to process actors" in {
-       (pending)
+    "publish events to the event bus" in {
+      val testProbe = TestProbe()
+      val collector = TestActorRef(new Collector(None, None, new TestPublication(testProbe.ref)))
+      val testEvent = new Event("id", System.currentTimeMillis)
+      collector ! testEvent
+      testProbe.expectMsg(1 seconds, testEvent)
     }
 
+    "don't publish events that has already been published" in {
+      val testProbe = TestProbe()
+      val collector = TestActorRef(new Collector(None, None, new TestPublication(testProbe.ref)))
+      val testEvent = new Event("id", System.currentTimeMillis)
+      collector ! testEvent
+      testProbe.expectMsg(1 seconds, testEvent)
+      collector ! testEvent
+      testProbe.expectNoMsg(1 seconds)
+    }
+    
+    "send old events to db check" in {
+      (pending)
+    }
+    
+    "remove old events from memory" in {
+      val collector = TestActorRef(new Collector(None, None, new TestPublication(TestProbe().ref))).underlyingActor
+
+      val testEvent = new Event("id", System.currentTimeMillis - collector.timeInMem + 100)
+
+      collector.eventExists(testEvent) must be (false)
+      collector.eventExists(testEvent) must be (true)
+      Thread.sleep(200)
+      collector.eventExists(testEvent) must be (true)
+      collector.eventExists(testEvent) must be (false)
+      
+    }
+    
   }
 }
