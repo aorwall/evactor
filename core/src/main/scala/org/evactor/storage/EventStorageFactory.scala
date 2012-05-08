@@ -30,7 +30,12 @@ object EventStorageFactory {
     
     import config._
 
-    val StorageImplementation: String = getString("akka.evactor.storage.implementation")
+    val implPath = "akka.evactor.storage.implementation"
+    val StorageImplementation: Option[String] = if(hasPath(implPath)) {
+      Some(getString("akka.evactor.storage.implementation"))
+    } else {
+      None
+    }
 
   }
 }
@@ -46,7 +51,10 @@ class EventStorageFactory(val system: ExtendedActorSystem) extends Extension {
   def storageImplOf(storageFQN: String): Either[Throwable, EventStorage] = 
     system.dynamicAccess.createInstanceFor[EventStorage](storageFQN, Seq(classOf[ActorSystem] -> system))
         
-  lazy val storageImplementation: Option[EventStorage] = 
-    storageImplOf(settings.StorageImplementation).fold(throw _, Some(_)) 
+  lazy val storageImplementation: Option[EventStorage] = settings.StorageImplementation match {
+    case Some(impl) => storageImplOf(impl).fold(throw _, Some(_)) 
+    case None => None
+  }
+    
 
 }
