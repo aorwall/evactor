@@ -24,15 +24,8 @@ import akka.actor.ActorLogging
 import akka.actor.ActorRef
 import java.util.ArrayList
 import scala.collection.JavaConversions._
-import org.evactor.transform.TransformerConfiguration
 import com.twitter.ostrich.stats.Stats
 import java.util.Locale
-
-class TwitterJsonToStatusEventConfig extends TransformerConfiguration {
-  
-  def transformer(sendTo: ActorRef) = new TwitterJsonToStatusEvent(sendTo)
-  
-}
 
 class TwitterJsonToStatusEvent(collector: ActorRef)  extends Transformer with ActorLogging {
 

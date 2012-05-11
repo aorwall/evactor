@@ -20,22 +20,20 @@ import java.io.InputStreamReader
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.impl.client.DefaultHttpClient
 import org.evactor.listen.Listener
-import org.evactor.listen.ListenerConfiguration
 import com.twitter.ostrich.stats.Stats
 import akka.actor.ActorLogging
 import akka.actor.ActorRef
 import org.apache.commons.codec.binary.Base64
+import java.util.zip.GZIPInputStream
+import java.io.InputStream
+import org.apache.http.params.HttpConnectionParams
+import org.evactor.ConfigurationException
 
-class TwitterListenerConfig(url: String, credentials: String) extends ListenerConfiguration {
+class TwitterListener(sendTo: ActorRef, url: String, username: String, password: String) extends Listener with ActorLogging {
   
-  def listener(sendTo: ActorRef) = new TwitterListener(url, credentials, sendTo)
-  
-}
-
-class TwitterListener(url: String, credentials: String, sendTo: ActorRef) extends Listener with ActorLogging {
-  
-  lazy val stream = connect(url, credentials)
-  
+  var stream = connect()
+  var failures = 0  
+   
   def receive = {
     case "" => read()
     case msg => log.debug("can't handle {}", msg)
@@ -43,44 +41,73 @@ class TwitterListener(url: String, credentials: String, sendTo: ActorRef) extend
 
   private[this] def read(){
     
-    val inputLine = stream.readLine()
+    val inputLine = try{
+      stream.readLine()
+    } catch {
+      case e => {
+        log.warning("caught an exception while trying to read from stream: {}", e)
+        stream = connect()
+        stream.readLine
+      }
+    } 
     
     if (inputLine == null) {
       Stats.incr("twitterlistener:null")
       log.debug("inputline is null")
-      Thread.sleep(25)
+      failures = failures +1
+      Thread.sleep(50)
     } else if (inputLine.trim.size == 0) {
       Stats.incr("twitterlistener:empty")
       log.debug("inputline is empty")
-      Thread.sleep(25)
+      failures = failures +1
+      Thread.sleep(50)
     } else {
       Stats.incr("twitterlistener:status")
-      log.debug(inputLine)
+      log.debug("inputline: {}", inputLine)
       sendTo ! inputLine
+    }
+    
+    if(failures > 10){
+      log.warning("more than 10 failures in a row, will try to reconnect to the twitter stream")
+      stream = connect()
+      failures = 0
     }
     
     context.self ! ""
     
   }
   
-  private[this] def connect(url: String, credentials: String): BufferedReader = {
+  private[this] def connect (): BufferedReader = {
     
     if(url == null)
       throw new IllegalArgumentException("No url provided")
     
-    if(credentials == null || ":" == credentials)
+    if(username == null || password == null)
       throw new IllegalArgumentException("No credentials provided")
     
+    val credentials = "%s:%s".format(username, password)
     val client = new DefaultHttpClient();
     val method = new HttpGet(url);
     val encoded = Base64.encodeBase64String(credentials.getBytes)
     method.setHeader("Authorization", "Basic " + encoded);
-    method.setHeader("Content-Type", "text/xml;charset=UTF-8") 
+    method.setHeader("Content-Type", "application/x-www-form-urlencoded") 
+    method.setHeader("User-Agent", "evactor") 
+    val params = client.getParams()
+    HttpConnectionParams.setConnectionTimeout(params, 5000)
+    HttpConnectionParams.setSoTimeout(params, 5000)
+//    method.setHeader("Accept-Encoding", "deflate, gzip")
+//    method.setHeader("Host", "stream.twitter.com")
+ 
+    val response = client.execute(method)
     
-    val response = client.execute(method);
-    
-    if(response.getStatusLine.getStatusCode != 200){
-      throw new RuntimeException("Couldn't connect to the Twitter stream API, status returned: %s".format(response.getStatusLine))
+    if(response.getStatusLine.getStatusCode >= 400){
+      
+      if(response.getStatusLine.getStatusCode == 401){
+        throw new ConfigurationException("Twitter returned \"401 Unauthorized\". Check the Twitter username and password.")
+      } else {
+        throw new RuntimeException("Couldn't connect to the Twitter stream API, status returned: %s".format(response.getStatusLine))  
+      }
+      
     }
     
     val entity = response.getEntity
@@ -88,10 +115,14 @@ class TwitterListener(url: String, credentials: String, sendTo: ActorRef) extend
   }
   
   override def preStart() {
+    super.preStart()
     context.self ! ""
   }
   
-  override def postStop() {
-  }
-
 }
+
+//class StreamingGZIPInputStream(val wrapped: InputStream ) extends GZIPInputStream(wrapped) {
+//
+//  override def available(): Int = wrapped.available()
+//
+//}
