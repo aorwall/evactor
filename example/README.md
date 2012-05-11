@@ -179,12 +179,11 @@ log_popular_urls {
 ```
 
 ### Log tweets about Scala, Akka and Cassandra
-An *Alerter* subscribes to `twitter:hashtag` and the categories `scala`, `cassandra` and `akka` and sends alerts to external parties.
+An *LogProducer* subscribes to `twitter:hashtag` and the categories `scala`, `cassandra` and `akka`.
 
-> Won't happen a lot because the Spritzer stream just gives us 1% of all tweets. If you want to receive all tweets with these hashtags, try the following URL: https://stream.twitter.com/1/statuses/filter.json?track=scala,cassandra,akka
+> This won't happen very often because the Spritzer stream just gives us 1% of all tweets. If you want to receive all tweets with these hashtags, try the following URL: https://stream.twitter.com/1/statuses/filter.json?track=scala,cassandra,akka
 
 ```text
-# log #akka, #scala and #cassandra
 log_cool_hashtags {
   type = logProducer
   subscriptions = [ 
