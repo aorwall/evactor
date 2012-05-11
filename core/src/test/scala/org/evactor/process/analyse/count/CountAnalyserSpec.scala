@@ -31,6 +31,7 @@ import org.evactor.model.events.AlertEvent
 import org.evactor.model.Message
 import org.evactor.model.events.DataEvent
 import org.evactor.publish.TestPublication
+import org.evactor.process.CategoryProcessor
 
 @RunWith(classOf[JUnitRunner])
 class CountAnalyserSpec(_system: ActorSystem) 
@@ -48,38 +49,29 @@ class CountAnalyserSpec(_system: ActorSystem)
 
     "alert if a word occured more than a specified amount of times in a specified time frame" in {
       val testProbe = TestProbe()
-
       val actor = TestActorRef(new CountAnalyser(Nil, new TestPublication(testProbe.ref), false, 1, 100 ))
-
       actor ! new Message("channel", Set(), new Event("id1", System.currentTimeMillis ))
       actor ! new Message("channel", Set(), new Event("id2", System.currentTimeMillis ))
-      
       testProbe.expectMsgAllClassOf(1 second, classOf[AlertEvent])
       actor.stop()
     }
     
     "alert twice if different words occured more than max occurences" in {
       val testProbe = TestProbe()
-
       val actor = TestActorRef(new CountAnalyser(Nil, new TestPublication(testProbe.ref), true, 1, 100 ))
-
       actor ! new Message("channel", Set("a"), new DataEvent("id1", System.currentTimeMillis, "a" ))
       actor ! new Message("channel", Set("b"), new DataEvent("id2", System.currentTimeMillis+1, "b" ))
       actor ! new Message("channel", Set("a"), new DataEvent("id3", System.currentTimeMillis+2, "a" ))
       actor ! new Message("channel", Set("b"), new DataEvent("id4", System.currentTimeMillis+3, "b" ))
-      
       testProbe.expectMsgAllClassOf(1 second, classOf[AlertEvent])
       testProbe.expectMsgAllClassOf(1 second, classOf[AlertEvent])
-      
       actor.stop()
     }
     
     "stop word sub counter on timeout " in {
-      val time = 100L
       val testProbe = TestProbe()
-
       val actor = TestActorRef(new CountAnalyser(Nil, new TestPublication(testProbe.ref), false, 1, 100 ))
-
+      val count = actor.underlyingActor
       actor ! new Message("channel", Set(), new DataEvent("id1", System.currentTimeMillis, "http://foo" ))
       Thread.sleep(150)
       testProbe.expectNoMsg
@@ -89,6 +81,4 @@ class CountAnalyserSpec(_system: ActorSystem)
       actor.stop()
     }
   }
-  
-
 }

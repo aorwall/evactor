@@ -20,18 +20,16 @@ import org.evactor.process.analyse.window.LengthWindowConf
 import org.evactor.process.analyse.window.TimeWindow
 import org.evactor.process.analyse.window.TimeWindowConf
 import org.evactor.process.analyse.window.WindowConf
-import org.evactor.process.ProcessorConfiguration
 import org.evactor.subscribe.Subscription
 import org.evactor.utils.JavaHelpers.any2option
 import org.evactor.publish.Publication
 
 class Failure (
-    override val name: String,
-    override val subscriptions: List[Subscription], 
+    val name: String,
+    val subscriptions: List[Subscription], 
     val publication: Publication,
     val maxOccurrences: Long, 
-    val window: Option[WindowConf])
-  extends ProcessorConfiguration(name, subscriptions) {
+    val window: Option[WindowConf]) {
   
   def this(name: String, subscription: Subscription, publication: Publication,
     maxOccurences: Long, window: WindowConf) = {

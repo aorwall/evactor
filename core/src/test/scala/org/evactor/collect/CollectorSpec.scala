@@ -15,18 +15,21 @@
  */
 package org.evactor.collect
 
-import org.evactor.process.TestProcessor
+import org.evactor.model.events.Event
+import org.evactor.publish.TestPublication
+import org.evactor.subscribe.Subscription
 import org.evactor.EvactorSpec
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.BeforeAndAfterAll
 import akka.actor.ActorSystem
+import akka.testkit.TestActorRef
 import akka.testkit.TestKit
 import akka.testkit.TestProbe
-import akka.testkit.TestActorRef
 import akka.util.duration.intToDurationInt
-import org.evactor.publish.TestPublication
-import org.evactor.model.events.Event
+import com.typesafe.config.ConfigFactory
+import org.evactor.bus.ProcessorEventBusExtension
+import org.evactor.model.Message
 
 @RunWith(classOf[JUnitRunner])
 class CollectorSpec(_system: ActorSystem) 
@@ -74,6 +77,26 @@ class CollectorSpec(_system: ActorSystem)
       Thread.sleep(200)
       collector.eventExists(testEvent) must be (true)
       collector.eventExists(testEvent) must be (false)
+      
+    }
+    
+    "create a collector object from config" in {
+    
+      val collectorConfig = ConfigFactory.parseString("publication = { channel = \"foo\"}")
+          
+      val probe = TestProbe()
+      ProcessorEventBusExtension(system).subscribe(probe.ref, new Subscription(Some("foo"), None))
+    
+      val collector = TestActorRef(Collector(collectorConfig))    
+      
+      collector.underlyingActor match {
+        case c: Collector =>
+        case _ => fail
+      }
+      
+      val event = new Event("id", 0L)
+      collector ! event
+      probe.expectMsg(new Message("foo", Set(), event))
       
     }
     

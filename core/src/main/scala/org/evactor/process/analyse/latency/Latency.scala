@@ -15,7 +15,6 @@
  */
 package org.evactor.process.analyse.latency
 
-import org.evactor.process.ProcessorConfiguration
 import org.evactor.process.analyse.window.TimeWindow
 import org.evactor.process.analyse.window.LengthWindow
 import org.evactor.process.analyse.window.WindowConf
@@ -26,12 +25,11 @@ import org.evactor.utils.JavaHelpers.any2option
 import org.evactor.publish.Publication
 
 class Latency (
-    override val name: String,
-    override val subscriptions: List[Subscription], 
+    val name: String,
+    val subscriptions: List[Subscription], 
     val publication: Publication,
     val maxLatency: Long, 
-    val window: Option[WindowConf])
-  extends ProcessorConfiguration(name, subscriptions) {
+    val window: Option[WindowConf]) {
 
   def this(name: String, subscription: Subscription, publication: Publication,
     maxLatency: Long, window: WindowConf) = {

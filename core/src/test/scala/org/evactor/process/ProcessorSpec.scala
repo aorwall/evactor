@@ -35,6 +35,18 @@ import org.evactor.publish.Publication
 import org.evactor.subscribe.Subscription
 import org.evactor.publish.TestPublication
 import org.evactor.publish.Publisher
+import com.typesafe.config.ConfigFactory
+import org.evactor.process.route.Filter
+import org.evactor.process.route.Forwarder
+import org.evactor.process.analyse.count.CountAnalyser
+import org.evactor.process.analyse.trend.RegressionAnalyser
+import org.evactor.process.analyse.latency.LatencyAnalyser
+import org.evactor.process.analyse.window.TimeWindow
+import org.evactor.process.analyse.failures.FailureAnalyser
+import org.evactor.process.analyse.window.LengthWindow
+import org.evactor.process.analyse.absence.AbsenceOfRequestsAnalyser
+import org.evactor.process.build.request.RequestBuilder
+import org.evactor.process.build.simpleprocess.SimpleProcessBuilder
 
 class TestProcessor (
     override val subscriptions: List[Subscription],
@@ -81,7 +93,179 @@ class ProcessorSpec(_system: ActorSystem)
       
       testProbe.expectMsg(1 seconds, testEvent)
     }
-
+    
+    "build filter" in {
+      val filterConfig = ConfigFactory.parseString("""
+          type = filter
+          subscriptions = [ {channel = "foo"} ]
+          publication = { channel = "bar" } 
+          expression = { mvel = "false" }
+          accept = false
+        """)
+        
+      TestActorRef(Processor(filterConfig)).underlyingActor match {
+        case f: Filter => f.accept must be (false)
+        case _ => fail
+      }
+    }
+    
+    "build forwarder" in {
+      val forwarderConfig = ConfigFactory.parseString("""
+          type = forwarder
+          subscriptions = [ {channel = "foo"} ]
+          publication = { channel = "bar" }
+        """)
+      TestActorRef(Processor(forwarderConfig)).underlyingActor match {
+        case f: Forwarder => 
+        case _ => fail
+      }
+    }
+    
+    "build count analyser" in {
+      val countAnalyserConfig = ConfigFactory.parseString("""
+          type = countAnalyser
+          subscriptions = [ {channel = "foo"} ]
+          publication = { channel = "bar" } 
+          categorize = true
+          maxOccurrences = 100
+          timeframe = 2 hours
+        """)
+        
+      TestActorRef(Processor(countAnalyserConfig)).underlyingActor match {
+        case c: CountAnalyser => {
+          c.categorize must be (true)
+          c.maxOccurrences must be (100L)
+          c.timeframe must be (2*3600*1000L)
+        }
+        case _ => fail
+      }
+    }
+    
+    "build regression analyser" in {
+      val regressionAnalyserConfig = ConfigFactory.parseString("""
+          type = regressionAnalyser
+          subscriptions = [ {channel = "foo"} ]
+          publication = { channel = "bar" } 
+          categorize = true
+          coefficient = 1
+          minSize = 25
+          timeframe = 15 minutes
+        """)
+      TestActorRef(Processor(regressionAnalyserConfig)).underlyingActor match {
+        case r: RegressionAnalyser => {
+          r.categorize must be (true)
+          r.coefficient must be (1.0)
+          r.minSize must be (25)
+          r.timeframe must be (15*60*1000L)
+        }
+        case _ => fail
+      }
+    }
+    
+    "build latency analyser" in {
+      val latencyAnalyserConfig = ConfigFactory.parseString("""
+          type = latencyAnalyser
+          subscriptions = [ {channel = "foo"} ]
+          publication = { channel = "bar" } 
+          maxLatency = 1 second
+          timeWindow = 1 minute
+        """)
+        
+      val actor =  TestActorRef(Processor(latencyAnalyserConfig)).underlyingActor 
+      
+      actor match {
+        case l: LatencyAnalyser => l.maxLatency must be (1000L)
+        case _ => fail
+      }
+     
+      actor match {
+        case t: TimeWindow => t.timeframe must be (60000L)
+        case _ => fail
+      }
+    }
+    
+    "build failure analyser" in {
+      val failureAnalyserConfig = ConfigFactory.parseString("""
+          type = failureAnalyser
+          subscriptions = [ {channel = "foo"} ]
+          publication = { channel = "bar" } 
+          maxOccurrences = 100
+          lengthWindow = 10
+        """)
+        
+      val actor =  TestActorRef(Processor(failureAnalyserConfig)).underlyingActor 
+      
+      actor match {
+        case f: FailureAnalyser => f.maxOccurrences must be (100)
+        case _ => fail
+      }
+     
+      actor match {
+        case l: LengthWindow => l.noOfRequests must be (10)
+        case _ => fail
+      }
+    }
+    
+    
+    "build absence of requests analyser" in {
+      val absenceOfRequestsAnalyserConfig = ConfigFactory.parseString("""
+          type = absenceOfRequestsAnalyser
+          subscriptions = [ {channel = "foo"} ]
+          publication = { channel = "bar" }
+          timeframe = 1 minute
+        """)
+        
+      val actor =  TestActorRef(Processor(absenceOfRequestsAnalyserConfig)).underlyingActor 
+      
+      actor match {
+        case a: AbsenceOfRequestsAnalyser => a.timeframe must be (60000)
+        case _ => fail
+      }
+    }
+    
+    "build request builder" in {
+      val requestBuilderConfig = ConfigFactory.parseString("""
+          type = requestBuilder
+          subscriptions = [ {channel = "foo"} ]
+          publication = { channel = "bar" } 
+          timeout = 1 minute
+        """)
+      TestActorRef(Processor(requestBuilderConfig)).underlyingActor match {
+        case r: RequestBuilder => {
+          r._timeout must be (60000L)
+        }
+        case _ => fail
+      }
+    }
+    
+    "build simple process builder" in {
+      val simpleProcessBuilderConfig = ConfigFactory.parseString("""
+          type = simpleProcessBuilder
+          subscriptions = [ {channel = "foo"} ]
+          publication = { channel = "bar" }
+          components = ["one", "two"]
+          timeout = 1 minute
+        """)
+      TestActorRef(Processor(simpleProcessBuilderConfig)).underlyingActor match {
+        case s: SimpleProcessBuilder => {
+          s._components must be (List("one", "two"))
+          s._timeout must be (60000L)
+        }
+        case _ => fail
+      }
+    }
+    
+    "build custom processor" in {
+      val customConfig = ConfigFactory.parseString("""
+          class = org.evactor.process.route.Forwarder
+          subscriptions = [ {channel = "foo"} ]
+          publication = { channel = "bar" }
+        """)
+      TestActorRef(Processor(customConfig)).underlyingActor match {
+        case f: Forwarder => 
+        case _ => fail
+      }
+    }
 
   }
 }

@@ -15,34 +15,111 @@
  */
 package org.evactor.process
 
+import org.evactor.expression.Expression
 import org.evactor.model.events.Event
 import org.evactor.model.Message
 import org.evactor.model.Timeout
 import org.evactor.monitor.Monitored
-import org.evactor.subscribe._
+import org.evactor.process.analyse.absence.AbsenceOfRequestsAnalyser
+import org.evactor.process.analyse.count.CountAnalyser
+import org.evactor.process.analyse.failures.FailureAnalyser
+import org.evactor.process.analyse.latency.LatencyAnalyser
+import org.evactor.process.analyse.trend.RegressionAnalyser
+import org.evactor.process.analyse.window.LengthWindow
+import org.evactor.process.analyse.window.TimeWindow
+import org.evactor.process.build.request.RequestBuilder
+import org.evactor.process.build.simpleprocess.SimpleProcessBuilder
+import org.evactor.process.route.Filter
+import org.evactor.process.route.Forwarder
+import org.evactor.publish.Publication
+import org.evactor.subscribe.Subscriber
+import org.evactor.subscribe.Subscription
+import org.evactor.subscribe.Subscriptions
+import org.evactor.ConfigurationException
+
+import com.typesafe.config.Config
+
 import akka.actor.ActorLogging
-import akka.actor.Terminated
+import akka.actor.ReflectiveDynamicAccess
+
+import scala.collection.JavaConversions._
 
 /**
  * Abstract class all standard processors should extend
  */
 abstract class Processor (
     val subscriptions: List[Subscription]) 
-  extends ProcessorBase
-  with Subscriber 
+  extends Subscriber 
   with Monitored
   with ActorLogging {
-    
-  final def receive = {
+
+  def receive = {
     case Message(_, _, event) => incr("process"); process(event)
     case Timeout => timeout()
-    case Terminated(supervised) => handleTerminated(supervised)
     case msg => log.warning("Can't handle {}", msg)
   }
 
   protected def process(event: Event)
   
   protected def timeout() = {}
-  
+
 }
 
+/**
+ * Build processor from config
+ * 
+ * TODO: Create some fancy dynamic "convention over configuration" thing instead
+ * 
+ */
+object Processor {
+
+  lazy val dynamicAccess = new ReflectiveDynamicAccess(this.getClass.getClassLoader)
+  
+  def apply(config: Config): Processor = {
+    
+    import config._
+    
+    lazy val sub = Subscriptions(getConfigList("subscriptions").toList) 
+    lazy val pub = Publication(getConfig("publication"))
+    
+    if(hasPath("type")){
+      getString("type") match{
+        case "countAnalyser" => new CountAnalyser(sub, pub, getBoolean("categorize"), getLong("maxOccurrences"), getMilliseconds("timeframe"))
+        case "regressionAnalyser" => new RegressionAnalyser(sub, pub, getBoolean("categorize"), getDouble("coefficient"), getLong("minSize"), getMilliseconds("timeframe"))
+        case "filter" => new Filter(sub, pub, Expression(getConfig("expression")), getBoolean("accept"))
+        case "forwarder" => new Forwarder(sub, pub)
+        case "requestBuilder" => new RequestBuilder(sub, pub, getMilliseconds("timeout"))
+        case "simpleProcessBuilder" => new SimpleProcessBuilder(sub, pub, getStringList("components").toList, getMilliseconds("timeout"))
+        case "latencyAnalyser" => if(hasPath("timeWindow")) new LatencyAnalyser(sub, pub, getMilliseconds("maxLatency")) with TimeWindow { override val timeframe = getMilliseconds("timeWindow").toLong }
+                                  else if(hasPath("lengthWindow")) new LatencyAnalyser(sub, pub, getMilliseconds("maxLatency")) with LengthWindow { override val noOfRequests = getInt("lengthWindow") }
+                                  else new LatencyAnalyser(sub, pub, getMilliseconds("maxLatency"))
+        case "failureAnalyser" =>  if(hasPath("timeWindow")) new FailureAnalyser(sub, pub, getLong("maxOccurrences")) with TimeWindow { override val timeframe = getMilliseconds("timeWindow").toLong }
+                                   else if(hasPath("lengthWindow")) new FailureAnalyser(sub, pub, getLong("maxOccurrences")) with LengthWindow { override val noOfRequests = getInt("lengthWindow") }
+                                   else new FailureAnalyser(sub, pub, getLong("maxOccurrences"))
+        case "absenceOfRequestsAnalyser" => new AbsenceOfRequestsAnalyser(sub, pub, getMilliseconds("timeframe"))
+  //      case "logProducer" => 
+         case o => throw new ConfigurationException("processor type not recognized: %s".format(o))
+      }
+    } else if (hasPath("class")) {
+      val clazz = getString("class")
+      
+      val arguments = if(hasPath("arguments")){
+        getList("arguments").map { a => (a.unwrapped.getClass, a.unwrapped.asInstanceOf[AnyRef]) }
+      } else {
+        Nil
+      }
+      
+      val pubs: Seq[(Class[_], AnyRef)] = if(hasPath("publication")) {
+        Seq((classOf[Publication], pub))
+      } else {
+        Nil
+      }
+
+      val args = Seq((classOf[List[Subscription]], sub)) ++ pubs ++ arguments
+      
+      dynamicAccess.createInstanceFor[Processor](clazz, args).fold(throw _, p => p)
+    } else {
+      throw new ConfigurationException("processor must specify either a type or a class")
+    }
+  }
+}

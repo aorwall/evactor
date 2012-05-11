@@ -15,18 +15,24 @@
  */
 package org.evactor.process
 
-import akka.actor._
-import akka.actor.SupervisorStrategy._
-import akka.routing.BroadcastRouter
-import akka.util.duration._
+import scala.collection.JavaConversions._
+
 import org.evactor.model.events.Event
 import org.evactor.storage.StorageProcessor
 import org.evactor.storage.StorageProcessorRouter
+
+import com.typesafe.config.Config
+
+import akka.actor.SupervisorStrategy._
+import akka.actor._
+import akka.util.duration._
 
 /**
  * Handles all processors.
  */
 class ProcessorManager extends Actor with ActorLogging  {
+    
+  val config = context.system.settings.config
   
   override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries = 10, withinTimeRange = 1 minute) {
     case _: IllegalArgumentException => Stop
@@ -34,11 +40,16 @@ class ProcessorManager extends Actor with ActorLogging  {
   }
 
   override def preStart = {
-    log.debug("starting...")
+    log.debug("loading processors from configuration")
+    
+    config.getConfig("evactor.processors").root.keySet.foreach { k =>
+      setProcessor(k, config.getConfig("evactor.processors").getConfig(k))
+    }
+    
   }
   
   def receive = {
-    case configuration: ProcessorConfiguration => setProcessor(configuration)
+    case (name: String, configuration: Config) => setProcessor(name, configuration)
     case name: String => removeProcessor(name)
     case msg => log.warning("can't handle: {}", msg); sender ! Status.Failure
   }
@@ -47,15 +58,15 @@ class ProcessorManager extends Actor with ActorLogging  {
    * Add and start new processor in the actor context. Will fail if
    * an exception is thrown on startup.
    */
-  def setProcessor(configuration: ProcessorConfiguration) {
+  def setProcessor(name: String, configuration: Config) {
     try {
-	    log.debug("starting processor for configuration: {}", configuration)
+	    log.debug("starting processor for configuration: {}", config)
 	    
-      context.actorOf(Props(configuration.processor), name = configuration.name)
+      context.actorOf(Props(Processor(configuration)), name = name)
       sender ! Status.Success
     } catch {
 			case e: Exception => {
-			  log.warning("Starting processor with name {} failed. {}", configuration.name, e)
+			  log.warning("Starting processor with name {} failed. {}", configuration.getString("name"), e)
 			  sender ! Status.Failure(e)
 			}
 	  }
@@ -76,3 +87,4 @@ class ProcessorManager extends Actor with ActorLogging  {
     log.debug("stopping...")
   }
 }
+

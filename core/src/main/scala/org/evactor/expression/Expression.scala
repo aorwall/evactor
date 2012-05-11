@@ -15,11 +15,32 @@
  */
 package org.evactor.expression
 
-import org.evactor.model.events.Event
 import org.evactor.model.attributes.HasMessage
-import akka.actor.Actor
+import org.evactor.model.events.Event
 import org.evactor.process.extract.Extractor
 import org.evactor.process.Processor
+
+import com.typesafe.config.Config
+
+import akka.config.ConfigurationException
+
+object Expression {
+  
+  def apply(config: Config): Expression = {
+    
+    if(config.isEmpty) throw new ConfigurationException("config empty: %s".format(config))
+    
+    val expr = config.entrySet.iterator.next
+    expr.getKey match {
+      case "static" => new StaticExpression(expr.getValue.unwrapped)
+      case "mvel" => new MvelExpression(expr.getValue.unwrapped.toString)
+      case o => throw new ConfigurationException("expression type not recognized: %s".format(o))
+    }
+    
+  }
+  
+}
+
 
 abstract class Expression {
   def evaluate(event: Event): Option[Any] 

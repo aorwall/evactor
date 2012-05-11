@@ -1,3 +1,3 @@
 package org.evactor
 
-class EvactorException extends Exception
+class EvactorException(message: String) extends Exception(message)

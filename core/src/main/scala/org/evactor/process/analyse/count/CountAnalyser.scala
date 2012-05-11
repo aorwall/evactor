@@ -29,19 +29,7 @@ import org.evactor.model.events.AlertEvent
 import scala.collection.immutable.TreeMap
 import java.util.UUID
 import org.evactor.model.Timeout
-import org.evactor.process.ProcessorConfiguration
 
-class CountAnalyserConfig (
-    override val name: String,
-    override val subscriptions: List[Subscription],
-    val publication: Publication,
-    val categorize: Boolean, 
-    val maxOccurrences: Long,
-    val timeframe: Long) extends ProcessorConfiguration(name, subscriptions) {
-  
-  def processor = new CountAnalyser(subscriptions, publication, categorize, maxOccurrences, timeframe)
-  
-}
 /**
  * Counting events in channels and alerts if they
  * occur more often than specified.
@@ -61,10 +49,10 @@ class CountAnalyser (
 
 class CountSubAnalyser (
     val publication: Publication,
-    val id: String,
+    override val id: String,
     val maxOccurrences: Long,
     val timeframe: Long) 
-  extends SubProcessor 
+  extends SubProcessor(id) 
   with TimeWindow 
   with Publisher
   with ActorLogging {
@@ -78,10 +66,12 @@ class CountSubAnalyser (
   override def preStart = {
     log.debug("Starting sub counter with id {} and timeframe {} ms", id, timeframe)
     cancellable
+    super.preStart()
   }
   
   override def postStop = {
     log.debug("Stopping sub counter with id {} and timeframe {} ms", id, timeframe)
+    super.postStop()
   }
   
   override protected def process(event: Event) {

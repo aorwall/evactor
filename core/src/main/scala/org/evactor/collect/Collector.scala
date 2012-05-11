@@ -16,43 +16,43 @@
 package org.evactor.collect
 
 import scala.collection.immutable.TreeMap
-import scala.collection.mutable.HashMap
+import scala.collection.mutable.HashSet
+
 import org.evactor.listen.Listener
-import org.evactor.listen.ListenerConfiguration
 import org.evactor.model.events.Event
 import org.evactor.monitor.Monitored
-import org.evactor.process.Processor
 import org.evactor.publish._
 import org.evactor.storage.Storage
 import org.evactor.transform.Transformer
-import org.evactor.transform.TransformerConfiguration
+
+import com.typesafe.config.Config
+
 import akka.actor.SupervisorStrategy._
 import akka.actor._
 import akka.util.duration._
-import scala.collection.mutable.HashSet
-
-
-//import com.twitter.ostrich.stats.Stats
 
 /**
  * Collecting incoming events
  */
 class Collector(
-    val listener: Option[ListenerConfiguration], 
-    val transformer: Option[TransformerConfiguration], 
-    val publication: Publication) 
+    val listener: Option[Config], 
+    val transformer: Option[Config], 
+    val publication: Publication,
+    val timeInMem: Long) 
   extends Actor 
   with Publisher
   with Monitored
   with ActorLogging {
   
-  val timeInMem = 3600 * 1000; // Save all id's in memory for one hour
+  def this(listener: Option[Config], transformer: Option[Config], publication: Publication) =
+    this(listener, transformer, publication, 120 * 1000)
+  
   val startTime = System.currentTimeMillis
   
   private val ids = new HashSet[String]()
   private var timeline = new TreeMap[Long, String]()
   
-  private val dbCheck = context.actorOf(Props(new CollectorDbCheck(publication)))
+  private val dbCheck = context.actorOf(Props(new CollectorStorageCheck(publication)))
 
   override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries = 10, withinTimeRange = 1 minute) {
     case _: IllegalArgumentException => Stop
@@ -77,9 +77,9 @@ class Collector(
         incr("collect")
         publish(event)
       } else {
-        log.warning("An event with the same id has already been processed: {}", event) 
+        log.debug("An event with the same id has already been processed: {}", event) 
       }
-    }
+    } 
   }
   
   protected[collect] def eventExists(event: Event) = {
@@ -93,21 +93,21 @@ class Collector(
     if(!exists){
       ids += event.id
       timeline += (event.timestamp -> event.id)
-    }    
+    }
     exists
   }
   
   override def preStart = { 
     // Start transformer and set collector to it
     val sendTo = transformer match {
-      case Some(t) => context.actorOf(Props(t.transformer(context.self)))
+      case Some(t) => context.actorOf(Props(Transformer(t, context.self)))
       case None => context.self
     }
     
     // Start listener and set a  transformer to it
     listener match {
-      case Some(l) => context.actorOf(Props(l.listener(sendTo)))
-      case None => log.warning("No listener")
+      case Some(l) => context.actorOf(Props(Listener(l, sendTo)))
+      case None => log.warning("No listener configuration provided to collector!")
     }
     
   }
@@ -118,7 +118,7 @@ class Collector(
 }
 
 
-class CollectorDbCheck(val publication: Publication) 
+class CollectorStorageCheck(val publication: Publication) 
   extends Actor 
   with Publisher
   with Storage
@@ -143,4 +143,22 @@ class CollectorDbCheck(val publication: Publication)
     
   }
   
+}
+
+object Collector {
+  
+  def apply(config: Config): Collector = {
+    
+    import config._
+    
+    lazy val pub = Publication(getConfig("publication"))
+    lazy val listener = if(hasPath("listener")) Some(getConfig("listener")) else None
+    lazy val transformer = if(hasPath("transformer")) Some(getConfig("transformer")) else None
+    
+    if(hasPath("timeInMem")){
+      new Collector(listener, transformer, pub, getMilliseconds("timeInMem"))  
+    } else {
+      new Collector(listener, transformer, pub)
+    }
+  }
 }

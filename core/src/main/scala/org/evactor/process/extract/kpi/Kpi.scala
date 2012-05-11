@@ -23,7 +23,6 @@ import org.evactor.model.events.Event
 import org.evactor.model.events.KpiEvent
 import org.evactor.process.extract.Extractor
 import org.evactor.process.Processor
-import org.evactor.process.ProcessorConfiguration
 import org.evactor.subscribe.Subscription
 import org.evactor.process.extract.EventCreator
 import org.evactor.expression.MvelExpression
@@ -40,16 +39,6 @@ import org.evactor.publish.Publisher
  * 
  * Uses MVEL to evaluate expressions and must return a float value, will be extended later...
  */
-class Kpi (
-    override val name: String,
-    override val subscriptions: List[Subscription], 
-    val publication: Publication,
-    val expression: Expression) 
-  extends ProcessorConfiguration(name, subscriptions) {
-   
-  override def processor: Processor = new KpiExtractor(subscriptions, publication, expression) 
-}
-
 class KpiExtractor(
     override val subscriptions: List[Subscription], 
     override val publication: Publication,

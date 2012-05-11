@@ -19,7 +19,6 @@ import org.evactor.process.Processor
 import org.evactor.process.alert.Alerter
 import org.evactor.model.events.Event
 import akka.actor.ActorLogging
-import org.evactor.process.ProcessorConfiguration
 import org.evactor.subscribe.Subscription
 
 class LogAlerter (
@@ -32,13 +31,3 @@ class LogAlerter (
   }
 
 }
-
-class LogAlerterConf (
-    override val name: String,
-    override val subscriptions: List[Subscription])
-  extends ProcessorConfiguration (name, subscriptions) {
-  
-  def processor = new LogAlerter(subscriptions);
-
-}
-    

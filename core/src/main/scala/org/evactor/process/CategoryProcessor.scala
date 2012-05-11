@@ -23,22 +23,20 @@ import org.evactor.subscribe.Subscriber
 import org.evactor.subscribe.Subscription
 
 import akka.actor.ActorLogging
-import akka.actor.Terminated
 
 /**
  * Creates sub processors for each category. To use this processor type, an implementation of
  * SubProcessor must be created.
  */
 abstract class CategoryProcessor (
-    val subscriptions: List[Subscription],
-    val categorize: Boolean) 
-  extends ProcessorBase
+    override val subscriptions: List[Subscription],
+    val categorize: Boolean)
+  extends Processor(subscriptions) with HasChildren
   with Subscriber 
   with Monitored
-  with ProcessorWithChildren
   with ActorLogging {
-    
-  final def receive = {
+  
+  final override def receive = {
     case Message(channel, categories, event) => {
       incr("process"); 
       if(categorize){
@@ -51,8 +49,7 @@ abstract class CategoryProcessor (
     case Terminated(supervised) => handleTerminated(supervised)
     case msg => log.warning("Can't handle {}", msg)
   }
-
-  protected def createSubProcessor(id: String): SubProcessor
   
+  def process(event: Event) {}
 }
 

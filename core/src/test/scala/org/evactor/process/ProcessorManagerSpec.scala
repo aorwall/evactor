@@ -42,12 +42,15 @@ class ProcessorManagerSpec(_system: ActorSystem)
     _system.shutdown()
   }
   
-  val testConf = new ProcessorConfiguration("name", Nil){
-    def processor = new Processor (Nil) {
-	    type T = Event
-	    def process(event: Event) {}
-	  }
-  }
+  val testConf = """
+    filter {
+      name = "twitter_url_filter"
+      subscriptions = [ {channel = "twitter"} ]
+      publication = { channel = static {"twitter:url"}, categories = mvel {"urls"} }
+      filterExpression = { mvel = "urls == null || urls.size() == 0" }
+      accept = false
+    }
+  """  
   
   implicit val timeout = Timeout(1 second)
     

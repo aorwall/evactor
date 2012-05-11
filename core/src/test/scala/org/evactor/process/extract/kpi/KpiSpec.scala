@@ -15,6 +15,11 @@
  */
 package org.evactor.process.extract.kpi
 
+import org.evactor.model.events.DataEvent
+import org.evactor.model.events.KpiEvent
+import org.evactor.model.Message
+import org.evactor.publish.TestPublication
+import org.evactor.EvactorSpec
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.matchers.MustMatchers
@@ -24,21 +29,15 @@ import akka.actor.ActorSystem
 import akka.testkit.TestActorRef
 import akka.testkit.TestKit
 import akka.testkit.TestProbe
-import org.evactor.model.events.DataEvent
-import org.evactor.model.events.Event
-import org.evactor.model.events.KpiEvent
-import org.evactor.EvactorSpec
-import org.evactor.expression.MvelExpression
 import akka.util.duration._
-import org.evactor.model.Message
-import org.evactor.publish.TestPublication
+import org.evactor.expression.MvelExpression
 
 @RunWith(classOf[JUnitRunner])
 class KpiSpec (_system: ActorSystem) 
   extends TestKit(_system) 
   with EvactorSpec {
 
-  def this() = this(ActorSystem("KeywordSpec"))
+  def this() = this(ActorSystem("KpiSpec"))
 
   val event = new Message("channel", Set(), createDataEvent("{ \"doubleField\": \"123.42\", \"intField\": \"123\", \"anotherField\": \"anothervalue\"}"))
 
@@ -52,34 +51,24 @@ class KpiSpec (_system: ActorSystem)
       val probe = TestProbe()
 
       val dest = TestActorRef(new Actor {
-				def receive = {
-					case e: KpiEvent => probe.ref ! e.value
-					case _ => fail
-				}
-			})
-			
-      val kpi = new Kpi("name", Nil, new TestPublication(dest), MvelExpression("message.intField"))
-      val actor = TestActorRef(kpi.processor)
-      
-      actor ! event
-            
+        def receive = {
+          case e: KpiEvent => probe.ref ! e.value
+          case _ => fail
+        }
+      })
+
+      val kpi = TestActorRef(new KpiExtractor(Nil, new TestPublication(dest), new MvelExpression("message.intField")))
+      kpi ! event
       probe.expectMsg(200 millis, 123L)
-      actor.stop			
-								
+      kpi.stop
     }
-				
+
     "send None when a non-numeric value is provided" in {
       val probe = TestProbe()
-      val kpi = new Kpi("name", Nil, new TestPublication(probe.ref), MvelExpression("message.anotherField"))
-      val actor = TestActorRef(kpi.processor)
-		
-      actor ! event
-            
+      val kpi = TestActorRef(new KpiExtractor(Nil, new TestPublication(probe.ref), new MvelExpression("message.anotherField")))
+      kpi ! event
       probe.expectNoMsg(200 millis)
-      actor.stop			
-			
+      kpi.stop			
     }
-	
   }
-	
 }

@@ -15,50 +15,30 @@
  */
 package org.evactor.process
 
-import akka.actor.Actor
-import akka.actor.ActorLogging
-import akka.actor.ActorRef
-import akka.actor.EmptyLocalActorRef
-import akka.actor.InternalActorRef
-import org.evactor.model.events.Event
-import org.evactor.model.Message
-import org.evactor.model.Timeout
 import akka.actor.Props
-import akka.actor.Terminated
-import scala.collection.mutable.HashMap
+import akka.actor.ActorLogging
 import org.evactor.monitor.Monitored
-
-/**
- * Base class for processors. Contains supporting functions for Processors
- * and SubProcessors
- */
-abstract class ProcessorBase
-  extends Actor
-  with ActorLogging {
-    
-  protected def handleTerminated(actor: ActorRef) {}
-  
-}
+import akka.actor.ActorRef
+import scala.collection.mutable.HashMap
+import org.evactor.model.Timeout
+import org.evactor.model.Message
 
 /** 
  * Trait used by processors that handles it own children processors (sub processors)
  */
-trait ProcessorWithChildren extends ProcessorBase with Monitored {
+trait HasChildren extends Processor with Monitored with ActorLogging {
   
   private val children = new HashMap[String, ActorRef] 
-  private val idMapping = new HashMap[ActorRef, String] // TODO: Fix bidirectional map instead
   
-  override protected def handleTerminated(child: ActorRef) {
-    val id = idMapping.remove(child)
-    
-    id match {
-      case Some(s) => {
-        log.debug("Removing actor with id {}", s)
-        children.remove(s)
-        addMetric("children", children.size)
-      }
-      case None => log.warning("No id found for actor {}", child)
-    }
+  override def receive = {
+    case Terminated(id) => handleTerminated(id) 
+    case msg => super.receive(msg)
+  }
+  
+  protected def handleTerminated(childId: String) {
+    log.debug("Removing actor with id {}", childId)
+    children.remove(childId)
+    addGauge("children", children.size)    
   }
   
   protected def createSubProcessor(id: String): SubProcessor
@@ -66,9 +46,7 @@ trait ProcessorWithChildren extends ProcessorBase with Monitored {
   private[this] def createNewActor(id: String): ActorRef = {
       val newActor = context.actorOf(Props(createSubProcessor(id)))
       children.put(id, newActor)
-      idMapping.put(newActor, id)
-      context.watch(newActor)
-      addMetric("children", children.size)
+      addGauge("children", children.size)
       newActor 
   }
   
@@ -77,12 +55,14 @@ trait ProcessorWithChildren extends ProcessorBase with Monitored {
   
   abstract override def preStart {
     super.preStart()
-    addMetric("children", 0)
+    addGauge("children", 0)
   }
   
   abstract override def postStop {
     super.postStop()
-    removeMetric("children")
+    removeGauge("children")
   }
   
 }
+
+case class Terminated(id: String) 

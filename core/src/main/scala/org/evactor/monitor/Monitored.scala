@@ -44,6 +44,14 @@ trait Monitored extends Actor {
     Stats.removeMetric(label(key))
   }
   
+  def addGauge(key: String, value: Double){
+    Stats.addGauge(label(key))(value)
+  }
+  
+  def removeGauge(key: String){
+    Stats.clearGauge(key)
+  }
+  
   def time[T](key: String)(f: => T): T = {
     Stats.time(label(key))(f)
   }

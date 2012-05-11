@@ -20,20 +20,12 @@ import org.evactor.process.Processor
 import org.evactor.publish.Publication
 import org.evactor.subscribe.Subscription
 import org.evactor.expression.Expression
-import org.evactor.process.ProcessorConfiguration
 import org.evactor.publish.Publisher
-
-class FilterConfig(
-    override val name: String,
-    override val subscriptions: List[Subscription],
-    val publication: Publication,
-    val expression: Expression,
-    val accept: Boolean)
-  extends ProcessorConfiguration(name, subscriptions) {
-  
-  def processor = new Filter(subscriptions, publication, expression, accept)
-  
-}
+import com.typesafe.config.Config
+import org.evactor.publish.Publication
+import org.evactor.subscribe.Subscriptions
+import org.evactor.expression.Expression
+import org.evactor.publish.Publication
 
 /**
  * Filter out all events that do or don't match the specified expression

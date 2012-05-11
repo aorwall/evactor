@@ -15,15 +15,11 @@
  */
 package org.evactor.process
 
-import akka.actor.Actor
-import akka.actor.ActorLogging
-import akka.actor.ActorRef
-import akka.actor.EmptyLocalActorRef
-import akka.actor.InternalActorRef
 import org.evactor.model.events.Event
-import org.evactor.model.Message
 import org.evactor.model.Timeout
-import akka.actor.Terminated
+import akka.actor.actorRef2Scala
+import akka.actor.ActorLogging
+import akka.actor.Actor
 
 /**
  * Processor used as a child to another processor. It can't subscribe to channels and
@@ -33,19 +29,25 @@ import akka.actor.Terminated
  * A SubProcessor isn't meant to be a persistent processor but should able to close itself down
  * when it's done.
  */
-abstract class SubProcessor 
-  extends ProcessorBase
-  with ActorLogging {
-
-  final def receive = {
+abstract class SubProcessor(val id: String) extends Actor with ActorLogging {
+  
+  final override def receive = {
     case event:Event => process(event)
     case Timeout => timeout()
-    case Terminated(supervised) => handleTerminated(supervised)
     case msg => log.warning("Can't handle {}", msg)
   }
 
   protected def process(event: Event)
   
   protected def timeout() = {}
+
+  
+  /**
+   * Inform parent when stopped. Would like to use death watch here but
+   * waiting for http://www.assembla.com/spaces/akka/tickets/1901
+   */
+  override def postStop = {
+     context.parent ! new Terminated(id)
+  }
   
 }

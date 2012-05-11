@@ -14,12 +14,23 @@
  * limitations under the License.
  */
 package org.evactor
+
+import org.evactor.model.events.DataEvent
+import org.evactor.model.events.Event
+import org.evactor.model.events.LogEvent
+import org.evactor.model.events.RequestEvent
+import org.evactor.model.State
 import org.scalatest.matchers.MustMatchers
 import org.scalatest.matchers.ShouldMatchers
 import org.scalatest.WordSpec
-import org.evactor.model.events._
-import org.evactor.model.State
-import org.evactor.model.Message
+
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
+import com.typesafe.config.ConfigParseOptions
+import com.typesafe.config.ConfigSyntax
+
+import EvactorSpec.id
+import EvactorSpec.timestamp
 
 object EvactorSpec {
   val channel = "channel"
@@ -38,5 +49,13 @@ trait EvactorSpec extends WordSpec with MustMatchers with ShouldMatchers {
 
   def createRequestEvent(timestamp: Long, inboundRef: Option[String], outboundRef: Option[String], corrId: String, comp: String, state: State, latency: Long) = 
     new RequestEvent(id, timestamp, corrId, comp, inboundRef, outboundRef, state, latency)
+
+  
+  def parseConfig(s: String) = {
+      val options = ConfigParseOptions.defaults().
+          setOriginDescription("test string").
+          setSyntax(ConfigSyntax.CONF);
+      ConfigFactory.parseString(s, options).asInstanceOf[Config]
+  }
 
 }

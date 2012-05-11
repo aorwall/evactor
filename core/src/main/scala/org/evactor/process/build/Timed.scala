@@ -28,7 +28,7 @@ trait Timed extends Actor  {
       
   override def preStart() {
     scheduledTimeout = timeout match {
-      case Some(timeout) => Some(context.system.scheduler.scheduleOnce(timeout seconds, self, Timeout))
+      case Some(timeout) => Some(context.system.scheduler.scheduleOnce(timeout milliseconds, self, Timeout))
       case _ => None
     }
   }
