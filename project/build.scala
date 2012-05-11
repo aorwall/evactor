@@ -15,8 +15,6 @@
  */
 import sbt._
 import Keys._
-import akka.sbt.AkkaKernelPlugin
-import akka.sbt.AkkaKernelPlugin.{ Dist, outputDirectory, distJvmOptions}
 import sbtassembly.Plugin._
 import AssemblyKeys._
 
