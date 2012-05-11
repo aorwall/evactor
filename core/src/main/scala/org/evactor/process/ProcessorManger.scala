@@ -16,16 +16,15 @@
 package org.evactor.process
 
 import scala.collection.JavaConversions._
-
 import org.evactor.model.events.Event
 import org.evactor.storage.StorageProcessor
 import org.evactor.storage.StorageProcessorRouter
-
 import com.typesafe.config.Config
-
 import akka.actor.SupervisorStrategy._
 import akka.actor._
 import akka.util.duration._
+import org.evactor.ConfigurationException
+import org.evactor.Start
 
 /**
  * Handles all processors.
@@ -35,23 +34,24 @@ class ProcessorManager extends Actor with ActorLogging  {
   val config = context.system.settings.config
   
   override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries = 10, withinTimeRange = 1 minute) {
-    case _: IllegalArgumentException => Stop
+    case _: ConfigurationException => Stop
     case _: Exception => Restart
   }
 
-  override def preStart = {
+  def receive = {
+    case (name: String, configuration: Config) => setProcessor(name, configuration)
+    case name: String => removeProcessor(name)
+    case Start => start()
+    case msg => log.warning("can't handle: {}", msg); sender ! Status.Failure
+  }
+  
+  def start() = {
     log.debug("loading processors from configuration")
     
     config.getConfig("evactor.processors").root.keySet.foreach { k =>
       setProcessor(k, config.getConfig("evactor.processors").getConfig(k))
     }
     
-  }
-  
-  def receive = {
-    case (name: String, configuration: Config) => setProcessor(name, configuration)
-    case name: String => removeProcessor(name)
-    case msg => log.warning("can't handle: {}", msg); sender ! Status.Failure
   }
   
   /**

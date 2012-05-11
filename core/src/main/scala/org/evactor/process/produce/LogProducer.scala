@@ -13,21 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.evactor.process.alert.log
+package org.evactor.process.produce
 
-import org.evactor.process.Processor
-import org.evactor.process.alert.Alerter
 import org.evactor.model.events.Event
-import akka.actor.ActorLogging
+import org.evactor.process.Processor
 import org.evactor.subscribe.Subscription
+import akka.actor.ActorLogging
+import akka.event.Logging
+import org.evactor.ConfigurationException
 
-class LogAlerter (
-    override val subscriptions: List[Subscription])
-  extends Alerter (subscriptions) 
+class LogProducer (
+    override val subscriptions: List[Subscription],
+    val loglevel: String)
+  extends Processor (subscriptions) 
   with ActorLogging {
 
+  private[this] val level = Logging.levelFor(loglevel).getOrElse(throw new ConfigurationException("Unknown log level: %s".format(loglevel)))
+  
   protected def process(event: Event) {
-    log.error("ALERT: {}", event)
+    log.log(level, "{}", event)
   }
 
 }

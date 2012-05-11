@@ -47,6 +47,7 @@ import org.evactor.process.analyse.window.LengthWindow
 import org.evactor.process.analyse.absence.AbsenceOfRequestsAnalyser
 import org.evactor.process.build.request.RequestBuilder
 import org.evactor.process.build.simpleprocess.SimpleProcessBuilder
+import org.evactor.process.produce.LogProducer
 
 class TestProcessor (
     override val subscriptions: List[Subscription],
@@ -251,6 +252,18 @@ class ProcessorSpec(_system: ActorSystem)
           s._components must be (List("one", "two"))
           s._timeout must be (60000L)
         }
+        case _ => fail
+      }
+    }
+    
+    "build log producer" in {
+      val logProducerConfig = ConfigFactory.parseString("""
+          type = logProducer
+          subscriptions = [ {channel = "foo"} ]
+          loglevel = DEBUG
+        """)
+      TestActorRef(Processor(logProducerConfig)).underlyingActor match {
+        case l: LogProducer => l.loglevel == "DEBUG"
         case _ => fail
       }
     }
