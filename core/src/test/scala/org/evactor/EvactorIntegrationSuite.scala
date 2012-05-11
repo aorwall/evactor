@@ -16,21 +16,15 @@
 package org.evactor
 
 import org.evactor.bus.ProcessorEventBusExtension
-import org.evactor.collect.Collector
-import org.evactor.model.events.AlertEvent
 import org.evactor.model.events.LogEvent
-import org.evactor.model._
-import org.evactor.process.analyse.latency.Latency
-import org.evactor.process.ProcessorManager
+import org.evactor._
 import org.evactor.subscribe.Subscription
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.matchers.MustMatchers
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.FunSuite
-
 import com.typesafe.config.ConfigFactory
-
 import akka.actor.ActorSystem
 import akka.actor.Props
 import akka.actor.actorRef2Scala
@@ -38,6 +32,7 @@ import akka.testkit.TestActorRef
 import akka.testkit.TestKit
 import akka.testkit.TestProbe
 import akka.util.duration.intToDurationInt
+import org.evactor.model.Message
 
 /**
  * Testing the whole log data flow.
@@ -121,10 +116,10 @@ class EvactorIntegrationSuite(_system: ActorSystem)
     
     if(startCollector.isTerminated || endCollector.isTerminated) fail ("couldn't find the collectors" )
     
-    startCollector ! new LogEvent("329380921309", currentTime, "329380921309", "startComponent", "client", "server", Start, "hello")
-    startCollector ! new LogEvent("329380921310", currentTime+1000, "329380921309", "startComponent", "client", "server" , Success, "") // success
-    endCollector ! new LogEvent("329380921311", currentTime+2000, "329380921309", "endComponent", "client", "server", Start, "")
-    endCollector ! new LogEvent("329380921312",  currentTime+3000, "329380921309", "endComponent", "client", "server", Success, "") // success
+    startCollector ! new LogEvent("329380921309", currentTime, "329380921309", "startComponent", "client", "server", model.Start, "hello")
+    startCollector ! new LogEvent("329380921310", currentTime+1000, "329380921309", "startComponent", "client", "server" , model.Success, "") // success
+    endCollector ! new LogEvent("329380921311", currentTime+2000, "329380921309", "endComponent", "client", "server", model.Start, "")
+    endCollector ! new LogEvent("329380921312",  currentTime+3000, "329380921309", "endComponent", "client", "server", model.Success, "") // success
 
     probe.expectMsgAllClassOf(1 seconds, classOf[Message]) // the latency alert
   }

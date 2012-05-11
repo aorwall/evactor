@@ -31,7 +31,7 @@ class EvactorContext extends Actor with ActorLogging {
   
   override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries = 10, withinTimeRange = 1 minute) {
     case _: IllegalArgumentException => Stop
-    case _: Exception => Restart
+    case _: Exception => Resume // We don't want to restart the managers ....
   }
   
   // managers
@@ -46,14 +46,16 @@ class EvactorContext extends Actor with ActorLogging {
   }
   
   override def preStart() = {
-    pm
-    cm
+    log.info("Starting Evactor")
     
-    if(system.settings.config.hasPath("evactor.storage.implementation")) sm
+    pm ! Start
+    cm ! Start
+    if(system.settings.config.hasPath("evactor.storage.implementation")) sm ! Start
   }
   
   override def postStop = {
-    
+    log.info("Stopping Evactor")
   }
-
 }
+
+case class Start

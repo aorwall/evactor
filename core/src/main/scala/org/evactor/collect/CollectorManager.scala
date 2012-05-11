@@ -16,28 +16,30 @@
 package org.evactor.collect
 
 import com.typesafe.config.Config
-
 import akka.actor.SupervisorStrategy._
 import akka.actor._
 import akka.util.duration._
 import scala.collection.JavaConversions._
+import org.evactor.ConfigurationException
+import org.evactor.Start
 
 class CollectorManager extends Actor with ActorLogging {
 
   val config = context.system.settings.config
 
   override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries = 10, withinTimeRange = 1 minute) {
-    case _: IllegalArgumentException => Stop
+    case _: ConfigurationException => Stop
     case _: Exception => Restart
   }
 
   def receive = {
     case (name: String, config: Config) => addCollector(name, config)
     case name: String => removeCollector(name)
+    case Start => start()
     case msg => log.debug("can't handle {}", msg)
   }
 
-  override def preStart {
+  def start() {
     
     config.getConfig("evactor.collectors").root.keySet.foreach { k =>
       addCollector(k, config.getConfig("evactor.collectors").getConfig(k))

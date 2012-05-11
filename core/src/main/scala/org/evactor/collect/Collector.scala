@@ -24,6 +24,7 @@ import org.evactor.monitor.Monitored
 import org.evactor.publish._
 import org.evactor.storage.Storage
 import org.evactor.transform.Transformer
+import org.evactor.ConfigurationException
 
 import com.typesafe.config.Config
 
@@ -47,17 +48,17 @@ class Collector(
   def this(listener: Option[Config], transformer: Option[Config], publication: Publication) =
     this(listener, transformer, publication, 120 * 1000)
   
+  override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries = 10, withinTimeRange = 1 minute) {
+    case _: ConfigurationException => Escalate
+    case _: Exception => Restart
+  }
+  
   val startTime = System.currentTimeMillis
   
   private val ids = new HashSet[String]()
   private var timeline = new TreeMap[Long, String]()
   
   private val dbCheck = context.actorOf(Props(new CollectorStorageCheck(publication)))
-
-  override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries = 10, withinTimeRange = 1 minute) {
-    case _: IllegalArgumentException => Stop
-    case _: Exception => Restart
-  }
   
   def receive = {
     case event: Event => collect(event)
@@ -100,21 +101,19 @@ class Collector(
   override def preStart = { 
     // Start transformer and set collector to it
     val sendTo = transformer match {
-      case Some(t) => context.actorOf(Props(Transformer(t, context.self)))
+      case Some(t) => context.actorOf(Props(Transformer(t, context.self)), name="transformer")
       case None => context.self
     }
     
     // Start listener and set a  transformer to it
     listener match {
-      case Some(l) => context.actorOf(Props(Listener(l, sendTo)))
+      case Some(l) => context.actorOf(Props(Listener(l, sendTo)), name="listener")
       case None => log.warning("No listener configuration provided to collector!")
     }
     
+    super.preStart()
   }
 
-  override def postStop = {
-    // Stop transformer and listener?
-  }
 }
 
 

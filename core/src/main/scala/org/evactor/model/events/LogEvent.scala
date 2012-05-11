@@ -36,7 +36,7 @@ case class LogEvent(
   with HasState {
 
   // Java friendly constructor
-  def this(id: String, timestamp: Long, correlationId: String, component: String, client: String, server: String, state: String, message: String) = {
-    this(id, timestamp, correlationId, component, client, server, State(state), message )
-  }
+//  def this(id: String, timestamp: Long, correlationId: String, component: String, client: String, server: String, state: String, message: String) = {
+//    this(id, timestamp, correlationId, component, client, server, State(state), message )
+//  }
 }
