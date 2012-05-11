@@ -9,7 +9,7 @@ Installation
 
 Install [sbt](https://github.com/harrah/xsbt/wiki/Getting-Started-Setup) if you don't already have it. The application has been tested with sbt 0.11.2.
 
-Clone the Evactor repo: `git clone git@github.com:aorwall/evactor.git`
+Clone the Evactor repo: `git clone git://github.com/aorwall/evactor.git`
 
 Replace `[TWITTER_USERNAME]` and `[TWITTER_PASSWORD]` your own Twitter username and password in: `evactor/example/src/main/resources/application.conf`
 
