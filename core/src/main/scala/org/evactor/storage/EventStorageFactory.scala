@@ -30,9 +30,9 @@ object EventStorageFactory {
     
     import config._
 
-    val implPath = "akka.evactor.storage.implementation"
+    val implPath = "evactor.storage.implementation"
     val StorageImplementation: Option[String] = if(hasPath(implPath)) {
-      Some(getString("akka.evactor.storage.implementation"))
+      Some(getString("evactor.storage.implementation"))
     } else {
       None
     }

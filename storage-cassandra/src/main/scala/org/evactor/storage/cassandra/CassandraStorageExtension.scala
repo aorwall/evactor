@@ -28,9 +28,9 @@ class CassandraStorageSettings(val config: Config) extends Extension {
 
   import config._
 
-  val Hostname = getString("akka.evactor.storage.cassandra.hostname")
-  val Port = getInt("akka.evactor.storage.cassandra.port")
-  val Keyspace = getString("akka.evactor.storage.cassandra.keyspace")
-  val Clustername = getString("akka.evactor.storage.cassandra.clustername")
+  val Hostname = getString("evactor.storage.cassandra.hostname")
+  val Port = getInt("evactor.storage.cassandra.port")
+  val Keyspace = getString("evactor.storage.cassandra.keyspace")
+  val Clustername = getString("evactor.storage.cassandra.clustername")
   
 }
