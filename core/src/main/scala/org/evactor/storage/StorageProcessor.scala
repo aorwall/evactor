@@ -28,10 +28,6 @@ import org.evactor.subscribe.Subscriber
 /**
  * Stores events
  */
-case class StorageProcessorConfig (
-    val channel: Option[String],
-    val maxThreads: Int)
-
 class StorageProcessorRouter (
     val subscriptions: List[Subscription],
     val maxThreads: Int)  

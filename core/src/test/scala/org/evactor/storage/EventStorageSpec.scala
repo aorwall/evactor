@@ -60,17 +60,14 @@ class TestEventStorage(override val system: ActorSystem) extends EventStorage(sy
 object EventStorageSpec {
 
   val storageConf = ConfigFactory.parseString("""
-		akka {
-		  evactor {
-		    storage {
-		        
-		      implementation = org.evactor.storage.TestEventStorage
-		    
-		    }
-		  }
-		}
-		""")
-	
+    evactor {
+      storage {
+          
+        implementation = org.evactor.storage.TestEventStorage
+      
+      }
+    }
+    """)
 }
 
 @RunWith(classOf[JUnitRunner])
@@ -91,5 +88,4 @@ class EventStorageSpec(system: ActorSystem) extends EvactorSpec {
       }    
     }
   }
-    
 }
