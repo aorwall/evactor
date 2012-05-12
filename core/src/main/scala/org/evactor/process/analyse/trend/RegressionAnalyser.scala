@@ -108,7 +108,7 @@ class RegressionSubAnalyser (
 //        addLabel("coefficient: %s (%s), id: %s, eventCount: %s".format(coeff, coefficient, id, listToCheck))
         
         if(coeff > coefficient){
-          val message = "regression coefficient for %s reached over %s (%s). Event count: %s".format(id, coefficient, coeff, eventCount)
+          val message = "regression coefficient for %s reached over %s (%s). Event count: %s".format(id, coefficient, coeff, listToCheck)
           
 //          log.info("coefficient: {}, id: {}, eventCount: {}", coefficient, id, listToCheck)
           val alert = new AlertEvent(UUID.randomUUID.toString, System.currentTimeMillis, true, message, None)
