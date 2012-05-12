@@ -7,7 +7,7 @@ Installation
 
 ### Build from source
 
-Install [sbt](https://github.com/harrah/xsbt/wiki/Getting-Started-Setup) if you don't already have it. The application has been tested with sbt 0.11.2.
+Install [sbt](https://github.com/harrah/xsbt/wiki/Getting-Started-Setup) if you don't already have it. The application has been tested with sbt 0.11.3.
 
 Clone the Evactor repo: `git clone git://github.com/aorwall/evactor.git`
 
@@ -24,26 +24,6 @@ $ sbt
 An executable jar file can now be found in `evactor/example/target` and is executed with the command `java -jar evactorExample.jar`. 
 
 See [Cassandra storage] and [API] for instructions on how to enable the storage and API modules.
-
-### Binary
-
-#### Lightweight
->No libraries for storage or api
-
-1. Download [jar]()
-2. Download [application.conf](https://raw.github.com/aorwall/evactor/master/example/src/main/resources/application.conf) and add it to the same directory as the jar
-3. Replace twitter credentials in `application.conf`
-4. Run `java -jar evactorExample.jar -cp application.conf`
-
-#### With Storage and API
-
-1. Download [jar]()
-2. Download [application.conf](https://raw.github.com/aorwall/evactor/master/example/src/main/resources/application.conf) and add it to the same directory as the jar
-3. Replace twitter credentials in `application.conf`
-4. [Install Apache Cassandra](Länk till där nere) and edit storage configuration
-5. Edit [API configuration]()
-6. Run `java -jar evactorExample.jar -cp application.conf`
-
 
 Understand the configuration
 ---------------------
@@ -103,7 +83,7 @@ twitter_hashtag_filter {
 #### Regression analyser
 A [*Regression analyser*]() analyses events categorized by hashtag to find hashtags that grows with more than 100% under a 15 minutes period
     
-> "coefficient" is supposed to represent the regression coefficient. Maybe not totally scientifically correct, but this means that the number of events grows with more than [coefficient]*[no event] under the specified time frame. A coefficient with a negative value means that the number of arriving event is declining.
+> "coefficient" is supposed to represent the regression coefficient. Maybe not totally scientifically correct, but this means that the number of events grows with more than [coefficient]*[no event] under the specified time frame. A coefficient with a negative value indicates that the number of arriving event is declining.
 
 ```text
 twitter_hashtag_trend {
