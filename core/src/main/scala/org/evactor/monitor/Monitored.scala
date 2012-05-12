@@ -1,59 +1,78 @@
+/*
+ * Copyright 2012 Albert Örwall
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.evactor.monitor
 
 import akka.actor.Actor
-import com.twitter.ostrich.stats.Stats
+import akka.actor.ActorLogging
 
 /**
  * Using Twitter Ostrich for monitoring. Will be changed to 
  * a configurable extension later...
  */
-trait Monitored extends Actor {
+trait Monitored extends Actor with ActorLogging {
 
+  val monitor = MonitoringExtension(context.system).getMonitoring
+  if(monitor.isEmpty) log.warning("No monitoring implementation found")
+  
   private val label = (key: String) => {
     "%s:%s".format(context.self.path, key)
   }
   
   def incr(key: String) {
-    Stats.incr(label(key))
+    if(monitor.isDefined) monitor.get.incr(label(key), 1)
   }
   
   def incr(key: String, i: Int){
-    Stats.incr(label(key), i)
+    if(monitor.isDefined) monitor.get.incr(label(key), i)
   }
   
   def addLabel(key: String, value: String){
-    Stats.setLabel(label(key), value)
+    if(monitor.isDefined) monitor.get.addLabel(label(key), value)
   }
   
   def addLabel(value: String){
-    Stats.setLabel(context.self.path.toString, value)
+    if(monitor.isDefined) monitor.get.addLabel(context.self.path.toString, value)
   }
   
   def removeLabel(key: String){
-    Stats.clearLabel(label(key))
+    if(monitor.isDefined) monitor.get.removeLabel(label(key))
   }
   
   def removeLabel() {
-    Stats.clearLabel(context.self.path.toString)
+    if(monitor.isDefined) monitor.get.removeLabel(context.self.path.toString)
   }
   def addMetric(key: String, value: Int){
-    Stats.addMetric(label(key), value)
+    if(monitor.isDefined) monitor.get.addMetric(label(key), value)
   }
   
   def removeMetric(key: String){
-    Stats.removeMetric(label(key))
+    if(monitor.isDefined) monitor.get.removeMetric(label(key))
   }
   
   def addGauge(key: String, value: Double){
-    Stats.addGauge(label(key))(value)
+    if(monitor.isDefined) monitor.get.addGauge(label(key), value)
   }
   
   def removeGauge(key: String){
-    Stats.clearGauge(key)
+    if(monitor.isDefined) monitor.get.removeGauge(key)
   }
   
   def time[T](key: String)(f: => T): T = {
-    Stats.time(label(key))(f)
+    if(monitor.isDefined) monitor.get.time(label(key))(f)
+    else f
   }
   
 }

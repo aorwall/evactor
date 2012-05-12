@@ -52,6 +52,14 @@ object BamBuild extends Build {
       libraryDependencies ++= Dependencies.api
     )
   ) dependsOn (core)
+	
+  lazy val monitoringOstrich = Project(
+    id = "monitoring-ostrich",
+    base = file("monitoring-ostrich"),
+    settings = defaultSettings ++ Seq(
+      libraryDependencies ++= Dependencies.monitoringOstrich
+    )
+  ) dependsOn (core)
                      
   lazy val example = Project(
     id = "example",
@@ -59,8 +67,8 @@ object BamBuild extends Build {
     settings = defaultSettings ++ exampleAssemblySettings ++ Seq(
       libraryDependencies ++= Dependencies.example
     )
-  ) dependsOn (core, storageCassandra, api)
-                                       
+  ) dependsOn (core, storageCassandra, api, monitoringOstrich)
+
   override lazy val settings = super.settings ++ Seq(
         resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/",
         resolvers += "Twitter Repository" at "http://maven.twttr.com/",
@@ -110,11 +118,11 @@ object BamBuild extends Build {
 object Dependencies {
   import Dependency._
   
-  val core = Seq(akkaActor, jacksonCore, jacksonMapper, mvel2, ostrich, Test.scalatest, Test.junit, Test.mockito, Test.akkaTestkit)
+  val core = Seq(akkaActor, jacksonCore, jacksonMapper, mvel2, Test.scalatest, Test.junit, Test.mockito, Test.akkaTestkit)
   val api = Seq (grizzled, jacksonCore, jacksonMapper, jacksonScala, unfilteredFilter, unfilteredNetty, unfilteredNettyServer)
   val example = Seq (akkaKernel, grizzled, httpClient, unfilteredNettyServer, Test.scalatest, Test.junit, Test.akkaTestkit)
   val storageCassandra = Seq(akkaActor, cassandraThrift, grizzled, guava, hectorCore, jodaConvert, jodaTime, perf4j, thrift, Test.scalatest, Test.junit)
-  val camel = Seq(camelCore)
+  val monitoringOstrich = Seq(ostrich)
 
 }
 

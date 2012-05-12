@@ -24,10 +24,10 @@ import akka.actor.ActorLogging
 import akka.actor.ActorRef
 import java.util.ArrayList
 import scala.collection.JavaConversions._
-import com.twitter.ostrich.stats.Stats
 import java.util.Locale
+import org.evactor.monitor.Monitored
 
-class TwitterJsonToStatusEvent(collector: ActorRef)  extends Transformer with ActorLogging {
+class TwitterJsonToStatusEvent(collector: ActorRef)  extends Transformer with Monitored with ActorLogging {
 
   def receive = {
     case jsonString: String => transform(jsonString)
@@ -42,7 +42,7 @@ class TwitterJsonToStatusEvent(collector: ActorRef)  extends Transformer with Ac
     
     try{
     
-    // skip delete status
+      // skip delete status
       if(map.get("delete") == null){
       
         val text = map.get("text").toString
@@ -75,14 +75,14 @@ class TwitterJsonToStatusEvent(collector: ActorRef)  extends Transformer with Ac
           u.get("text")
         }.toList
         
-        Stats.incr("twittertransformer:success")
+        incr("twittertransformer:success")
         collector ! new StatusEvent(id, timestamp, screenName, text, urls, hashtags)
       } else {
-        Stats.incr("twittertransformer:delete")
+        incr("twittertransformer:delete")
       }
     } catch {
       case e => {
-        Stats.incr("twittertransformer:failure")
+        incr("twittertransformer:failure")
         log.warning("couldn't parse {}", jsonString, e)
         throw e
       }
