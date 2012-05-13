@@ -40,7 +40,13 @@ class ExampleKernel extends Bootable {
   lazy val context = system.actorOf(Props[EvactorContext], name = "evactor")
   
   // netty api server
-  lazy val nettyServer = unfiltered.netty.Http(8080).plan(new BasePlan(system))
+  val port = if(system.settings.config.hasPath("evactor.api.port")){
+    system.settings.config.getInt("evactor.api.port")
+  } else {
+    8080
+  }
+
+  lazy val nettyServer = unfiltered.netty.Http(port).plan(new BasePlan(system))
   
   def startup = {
     
@@ -48,20 +54,27 @@ class ExampleKernel extends Bootable {
     
     context  // Start evactor context
     
-    // start api server
-    nettyServer.start()
     
-    // start ostrich admin web service
-    val adminConfig = new AdminServiceConfig {
-      httpPort = 8888
+    if(system.settings.config.hasPath("evactor.api")){
+      // start api server
+      nettyServer.start()
     }
     
-    val runtime = RuntimeEnvironment(this, Array[String]())
-    val admin = adminConfig()(runtime)
+    if(system.settings.config.hasPath("evactor.monitoring.ostrich")){
+      // start ostrich admin web service
+      val adminConfig = new AdminServiceConfig {
+        httpPort = system.settings.config.getInt("evactor.monitoring.ostrich.port")
+      }
+      
+      val runtime = RuntimeEnvironment(this, Array[String]())
+      val admin = adminConfig()(runtime)
+    }
   }
 
   def shutdown = {
-    nettyServer.stop()
+    if(system.settings.config.hasPath("evactor.api")){
+      nettyServer.stop()
+    }
     system.shutdown()
   }
 
