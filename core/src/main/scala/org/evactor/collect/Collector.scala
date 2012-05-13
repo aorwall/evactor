@@ -17,7 +17,6 @@ package org.evactor.collect
 
 import scala.collection.immutable.TreeMap
 import scala.collection.mutable.HashSet
-
 import org.evactor.listen.Listener
 import org.evactor.model.events.Event
 import org.evactor.monitor.Monitored
@@ -25,12 +24,11 @@ import org.evactor.publish._
 import org.evactor.storage.Storage
 import org.evactor.transform.Transformer
 import org.evactor.ConfigurationException
-
 import com.typesafe.config.Config
-
 import akka.actor.SupervisorStrategy._
 import akka.actor._
 import akka.util.duration._
+import org.evactor.Start
 
 /**
  * Collecting incoming events

@@ -28,7 +28,8 @@ class CollectorManager extends Actor with ActorLogging {
   val config = context.system.settings.config
 
   override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries = 10, withinTimeRange = 1 minute) {
-    case _: ConfigurationException => Stop
+    case e: ConfigurationException => log.error("Stopping collector because of: {}", e); Stop
+    case e: ClassNotFoundException => log.error("Stopping collector because of: {}", e); Stop
     case _: Exception => Restart
   }
 
@@ -57,6 +58,7 @@ class CollectorManager extends Actor with ActorLogging {
       case e: Exception => {
         log.warning("Starting collector with name {} failed. {}", n, e)
         sender ! Status.Failure(e)
+        throw e
       }
     }
   }
