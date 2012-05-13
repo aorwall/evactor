@@ -28,14 +28,16 @@ import java.util.zip.GZIPInputStream
 import java.io.InputStream
 import org.apache.http.params.HttpConnectionParams
 import org.evactor.ConfigurationException
+import org.evactor.Start
+import java.io.BufferedInputStream
 
 class TwitterListener(sendTo: ActorRef, url: String, username: String, password: String) extends Listener with ActorLogging {
   
-  var stream = connect()
+  var stream: BufferedReader = null
   var failures = 0  
    
   def receive = {
-    case "" => read()
+    case Start => read()
     case msg => log.debug("can't handle {}", msg)
   }
 
@@ -114,9 +116,9 @@ class TwitterListener(sendTo: ActorRef, url: String, username: String, password:
     new BufferedReader(new InputStreamReader(entity.getContent))
   }
   
-  override def preStart() {
-    super.preStart()
-    context.self ! ""
+  override def preStart = {
+    super.preStart
+    self ! Start
   }
   
 }
