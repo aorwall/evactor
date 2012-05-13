@@ -17,18 +17,27 @@ package org.evactor.collect
 
 import scala.collection.immutable.TreeMap
 import scala.collection.mutable.HashSet
+
 import org.evactor.listen.Listener
+import org.evactor.listen.ListenerException
 import org.evactor.model.events.Event
 import org.evactor.monitor.Monitored
-import org.evactor.publish._
+import org.evactor.publish.Publication
+import org.evactor.publish.Publisher
 import org.evactor.storage.Storage
 import org.evactor.transform.Transformer
 import org.evactor.ConfigurationException
+
 import com.typesafe.config.Config
-import akka.actor.SupervisorStrategy._
-import akka.actor._
-import akka.util.duration._
-import org.evactor.Start
+
+import akka.actor.SupervisorStrategy.Escalate
+import akka.actor.SupervisorStrategy.Restart
+import akka.actor.actorRef2Scala
+import akka.actor.Actor
+import akka.actor.ActorLogging
+import akka.actor.OneForOneStrategy
+import akka.actor.Props
+import akka.util.duration.intToDurationInt
 
 /**
  * Collecting incoming events
@@ -37,17 +46,15 @@ class Collector(
     val listener: Option[Config], 
     val transformer: Option[Config], 
     val publication: Publication,
-    val timeInMem: Long) 
+    val timeInMem: Long = 120 * 1000) 
   extends Actor 
   with Publisher
   with Monitored
   with ActorLogging {
   
-  def this(listener: Option[Config], transformer: Option[Config], publication: Publication) =
-    this(listener, transformer, publication, 120 * 1000)
-  
   override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries = 10, withinTimeRange = 1 minute) {
     case _: ConfigurationException => Escalate
+    case _: ListenerException => Restart
     case _: Exception => Restart
   }
   

@@ -23,6 +23,7 @@ import org.evactor.listen.Listener
 import com.twitter.ostrich.stats.Stats
 import akka.actor.ActorLogging
 import akka.actor.ActorRef
+import akka.util.duration._
 import org.apache.commons.codec.binary.Base64
 import java.util.zip.GZIPInputStream
 import java.io.InputStream
@@ -30,6 +31,7 @@ import org.apache.http.params.HttpConnectionParams
 import org.evactor.ConfigurationException
 import org.evactor.Start
 import java.io.BufferedInputStream
+import org.evactor.listen.ListenerException
 
 class TwitterListener(sendTo: ActorRef, url: String, username: String, password: String) extends Listener with ActorLogging {
   
@@ -57,26 +59,22 @@ class TwitterListener(sendTo: ActorRef, url: String, username: String, password:
       Stats.incr("twitterlistener:null")
       log.debug("inputline is null")
       failures = failures +1
-      Thread.sleep(50)
+      context.system.scheduler.scheduleOnce(50 milliseconds, context.self, new Start)
     } else if (inputLine.trim.size == 0) {
       Stats.incr("twitterlistener:empty")
       log.debug("inputline is empty")
       failures = failures +1
-      Thread.sleep(50)
+      context.system.scheduler.scheduleOnce(50 milliseconds, context.self, new Start)
     } else {
       Stats.incr("twitterlistener:status")
       log.debug("inputline: {}", inputLine)
       sendTo ! inputLine
+      context.self ! new Start
     }
     
     if(failures > 10){
-      log.warning("more than 10 failures in a row, will try to reconnect to the twitter stream")
-      stream = connect()
-      failures = 0
+      throw new ListenerException("more than 10 connection failures in a row")
     }
-    
-    context.self ! ""
-    
   }
   
   private[this] def connect (): BufferedReader = {
@@ -107,7 +105,7 @@ class TwitterListener(sendTo: ActorRef, url: String, username: String, password:
       if(response.getStatusLine.getStatusCode == 401){
         throw new ConfigurationException("Twitter returned \"401 Unauthorized\". Check the Twitter username and password.")
       } else {
-        throw new RuntimeException("Couldn't connect to the Twitter stream API, status returned: %s".format(response.getStatusLine))  
+        throw new ListenerException("Couldn't connect to the Twitter stream API, status returned: %s".format(response.getStatusLine))  
       }
       
     }
