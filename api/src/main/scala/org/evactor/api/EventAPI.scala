@@ -55,7 +55,7 @@ class EventAPI (val system: ActorSystem) {
       case "channels" :: Nil => getChannels(getCount(params.get("count"), 100))
       case "categories" :: channel :: Nil => getCategories(decode(channel), getCount(params.get("count"), 100))
    	  case "stats" :: tail => getStats(tail, params)
-   	  case "events" :: tail => getEvents(tail, params)
+   	  case "timeline" :: tail => getTimeline(tail, params)
    	  case "event" :: id :: Nil => getEvent(id) 
    	  case "latency" :: channel :: Nil => getAvgLatency(decode(channel), None, getInterval(params.get("interval")))
    	  case "latency" :: channel :: category :: Nil => getAvgLatency(decode(channel), Some(decode(category)), getInterval(params.get("interval")))
@@ -78,7 +78,7 @@ class EventAPI (val system: ActorSystem) {
    	  case e => throw new IllegalArgumentException("Illegal stats request: %s".format(e))
   }
   
-  protected[api] def getEvents(path: Seq[String], params: Map[String, Seq[String]]): List[Event] = 
+  protected[api] def getTimeline(path: Seq[String], params: Map[String, Seq[String]]): List[Event] = 
     path match {
  	    case channel :: Nil => storage.getEvents(decode(channel), None, None, None, 10, 0)
  	    case channel :: category :: Nil => storage.getEvents(decode(channel), Some(decode(category)), None, None, 10, 0)

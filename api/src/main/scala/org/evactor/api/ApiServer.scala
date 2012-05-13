@@ -17,16 +17,17 @@ package org.evactor.api
 
 import akka.actor.Actor
 import akka.actor.ActorSystem
+import akka.actor.ActorLogging
 
 class ApiServer(
     val system: ActorSystem,
     val port: Int)
-  extends Actor  {
+  extends Actor with ActorLogging {
 
   lazy val nettyServer = unfiltered.netty.Http(port).plan(new BasePlan(system))
 
   def receive = {
-    case "startup" => nettyServer.run
+    case "startup" => log.info("Starting api..."); nettyServer.run
     case _      	 => nettyServer.stop
   }
   
