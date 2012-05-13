@@ -57,17 +57,18 @@ class TwitterListener(sendTo: ActorRef, url: String, username: String, password:
     
     if (inputLine == null) {
       Stats.incr("twitterlistener:null")
-      log.debug("inputline is null")
+      log.debug("inputline is null, backing off for 50 ms")
       failures = failures +1
       context.system.scheduler.scheduleOnce(50 milliseconds, context.self, new Start)
     } else if (inputLine.trim.size == 0) {
       Stats.incr("twitterlistener:empty")
-      log.debug("inputline is empty")
+      log.debug("inputline is empty, backing off for 50 ms")
       failures = failures +1
       context.system.scheduler.scheduleOnce(50 milliseconds, context.self, new Start)
     } else {
       Stats.incr("twitterlistener:status")
       log.debug("inputline: {}", inputLine)
+      failures = 0
       sendTo ! inputLine
       context.self ! new Start
     }
