@@ -70,7 +70,7 @@ class TwitterListener(sendTo: ActorRef, url: String, username: String, password:
       log.debug("inputline: {}", inputLine)
       failures = 0
       sendTo ! inputLine
-      context.self ! new Start
+      context.self ! Start
     }
     
     if(failures > 10){
@@ -117,6 +117,7 @@ class TwitterListener(sendTo: ActorRef, url: String, username: String, password:
   
   override def preStart = {
     super.preStart
+    stream = connect()
     self ! Start
   }
   
