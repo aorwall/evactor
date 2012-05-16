@@ -30,6 +30,9 @@ import akka.util.duration.intToDurationInt
 import com.typesafe.config.ConfigFactory
 import org.evactor.bus.ProcessorEventBusExtension
 import org.evactor.model.Message
+import akka.actor.ActorRef
+import org.evactor.listen.Listener
+import org.evactor.ConfigurationException
 
 @RunWith(classOf[JUnitRunner])
 class CollectorSpec(_system: ActorSystem) 
@@ -68,15 +71,19 @@ class CollectorSpec(_system: ActorSystem)
     }
     
     "remove old events from memory" in {
-      val collector = TestActorRef(new Collector(None, None, new TestPublication(TestProbe().ref))).underlyingActor
+      val collector = TestActorRef(new Collector(None, None, new TestPublication(TestProbe().ref), 100)).underlyingActor
 
-      val testEvent = new Event("id", System.currentTimeMillis - collector.timeInMem + 100)
-
-      collector.eventExists(testEvent) must be (false)
-      collector.eventExists(testEvent) must be (true)
+      val time = System.currentTimeMillis - collector.timeInMem + 50
+      
+      val testEvent1 = new Event("id1", time)
+      val testEvent2 = new Event("id2", time)
+      collector.eventExists(testEvent1) must be (false)
+      collector.eventExists(testEvent1) must be (true)
+      collector.eventExists(testEvent2) must be (false)
       Thread.sleep(200)
-      collector.eventExists(testEvent) must be (true)
-      collector.eventExists(testEvent) must be (false)
+      collector.eventExists(testEvent1) must be (true)
+      collector.eventExists(testEvent1) must be (false)
+      collector.eventExists(testEvent2) must be (false)
       
     }
     
@@ -102,3 +109,4 @@ class CollectorSpec(_system: ActorSystem)
     
   }
 }
+

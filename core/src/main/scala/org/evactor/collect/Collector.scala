@@ -15,9 +15,8 @@
  */
 package org.evactor.collect
 
-import scala.collection.immutable.TreeMap
-import scala.collection.mutable.HashSet
-
+import java.util.TreeMap
+import scala.collection.JavaConversions._
 import org.evactor.listen.Listener
 import org.evactor.listen.ListenerException
 import org.evactor.model.events.Event
@@ -27,9 +26,7 @@ import org.evactor.publish.Publisher
 import org.evactor.storage.Storage
 import org.evactor.transform.Transformer
 import org.evactor.ConfigurationException
-
 import com.typesafe.config.Config
-
 import akka.actor.SupervisorStrategy.Escalate
 import akka.actor.SupervisorStrategy.Restart
 import akka.actor.actorRef2Scala
@@ -38,6 +35,7 @@ import akka.actor.ActorLogging
 import akka.actor.OneForOneStrategy
 import akka.actor.Props
 import akka.util.duration.intToDurationInt
+import scala.collection.mutable.HashSet
 
 /**
  * Collecting incoming events
@@ -46,22 +44,22 @@ class Collector(
     val listener: Option[Config], 
     val transformer: Option[Config], 
     val publication: Publication,
-    val timeInMem: Long = 120 * 1000) 
+    val timeInMem: Long = 600 * 1000) 
   extends Actor 
   with Publisher
   with Monitored
   with ActorLogging {
   
   override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries = 10, withinTimeRange = 1 minute) {
-    case _: ConfigurationException => Escalate
-    case _: ListenerException => Restart
-    case _: Exception => Restart
+    case e: ConfigurationException => Escalate
+    case e: ListenerException => log.error("Caught exception: {}", e); Restart
+    case e: Exception => log.error("Caught exception: {}", e); Restart
   }
   
   val startTime = System.currentTimeMillis
   
-  private val ids = new HashSet[String]()
-  private var timeline = new TreeMap[Long, String]()
+  private val ids = new HashSet[String]
+  private val timeline = new TreeMap[Long, List[String]]()
   
   private val dbCheck = context.actorOf(Props(new CollectorStorageCheck(publication)))
   
@@ -89,16 +87,31 @@ class Collector(
   }
   
   protected[collect] def eventExists(event: Event) = {
+    false
     val exists = ids.contains(event.id)
     
     // remove old
-    val old = timeline.takeWhile( _._1 < System.currentTimeMillis - timeInMem )
-    for((_, id) <- old) ids.remove(id)
-    timeline = timeline.drop(old.size)
+    val oldTime = System.currentTimeMillis - timeInMem
+    
+    val old = timeline.headMap(oldTime)
+    for((timestamp, timedIds) <- old) {
+      for(timedId <- timedIds){
+        ids -= timedId
+      }
+      
+      timeline.remove(timestamp)
+    }
     
     if(!exists){
       ids += event.id
-      timeline += (event.timestamp -> event.id)
+      
+      val timedIds = if(timeline.containsKey(event.timestamp)){
+        event.id :: timeline.get(event.timestamp)
+      } else {
+        List(event.id)
+      }
+      
+      timeline.put(event.timestamp, timedIds)
     }
     exists
   }
@@ -118,7 +131,6 @@ class Collector(
     
     super.preStart()
   }
-
 }
 
 

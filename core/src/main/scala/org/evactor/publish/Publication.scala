@@ -21,7 +21,7 @@ import com.typesafe.config.Config
 import akka.actor.ActorRef
 import org.evactor.ConfigurationException
 import scala.collection.JavaConversions._
-import scala.collection.immutable.TreeSet
+import scala.collection.immutable.ListSet
 import com.typesafe.config.ConfigValueType
 
 object Publication {
@@ -70,8 +70,8 @@ object Publication {
   }
   
   def set(l: Traversable[Any]): Set[String] = l match {
-    case head :: tail => if (head != null) { TreeSet(head.toString) ++ set(tail) } else { set(tail) } 
-    case Nil => TreeSet() 
+    case head :: tail => if (head != null) { ListSet(head.toString) ++ set(tail) } else { set(tail) } 
+    case Nil => ListSet() 
   }
 }
 
