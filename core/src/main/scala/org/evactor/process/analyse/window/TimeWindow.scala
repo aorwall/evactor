@@ -15,20 +15,31 @@
  */
 package org.evactor.process.analyse.window
 
-trait TimeWindow extends Window {
+import org.evactor.model.Timeout
+import akka.util.duration._
+import akka.actor.ActorLogging
+import scala.collection.immutable.SortedMap
 
+trait TimeWindow extends Window with ActorLogging {
+
+  type S
   val timeframe: Long
 
-  override protected[analyse] def getInactive(activities: Map[Long, S]): Map[Long, S] = {
+  override protected[analyse] def getInactive(activities: SortedMap[Long, S]): Map[Long, S] = {
     activities.takeWhile( _._1 < System.currentTimeMillis - timeframe )
   }
 
-  // Scheduler.schedule(self, new Timeout, timeframe, timeframe, TimeUnit.MILLISECONDS)
+  lazy val cancellable = context.system.scheduler.schedule(timeframe milliseconds, timeframe milliseconds, self, Timeout)
 
-  //TODO: Scheduler.shutdown
-
-}
-
-case class TimeWindowConf(timeframe: Long) extends WindowConf {
-
+  abstract override def preStart = {
+    log.info("starting scheduler")
+    cancellable
+    super.preStart()
+  }
+  
+  abstract override def postStop = {
+    log.info("stopping scheduler")
+    cancellable.cancel()
+    super.postStop()
+  }
 }

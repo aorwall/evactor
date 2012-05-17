@@ -60,31 +60,30 @@ class ProcessorManager extends Actor with ActorLogging  {
    */
   def setProcessor(name: String, configuration: Config) {
     try {
-	    log.debug("starting processor for configuration: {}", config)
-	    
+      log.debug("starting processor for configuration: {}", config)
+      
       context.actorOf(Props(Processor(configuration)), name = name)
       sender ! Status.Success
     } catch {
-			case e: Exception => {
-			  log.warning("Starting processor with name {} failed. {}", configuration.getString("name"), e)
-			  sender ! Status.Failure(e)
-			}
-	  }
+      case e: Exception => {
+        log.warning("Starting processor with name {} failed. {}", configuration.getString("name"), e)
+        sender ! Status.Failure(e)
+      }
+    }
   }
 
   def removeProcessor(name: String) {    
     try {
-	    log.debug("stopping processor with name: {}", name)
-	    val runningActor = context.actorFor(name)
-	    context.stop(runningActor)  
-	    sender ! Status.Success    
+      log.debug("stopping processor with name: {}", name)
+      val runningActor = context.actorFor(name)
+      context.stop(runningActor)  
+      sender ! Status.Success    
     } catch {
-			case e: Exception => sender ! Status.Failure(e)
-	  }
+      case e: Exception => sender ! Status.Failure(e)
+    }
   }
 
   override def postStop() {
     log.debug("stopping...")
   }
 }
-

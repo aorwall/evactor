@@ -20,9 +20,33 @@ import org.scalatest.{WordSpec, FunSuite}
 import org.scalatest.matchers.MustMatchers
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
+import akka.testkit.TestKit
+import org.scalatest.BeforeAndAfterAll
+import akka.actor.ActorSystem
+import akka.actor.ActorRef
+import akka.actor.Actor
+import scala.collection.immutable.SortedMap
+import org.evactor.EvactorSpec
+import akka.testkit.TestProbe
+import akka.testkit.TestActorRef
+import akka.util.duration._
 
 @RunWith(classOf[JUnitRunner])
-class TimeWindowSpec extends WordSpec with MustMatchers {
+class TimeWindowSpec (_system: ActorSystem) 
+  extends TestKit(_system) 
+  with EvactorSpec   
+  with BeforeAndAfterAll {
+
+  def this() = this(ActorSystem("TimeWindowSpec"))
+
+  private class TestActor (val probe: ActorRef, val timeframe: Long)
+    extends Actor with TimeWindow {
+    type S = Int
+    
+    def receive = {
+      case l: SortedMap[Long, Int] => probe ! getInactive(l).size
+    }
+  }
 
   val currentTime = System.currentTimeMillis
   val events = TreeMap(
@@ -45,23 +69,19 @@ class TimeWindowSpec extends WordSpec with MustMatchers {
     }
 */
     "not return any events when the timeframe is set to current time" in {
+      val probe = TestProbe()
+      val actor = TestActorRef(new TestActor(probe.ref,  System.currentTimeMillis))
+      actor ! events
+      probe.expectMsg(100 milliseconds, 0)
 
-      new {
-        type S = Int
-        val timeframe = System.currentTimeMillis
-      } with TimeWindow {
-        assert(getInactive(events).size == 0)
-      }
+      
     }
 
     "return all events when the timelimit is set to 0" in {
-
-      new {
-        type S = Int
-        val timeframe = 0L
-      } with TimeWindow {
-        assert(getInactive(events).size == 5)
-      }
+      val probe = TestProbe()
+      val actor = TestActorRef(new TestActor(probe.ref, 0))
+      actor ! events
+      probe.expectMsg(100 milliseconds, 5)
     }
   }
 }

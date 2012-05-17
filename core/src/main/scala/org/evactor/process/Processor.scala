@@ -15,33 +15,27 @@
  */
 package org.evactor.process
 
+import org.evactor.ConfigurationException
 import org.evactor.expression.Expression
+import org.evactor.model.{Message, Timeout}
 import org.evactor.model.events.Event
-import org.evactor.model.Message
-import org.evactor.model.Timeout
 import org.evactor.monitor.Monitored
-import org.evactor.process.analyse.absence.AbsenceOfRequestsAnalyser
+import org.evactor.process.alert.Alerter
 import org.evactor.process.analyse.count.CountAnalyser
-import org.evactor.process.analyse.failures.FailureAnalyser
-import org.evactor.process.analyse.latency.LatencyAnalyser
+import org.evactor.process.analyse.average.AverageAnalyser
 import org.evactor.process.analyse.trend.RegressionAnalyser
 import org.evactor.process.analyse.window.LengthWindow
 import org.evactor.process.analyse.window.TimeWindow
 import org.evactor.process.build.request.RequestBuilder
 import org.evactor.process.build.simpleprocess.SimpleProcessBuilder
-import org.evactor.process.route.Filter
-import org.evactor.process.route.Forwarder
-import org.evactor.publish.Publication
-import org.evactor.subscribe.Subscriber
-import org.evactor.subscribe.Subscription
-import org.evactor.subscribe.Subscriptions
-import org.evactor.ConfigurationException
-import com.typesafe.config.Config
-import akka.actor.ActorLogging
-import akka.actor.ReflectiveDynamicAccess
-import scala.collection.JavaConversions._
-import com.typesafe.config.ConfigException
 import org.evactor.process.produce.LogProducer
+import org.evactor.process.route.{Filter, Forwarder}
+import org.evactor.publish.Publication
+import org.evactor.subscribe._
+import akka.actor.{ActorLogging, ReflectiveDynamicAccess}
+import com.typesafe.config.{Config, ConfigException}
+import scala.collection.JavaConversions._
+import java.util.UUID
 
 /**
  * Abstract class all standard processors should extend
@@ -61,6 +55,9 @@ abstract class Processor (
   protected def process(event: Event)
   
   protected def timeout() = {}
+  
+  def uuid = UUID.randomUUID.toString
+  def currentTime = System.currentTimeMillis
 
 }
 
@@ -84,19 +81,14 @@ object Processor {
     try {
       if(hasPath("type")){
         getString("type") match{
-          case "countAnalyser" => new CountAnalyser(sub, pub, getBoolean("categorize"), getLong("maxOccurrences"), getMilliseconds("timeframe"))
-          case "regressionAnalyser" => new RegressionAnalyser(sub, pub, getBoolean("categorize"), getDouble("coefficient"), getLong("minSize"), getMilliseconds("timeframe"))
+          case "countAnalyser" => new CountAnalyser(sub, pub, getBoolean("categorize"), getMilliseconds("timeframe"))
+          case "regressionAnalyser" => new RegressionAnalyser(sub, pub, getBoolean("categorize"), getLong("minSize"), getMilliseconds("timeframe"))
           case "filter" => new Filter(sub, pub, Expression(getConfig("expression")), getBoolean("accept"))
           case "forwarder" => new Forwarder(sub, pub)
           case "requestBuilder" => new RequestBuilder(sub, pub, getMilliseconds("timeout"))
           case "simpleProcessBuilder" => new SimpleProcessBuilder(sub, pub, getStringList("components").toList, getMilliseconds("timeout"))
-          case "latencyAnalyser" => if(hasPath("timeWindow")) new LatencyAnalyser(sub, pub, getMilliseconds("maxLatency")) with TimeWindow { override val timeframe = getMilliseconds("timeWindow").toLong }
-                                    else if(hasPath("lengthWindow")) new LatencyAnalyser(sub, pub, getMilliseconds("maxLatency")) with LengthWindow { override val noOfRequests = getInt("lengthWindow") }
-                                    else new LatencyAnalyser(sub, pub, getMilliseconds("maxLatency"))
-          case "failureAnalyser" =>  if(hasPath("timeWindow")) new FailureAnalyser(sub, pub, getLong("maxOccurrences")) with TimeWindow { override val timeframe = getMilliseconds("timeWindow").toLong }
-                                     else if(hasPath("lengthWindow")) new FailureAnalyser(sub, pub, getLong("maxOccurrences")) with LengthWindow { override val noOfRequests = getInt("lengthWindow") }
-                                     else new FailureAnalyser(sub, pub, getLong("maxOccurrences"))
-          case "absenceOfRequestsAnalyser" => new AbsenceOfRequestsAnalyser(sub, pub, getMilliseconds("timeframe"))
+          case "averageAnalyser" => new AverageAnalyser(sub, pub, getBoolean("categorize"), Expression(getConfig("expression")), if(hasPath("window")){ Some(getConfig("window"))} else {None}) 
+          case "alerter" => new Alerter(sub, pub, getBoolean("categorize"), Expression(getConfig("expression")))
           case "logProducer" => new LogProducer(sub, getString("loglevel"))
           case o => throw new ConfigurationException("processor type not recognized: %s".format(o))
         }

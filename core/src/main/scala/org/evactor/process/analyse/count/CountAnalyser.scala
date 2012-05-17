@@ -29,43 +29,41 @@ import org.evactor.model.events.AlertEvent
 import scala.collection.immutable.TreeMap
 import java.util.UUID
 import org.evactor.model.Timeout
+import org.evactor.model.events.ValueEvent
+import scala.None
 
 /**
- * Counting events in channels and alerts if they
- * occur more often than specified.
+ * Counting events in channels and creates
+ * a value event with current count
  * 
  */
 class CountAnalyser (
     override val subscriptions: List[Subscription],
     val publication: Publication,
     override val categorize: Boolean, 
-    val maxOccurrences: Long,
     val timeframe: Long) extends CategoryProcessor(subscriptions, categorize) {
 
   protected def createSubProcessor(id: String): SubProcessor = {
-    new CountSubAnalyser(publication, id, maxOccurrences, timeframe)
+    new CountSubAnalyser(publication, id, timeframe)
   }
 }
 
 class CountSubAnalyser (
     val publication: Publication,
     override val id: String,
-    val maxOccurrences: Long,
     val timeframe: Long) 
   extends SubProcessor(id) 
   with TimeWindow 
   with Publisher
   with ActorLogging {
   
-  type S = Event
+  type S = Long
   
-  var allEvents = new TreeMap[Long, Event]
-  
-  lazy val cancellable = context.system.scheduler.schedule(timeframe milliseconds, timeframe milliseconds, context.self, Timeout)
+  var allEvents = new TreeMap[Long, Long]
+  var sum = 0L
   
   override def preStart = {
     log.debug("Starting sub counter with id {} and timeframe {} ms", id, timeframe)
-    cancellable
     super.preStart()
   }
   
@@ -75,39 +73,39 @@ class CountSubAnalyser (
   }
   
   override protected def process(event: Event) {
-    
-    allEvents += (event.timestamp -> event)
-    
+    val count = allEvents.getOrElse(event.timestamp, 0L)+1
+    allEvents += (event.timestamp -> count)
+    sum += 1
+    analyse()
+  }
+  
+  protected def analyse() {
     // Remove old
     val inactiveEvents = getInactive(allEvents) 
     allEvents = allEvents.drop(inactiveEvents.size)
 
-    log.debug("received {}, there are currently {} active events", event, allEvents.size)
-        
-    if(allEvents.size > maxOccurrences){
-      
-      val alert = new AlertEvent(
-          UUID.randomUUID.toString, allEvents.last._2.timestamp, true, id, None)
-      publish(alert)
-      stop()
-      
+    log.debug("inactive events: {}", inactiveEvents)
+    
+    sum += inactiveEvents.foldLeft(0L) {
+      case (a, (k, v)) => a - v
     }
     
-  }
-  
-  private[this] def stop() {
-    cancellable.cancel()
-    context.stop(context.self)
+    log.debug("there are currently {} active events ({})", sum, allEvents)
+    
+    val time = if(!allEvents.isEmpty){
+      allEvents.last._1
+    } else {
+      currentTime
+    }
+    publish(new ValueEvent(uuid, time, sum))
+   
+    if(allEvents.size == 0){
+      context.stop(context.self)
+    }
   }
   
   override protected def timeout() {
-    val inactiveEvents = getInactive(allEvents) 
-    allEvents = allEvents.drop(inactiveEvents.size)
-    
-    if(allEvents.size == 0){
-      stop()
-    }
-    
+    analyse()
   }
   
 }

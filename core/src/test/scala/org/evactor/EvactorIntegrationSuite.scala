@@ -71,20 +71,36 @@ object EvactorIntegrationSuite {
         simpleProcess {
           type = simpleProcessBuilder
           subscriptions = [ {channel = "request"} ]
-          publication = { channel = "processId" }
+          publication = { channel = "process" }
           components = ["startComponent", "endComponent"]
           timeout = 2 minutes
         },
       
         latency {
-          type = latencyAnalyser
-          subscriptions = [ {channel = "processId"} ]
+          type = averageAnalyser
+          subscriptions = [ {channel = "process"} ]
           publication = { channel = "latency" } 
-          maxLatency = 2 seconds
-          lengthWindow = 2
+          categorize = false
+          expression = { mvel = "latency" }
+          window = { length = 2 }
+        },
+      
+        alerter {
+          type = alerter
+          subscriptions = [ {channel = "latency"} ]
+          publication = { channel = "latency:alert" }
+          categorize = false
+          expression = { mvel = "value >= 2000" }
         }
+      
       } 
     }
+      
+    akka {
+      # Set loglevel to DEBUG to log everything
+      loglevel = WARNING
+    }
+      
     """)
 }
 

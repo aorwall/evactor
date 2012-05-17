@@ -19,6 +19,7 @@ import org.evactor.model.events.DataEvent
 import org.evactor.model.events.Event
 import org.evactor.model.events.LogEvent
 import org.evactor.model.events.RequestEvent
+import org.evactor.model.events.ValueEvent
 import org.evactor.model.State
 import org.scalatest.matchers.MustMatchers
 import org.scalatest.matchers.ShouldMatchers
@@ -31,6 +32,9 @@ import com.typesafe.config.ConfigSyntax
 
 import EvactorSpec.id
 import EvactorSpec.timestamp
+import akka.actor.Actor
+import akka.actor.ActorRef
+import akka.testkit.TestActorRef
 
 object EvactorSpec {
   val channel = "channel"
@@ -57,5 +61,7 @@ trait EvactorSpec extends WordSpec with MustMatchers with ShouldMatchers {
           setSyntax(ConfigSyntax.CONF);
       ConfigFactory.parseString(s, options).asInstanceOf[Config]
   }
+  
+   
 
 }

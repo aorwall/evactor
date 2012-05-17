@@ -13,27 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.evactor.process.analyse.window
+package org.evactor.model.events
 
-import akka.actor.ActorLogging
-import scala.collection.immutable.SortedMap
+import org.evactor.model.attributes.HasMessage
 
 /**
- *
+ * An event with a value
  */
-trait LengthWindow extends Window {
+case class ValueEvent (    
+    override val id: String, 
+    override val timestamp: Long, 
+    val value: Any) 
+  extends Event(id, timestamp) {
 
-  type S
-  val noOfRequests: Int
-
-  override protected[analyse] def getInactive(activities: SortedMap[Long, S]): Map[Long, S] = {
-
-    val noOfInactive = activities.size - noOfRequests
-
-    if(noOfInactive > 0)
-      activities.take(noOfInactive)
-    else
-      Map()
-
-  }
 }

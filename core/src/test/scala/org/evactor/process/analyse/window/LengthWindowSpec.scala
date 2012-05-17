@@ -15,34 +15,58 @@
  */
 package org.evactor.process.analyse.window
 
-import collection.immutable.TreeMap
-import org.scalatest.WordSpec
-import org.scalatest.matchers.MustMatchers
+import scala.collection.immutable.SortedMap
+import org.evactor.process.TestProcessor
+import org.evactor.EvactorSpec
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
-import akka.testkit.TestActorRef
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.WordSpec
 import akka.actor.Actor
-import org.evactor.process.analyse.Analyser
+import akka.actor.ActorRef
+import akka.actor.ActorSystem
+import akka.testkit.TestKit
+import akka.testkit.TestProbe
+import akka.testkit.TestActorRef
+import scala.collection.immutable.TreeMap
+import akka.util.duration._
 
 @RunWith(classOf[JUnitRunner])
-class LengthWindowSpec extends WordSpec with MustMatchers {
+class LengthWindowSpec (_system: ActorSystem) 
+  extends TestKit(_system) 
+  with EvactorSpec   
+  with BeforeAndAfterAll {
 
-  val lengthWindow = new {
-      type S = Int
-      val noOfRequests = 3
-    } with LengthWindow 
+  def this() = this(ActorSystem("LengthWindowSpec"))
 
-  "A LengthWindowConf" must {
+  private class TestActor (val probe: ActorRef)
+    extends Actor with LengthWindow {
+    type S = Int
+    val noOfRequests = 3
+    
+    def receive = {
+      case l: SortedMap[Long, Int] => probe ! getInactive(l)
+    }
+  }
+    
+  override protected def afterAll(): scala.Unit = {
+    _system.shutdown()
+  }
+
+  "A LengthWindow" must {
 
     "return inactive events if there are more events than the specified length" in {
-      val events = TreeMap(1L -> 11, 2L -> 22, 3L -> 33, 4L -> 44, 5L -> 55)
-      lengthWindow.getInactive(events) must be(Map(1L -> 11, 2L -> 22))
+      val probe = TestProbe()
+      val actor = TestActorRef(new TestActor(probe.ref))
+      actor ! TreeMap(1L -> 11, 2L -> 22, 3L -> 33, 4L -> 44, 5L -> 55)
+      probe.expectMsg(100 milliseconds, Map(1L -> 11, 2L -> 22))
     }
 
     "don't return any events if there are less events than the specified length" in {
-      val events = TreeMap(1L -> 11, 2L -> 22)
-      lengthWindow.getInactive(events).size must be(0)
+      val probe = TestProbe()
+      val actor = TestActorRef(new TestActor(probe.ref))
+      actor ! TreeMap(1L -> 11, 2L -> 22)
+      probe.expectMsg(100 milliseconds, Map())
     }
-
   }
 }

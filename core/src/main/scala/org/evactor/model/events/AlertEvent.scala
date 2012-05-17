@@ -19,8 +19,7 @@ case class AlertEvent (
     override val id: String, 
     override val timestamp: Long,
     val triggered: Boolean,
-    val message: String,
-    val eventRef: Option[String]) 
+    val event: Event) 
   extends Event (id, timestamp) {
 
 }

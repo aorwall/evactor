@@ -20,6 +20,7 @@ import org.evactor.model.Timeout
 import akka.actor.actorRef2Scala
 import akka.actor.ActorLogging
 import akka.actor.Actor
+import java.util.UUID
 
 /**
  * Processor used as a child to another processor. It can't subscribe to channels and
@@ -50,4 +51,6 @@ abstract class SubProcessor(val id: String) extends Actor with ActorLogging {
      context.parent ! new Terminated(id)
   }
   
+  def uuid = UUID.randomUUID.toString
+  def currentTime = System.currentTimeMillis
 }

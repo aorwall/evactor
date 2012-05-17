@@ -32,6 +32,7 @@ import org.evactor.model.Timeout
 import scala.collection.mutable.LinkedList
 import java.util.ArrayList
 import org.evactor.monitor.Monitored
+import org.evactor.model.events.ValueEvent
 
 /**
  * Analysing trends by checking the regression coefficient on growth of event occurrences within
@@ -44,19 +45,17 @@ class RegressionAnalyser (
     override val subscriptions: List[Subscription],
     val publication: Publication,
     override val categorize: Boolean, 
-    val coefficient: Double,
     val minSize: Long, 
     val timeframe: Long) extends CategoryProcessor(subscriptions, categorize) {
 
   protected def createSubProcessor(id: String): SubProcessor = {
-    new RegressionSubAnalyser(publication, id, coefficient, minSize, timeframe)
+    new RegressionSubAnalyser(publication, id, minSize, timeframe)
   }
 }
 
 class RegressionSubAnalyser (
     val publication: Publication,
     override val id: String,
-    var coefficient: Double,
     val minSize: Long, 
     val timeframe: Long) 
   extends SubProcessor (id)
@@ -71,11 +70,8 @@ class RegressionSubAnalyser (
   protected[trend] val eventCount = new Array[Long](10)
   var iteration = start
   
-  lazy val cancellable = context.system.scheduler.schedule(timeframe milliseconds, timeframe milliseconds, context.self, Timeout)
-  
   override def preStart = {
     log.debug("Starting sub counter with id {} and timeframe {} ms", id, timeframe)
-    cancellable
     super.preStart()
   }
   
@@ -97,7 +93,6 @@ class RegressionSubAnalyser (
       eventCount.update(i, eventCount(i)+1)
     }
     
-    
     if(eventCount.sum > minSize && now > start + timeframe/2){
       
       val listToCheck = eventCount.toList.drop(1).reverse.dropWhile(_ == 0)
@@ -107,18 +102,12 @@ class RegressionSubAnalyser (
       
 //        addLabel("coefficient: %s (%s), id: %s, eventCount: %s".format(coeff, coefficient, id, listToCheck))
         
-        if(coeff > coefficient){
-          val message = "regression coefficient for %s reached over %s (%s). Event count: %s".format(id, coefficient, coeff, listToCheck)
-          
 //          log.info("coefficient: {}, id: {}, eventCount: {}", coefficient, id, listToCheck)
-          val alert = new AlertEvent(UUID.randomUUID.toString, System.currentTimeMillis, true, message, None)
-          publish(alert)
-          stop()
-        }
+      
+        publish(new ValueEvent(uuid, currentTime, coeff))
+
       }
     }
-     
-    
   }
   
   def moveCounters(now: Long) {

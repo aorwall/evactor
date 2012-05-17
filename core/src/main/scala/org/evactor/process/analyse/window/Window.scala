@@ -15,17 +15,18 @@
  */
 package org.evactor.process.analyse.window
 
-import org.evactor.process.analyse.Analyser
+import akka.actor.Actor
+import scala.collection.immutable.SortedMap
+import com.typesafe.config.Config
+import org.evactor.process.Processor
+import org.evactor.process.SubProcessor
 
 /**
- * Specifies a window with activities, returns activities outside the window
+ * Specifies an event window to a sub processor
  */
-trait Window {
+trait Window extends Actor {
+
   type S
-
-  protected[analyse] def getInactive(activities: Map[Long, S]) = Map[Long, S]()
-}
-
-trait WindowConf {
-
+  
+  protected def getInactive(activities: SortedMap[Long, S]) = Map[Long, S]()
 }

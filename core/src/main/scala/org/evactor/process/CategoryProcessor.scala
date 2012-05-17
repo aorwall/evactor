@@ -50,6 +50,21 @@ abstract class CategoryProcessor (
     case msg => log.warning("Can't handle {}", msg)
   }
   
+  override def preStart = {
+    
+    // Start up actors for all subscribed channels if "categorized" isn't set
+    if(!categorize){
+      for( Subscription(channel, _) <- subscriptions  ){
+        if(channel.isDefined){
+          getSubProcessor(channel.get)  
+        }
+      }
+    }
+    
+    super.preStart()
+    
+  }
+  
   def process(event: Event) {}
 }
 
