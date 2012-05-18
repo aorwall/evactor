@@ -1,0 +1,289 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Evactor by aorwall</title>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="javascripts/main.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+  </head>
+  <body>
+
+      <header>
+        <h1>Evactor</h1>
+        <p>Complex event processor based on Akka</p>
+      </header>
+
+      <div id="banner">
+        <span id="logo"></span>
+
+        <a href="https://github.com/aorwall/evactor" class="button fork"><strong>View On GitHub</strong></a>
+        <div class="downloads">
+          <span>Downloads:</span>
+          <ul>
+            <li><a href="https://github.com/aorwall/evactor/zipball/master" class="button">ZIP</a></li>
+            <li><a href="https://github.com/aorwall/evactor/tarball/master" class="button">TAR</a></li>
+          </ul>
+        </div>
+      </div><!-- end banner -->
+
+    <div class="wrapper">
+      <nav>
+        <ul></ul>
+      </nav>
+      <section>
+        <h1>Evactor</h1>
+
+<p><strong><em>Check out the <a href="https://github.com/aorwall/evactor/tree/master/example">example</a> module to get a better understanding on how all this works.</em></strong></p>
+
+<p>This is an attempt to create a complex event processing implementation in Akka. The idea is that <em>processors</em> subscribe to <em>channels</em> to receive <em>events</em> published on the channels. The event processor can then process the events in some way and publish new events on other event channels. </p>
+
+<p>The project also houses a storage solution, based on Apache Cassandra, for auditing and statistics. An API exists for easy access to historic data.</p>
+
+<h2>Flow</h2>
+
+<h3>Event</h3>
+
+<p><em>TODO</em></p>
+
+<h3>Collector</h3>
+
+<p>A <em>collector</em> collects events from external event producers. </p>
+
+<h3>Processor</h3>
+
+<p>A processor is a component that performs operations on events. This could be to extract data, create new events based on aggregated events or examining a collection of events to find a particular pattern.</p>
+
+<p>To receive events the processor subscribes to channels or to all events that flows through the system. When the processor creates a new event it can publish it to another channel.</p>
+
+<h3>Channel</h3>
+
+<p><em>TODO</em></p>
+
+<h2>Configuration</h2>
+
+<p>Everything is configured in the <code>application.conf</code> file.</p>
+
+<h3>Collectors</h3>
+
+<p><em>TODO</em></p>
+
+<h3>Processors</h3>
+
+<h4>Routers</h4>
+
+<p>Handles routing in the system</p>
+
+<h5>Forwarder</h5>
+
+<p>Just forwarding an event to a different channel (and category)</p>
+
+<h6>Configuration</h6>
+
+<div class="highlight">
+<pre>forwarderName {
+  type = forwarder
+  subscriptions = [ {channel = "foo"} ]
+  publication = { channel = "bar" }
+}
+</pre>
+</div>
+
+
+<h5>Filter</h5>
+
+<p>Filtering out events that doesn't comply with a specified rule(expression)</p>
+
+<h6>Configuration</h6>
+
+<div class="highlight">
+<pre>filterName {
+  type = filter
+  subscriptions = [ {channel = "foo"} ]
+  publication = { channel = "bar" } 
+  expression = { mvel = "value &gt; 0" }
+  accept = false
+}
+</pre>
+</div>
+
+
+<h4>Analysers</h4>
+
+<p>Analysing sequences of events and produces new events with the result </p>
+
+<h5>Count analyser</h5>
+
+<p>Counts events within a specified time frame</p>
+
+<h6>Configuration</h6>
+
+<div class="highlight">
+<pre>filterName {
+  type = countAnalyser
+  subscriptions = [ {channel = "foo"} ]
+  publication = { channel = "bar" } 
+  categorize = true
+  timeframe = 2 hours
+}
+</pre>
+</div>
+
+
+<h5>Average analyser</h5>
+
+<p>Count average in a specified window (time or length)</p>
+
+<h6>Configuration</h6>
+
+<div class="highlight">
+<pre>averageAnalyserName {
+  type = averageAnalyser
+  subscriptions = [ {channel = "foo"} ]
+  publication = { channel = "bar" }
+  categorize = false
+  expression = { static = "foo" }
+  window = { time = 1 minute }
+}
+</pre>
+</div>
+
+
+<h5>Regression analyser</h5>
+
+<p>Calculates the regression coefficient within a specified time frame</p>
+
+<h6>Configuration</h6>
+
+<div class="highlight">
+<pre>regressionName {
+  type = regressionAnalyser
+  subscriptions = [ {channel = "foo"} ]
+  publication = { channel = "bar" } 
+  categorize = true
+  minSize = 25
+  timeframe = 15 minutes
+}
+</pre>
+</div>
+
+
+<h4>Alerter</h4>
+
+<p>Alerts when events that doesn't comply with a specified rule(expression) and informs when state is back to normal.</p>
+
+<div class="highlight">
+<pre>  type = alerter
+  subscriptions = [ {channel = "foo"} ]
+  publication = { channel = "bar" } 
+  categorize = false
+  expression = { mvel = "true" }
+</pre>
+</div>
+
+
+<h4>Builders</h4>
+
+<p><em>TODO</em></p>
+
+<h4>Producers</h4>
+
+<p>Produces events to external consumers.</p>
+
+<h5>LogProducers</h5>
+
+<p>Writes events to log.</p>
+
+<h6>Configuration</h6>
+
+<div class="highlight">
+<pre>logger {
+  type = logProducer
+  subscriptions = [ {channel = "foo"} ]
+  loglevel = INFO
+}
+</pre>
+</div>
+
+
+<h4>Custom processor</h4>
+
+<p>It's possible to create a custom processor and use it in the configuration by specifying the class instead of <em>type</em>.</p>
+
+<h5>Configuration</h5>
+
+<div class="highlight">
+<pre>customProcessor {
+  class = org.example.CustomProcessor
+  subscriptions = [ {channel = "foo"} ]
+  publication = { channel = "bar" } 
+  arguments = ["foo", "bar"]
+}
+</pre>
+</div>
+
+
+<h5>Example implementation</h5>
+
+<div class="highlight">
+<pre>
+<span class="k">class</span> <span class="nc">SimpleProcessor</span> <span class="o">(</span>
+    <span class="k">override</span> <span class="k">val</span> <span class="n">subscriptions</span><span class="k">:</span> <span class="kt">List</span><span class="o">[</span><span class="kt">Subscription</span><span class="o">],</span>
+    <span class="k">val</span> <span class="n">publication</span><span class="k">:</span> <span class="kt">Publication</span><span class="o">)</span>
+  <span class="k">extends</span> <span class="nc">Processor</span><span class="o">(</span><span class="n">subscriptions</span><span class="o">)</span> <span class="k">with</span> <span class="nc">Publisher</span> <span class="o">{</span>
+
+  <span class="k">def</span> <span class="n">process</span><span class="o">(</span><span class="n">event</span><span class="k">:</span> <span class="kt">Event</span><span class="o">)</span> <span class="o">{</span>
+    <span class="c1">// do stuff</span>
+
+    <span class="n">publish</span><span class="o">(</span><span class="n">event</span><span class="o">)</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+
+</pre>
+</div>
+
+
+<h2>Storage</h2>
+
+<p><em>TODO</em></p>
+
+<h2>API</h2>
+
+<p><em>TODO</em></p>
+
+<h2>Build and deploy</h2>
+
+<p><em>TODO</em></p>
+
+<h2>Licence</h2>
+
+<p>Copyright 2012 Albert Örwall</p>
+
+<p>Licensed under the Apache License, Version 2.0: <a href="http://www.apache.org/licenses/LICENSE-2.0">http://www.apache.org/licenses/LICENSE-2.0</a></p>
+      </section>
+      <footer>
+        <p>Project maintained by <a href="https://github.com/aorwall">aorwall</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="http://twitter.com/#!/michigangraham">mattgraham</a></small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><!--<![endif]-->
+              <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-31879466-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+  </body>
+</html>
