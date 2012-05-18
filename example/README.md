@@ -2,6 +2,8 @@ Twitter Example
 ====================
 This is an example implementation of Evactor that analyses status updates on Twitter. It receives tweets from the [Twitter Streaming API](https://dev.twitter.com/docs/streaming-api). 
 
+By using Evactor to process tweets as events, we can find patterns and/or determine odd behaviour in real time. In this example we will look for popular URL's, trending hashtags and alert when such events occurs. By enabling the API and Storage modules it will also be possible to go back and look at historic data and statistics.
+
 Installation
 ---------------------
 
@@ -81,7 +83,7 @@ twitter_hashtag_filter {
 ```
 
 #### Regression analyser
-A [*Regression analyser*]() analyses events categorized by hashtag to find hashtags that grows with more than 100% under a 15 minutes period
+A [*Regression analyser*]() analyses events categorized by hashtag and creates a *ValueEvent* with the regression coefficient for events from the last 15 minutes.
     
 > "coefficient" is supposed to represent the regression coefficient. Maybe not totally scientifically correct, but this means that the number of events grows with more than [coefficient]*[no event] under the specified time frame. A coefficient with a negative value indicates that the number of arriving event is declining.
 
@@ -89,22 +91,37 @@ A [*Regression analyser*]() analyses events categorized by hashtag to find hasht
 twitter_hashtag_trend {
   type = regressionAnalyser
   subscriptions = [ { channel = "twitter:hashtag" } ]
-  publication = { channel = "twitter:hashtag:trending" }
+  publication = { channel = "twitter:hashtag:trend" }
   categorize = true
-  coefficient = 1
   minSize = 25
   timeframe = 15 minutes
 }
 
 ```
 
+#### Alerter
+A *alerter* listens to `twitter:hashtag:trend` and alerts when the regression coefficient exceeds 1.0.
+
+```text
+twitter_hashtag_trending {
+  type = alerter
+  subscriptions = [ { channel = "twitter:hashtag:trend" } ]
+  publication = { channel = "twitter:hashtag:trending" }
+  categorize = true
+  expression = { mvel = "value > 1.0" }
+}
+```
+
 #### Log producer
+Logs alerts
+
+```text
 log_trending_hashtags {
   type = logProducer
   subscriptions = [ { channel = "twitter:hashtag:trending" } ]
   loglevel = INFO
 }
-    
+```
 
 ### Popular URL's
 Look for URL's that are retweeded more than 50 times in an hour.
@@ -135,20 +152,33 @@ twitter_url_filter {
 ```
 
 #### Count analyser
-A [*Count analyser*](https://github.com/aorwall/evactor/blob/master/core/src/main/scala/org/evactor/process/analyse/count/CountAnalyser.scala) subscribes to `twitter:url` and sends an alert event to `twitter:url:popular` when an event with the same category arrives more than five times within an hour.
+A [*Count analyser*](https://github.com/aorwall/evactor/blob/master/core/src/main/scala/org/evactor/process/analyse/count/CountAnalyser.scala) subscribes to `twitter:url` and sends a ValueEvent with the current number of events of a category from the last 30 minutes to  `twitter:url:count`.
 
 ```text
 twitter_url_popular {
   type = countAnalyser
   subscriptions = [ { channel = "twitter:rt" } ]
-  publication = { channel = "twitter:url:popular" }
+  publication = { channel = "twitter:url:count" }
   categorize = true
-  maxOccurrences = 2
-  timeframe = 1 hour
+  timeframe = 30 minutes
 }
 ```
 
-#### Log 
+#### Alerter
+A *alerter* listens to `twitter:hashtag:count` and alerts when the count exceeds 5.
+
+```text
+twitter_url_popular {
+  type = alerter
+  subscriptions = [ { channel = "twitter:url:count" } ]
+  publication = { channel = "twitter:url:popular" }
+  categorize = true
+  expression = { mvel = "value > 5" }
+}
+```
+
+#### Log producer
+Logs alert
 
 ```text
 log_popular_urls {
