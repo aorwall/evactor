@@ -26,6 +26,8 @@ import org.evactor.model.events.AlertEvent
 import org.evactor.model.events.Event
 import java.util.UUID
 import org.evactor.EvactorException
+import org.evactor.process.ProcessException
+import org.evactor.process.CategoryPublication
 
 /**
  * Alerts when the specified expression isn't followed (ie returns false).
@@ -43,7 +45,7 @@ class Alerter(
   with ActorLogging {
   
   protected def createSubProcessor(id: String): SubProcessor = {
-    new SubAlerter(publication, id, expression)
+    new SubAlerter(new CategoryPublication(publication, id), id, expression)
   }
 }
 
@@ -67,7 +69,7 @@ class SubAlerter(
     case e: Event if(!evaluate(e)) => become(untriggered); backToNormal(e)
     case _ => // Do nothing
   }
-   
+  
   def untriggered: Receive = {
     case e: Event if(evaluate(e)) => become(triggered); alert(e)
     case _ => // Do nothing
@@ -91,7 +93,7 @@ class SubAlerter(
     val answer = expression.evaluate(event)
     answer match {
       case Some(b: Boolean) => b
-      case _ => throw new EvactorException("No boolean value could be extracted from %s with %s".format(event, expression))
+      case _ => throw new ProcessException("No boolean value could be extracted from %s with %s".format(event, expression))
     }
   }
   

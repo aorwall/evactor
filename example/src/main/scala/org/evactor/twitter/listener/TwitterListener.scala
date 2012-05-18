@@ -20,7 +20,6 @@ import java.io.InputStreamReader
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.impl.client.DefaultHttpClient
 import org.evactor.listen.Listener
-import com.twitter.ostrich.stats.Stats
 import akka.actor.ActorLogging
 import akka.actor.ActorRef
 import akka.util.duration._
@@ -32,12 +31,13 @@ import org.evactor.ConfigurationException
 import org.evactor.Start
 import java.io.BufferedInputStream
 import org.evactor.listen.ListenerException
+import org.evactor.monitor.Monitored
 
-class TwitterListener(sendTo: ActorRef, url: String, username: String, password: String) extends Listener with ActorLogging {
+class TwitterListener(sendTo: ActorRef, url: String, username: String, password: String) extends Listener with Monitored with ActorLogging {
   
-  var stream: BufferedReader = null
+  lazy val stream = connect()
   var failures = 0  
-   
+  
   def receive = {
     case Start => read()
     case msg => log.debug("can't handle {}", msg)
@@ -48,25 +48,22 @@ class TwitterListener(sendTo: ActorRef, url: String, username: String, password:
     val inputLine = try{
       stream.readLine()
     } catch {
-      case e => {
-        log.warning("caught an exception while trying to read from stream: {}", e)
-        stream = connect()
-        stream.readLine
-      }
+      case ce: ConfigurationException => throw ce
+      case e: Exception => throw new ListenerException("caught an exception while trying to read from stream. %s".format(e))
     } 
     
     if (inputLine == null) {
-      Stats.incr("twitterlistener:null")
+      incr("null")
       log.debug("inputline is null, backing off for 50 ms")
       failures = failures +1
       context.system.scheduler.scheduleOnce(50 milliseconds, context.self, new Start)
     } else if (inputLine.trim.size == 0) {
-      Stats.incr("twitterlistener:empty")
+      incr("empty")
       log.debug("inputline is empty, backing off for 50 ms")
       failures = failures +1
       context.system.scheduler.scheduleOnce(50 milliseconds, context.self, new Start)
     } else {
-      Stats.incr("twitterlistener:status")
+      incr("status")
       log.debug("inputline: {}", inputLine)
       failures = 0
       sendTo ! inputLine
@@ -81,10 +78,10 @@ class TwitterListener(sendTo: ActorRef, url: String, username: String, password:
   private[this] def connect (): BufferedReader = {
     
     if(url == null)
-      throw new IllegalArgumentException("No url provided")
+      throw new ConfigurationException("No url provided")
     
     if(username == null || password == null)
-      throw new IllegalArgumentException("No credentials provided")
+      throw new ConfigurationException("No credentials provided")
     
     val credentials = "%s:%s".format(username, password)
     val client = new DefaultHttpClient();
@@ -94,8 +91,8 @@ class TwitterListener(sendTo: ActorRef, url: String, username: String, password:
     method.setHeader("Content-Type", "application/x-www-form-urlencoded") 
     method.setHeader("User-Agent", "evactor") 
     val params = client.getParams()
-    HttpConnectionParams.setConnectionTimeout(params, 5000)
-    HttpConnectionParams.setSoTimeout(params, 5000)
+    HttpConnectionParams.setConnectionTimeout(params, 10000)
+    HttpConnectionParams.setSoTimeout(params, 10000)
 //    method.setHeader("Accept-Encoding", "deflate, gzip")
 //    method.setHeader("Host", "stream.twitter.com")
  
@@ -117,7 +114,6 @@ class TwitterListener(sendTo: ActorRef, url: String, username: String, password:
   
   override def preStart = {
     super.preStart
-    stream = connect()
     self ! Start
   }
   

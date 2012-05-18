@@ -35,6 +35,7 @@ import com.typesafe.config.Config
 import org.evactor.process.analyse.window.TimeWindow
 import org.evactor.process.analyse.window.LengthWindow
 import org.evactor.ConfigurationException
+import org.evactor.process.CategoryPublication
 
 class AverageAnalyser(
     override val subscriptions: List[Subscription], 
@@ -55,7 +56,7 @@ class AverageAnalyser(
         throw new ConfigurationException("window configuration not recognized: %s".format(c))
       }
     }
-    case None =>  new AverageSubAnalyser(publication, id, expression)
+    case None =>  new AverageSubAnalyser(new CategoryPublication(publication, id), id, expression)
   }
 }
  

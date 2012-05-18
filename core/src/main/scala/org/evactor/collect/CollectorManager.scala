@@ -30,6 +30,7 @@ class CollectorManager extends Actor with ActorLogging {
   override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries = 10, withinTimeRange = 1 minute) {
     case e: ConfigurationException => log.error("Stopping collector because of: {}", e); Stop
     case e: ClassNotFoundException => log.error("Stopping collector because of: {}", e); Stop
+    case e: ActorInitializationException => log.error("Stopping collector because of: {}", e); Stop
     case e: Exception => log.error("Caught exception: {}", e); Restart
   }
 

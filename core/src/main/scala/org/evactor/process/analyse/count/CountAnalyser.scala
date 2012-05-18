@@ -31,6 +31,7 @@ import java.util.UUID
 import org.evactor.model.Timeout
 import org.evactor.model.events.ValueEvent
 import scala.None
+import org.evactor.process.CategoryPublication
 
 /**
  * Counting events in channels and creates
@@ -44,7 +45,7 @@ class CountAnalyser (
     val timeframe: Long) extends CategoryProcessor(subscriptions, categorize) {
 
   protected def createSubProcessor(id: String): SubProcessor = {
-    new CountSubAnalyser(publication, id, timeframe)
+    new CountSubAnalyser(new CategoryPublication(publication, id), id, timeframe)
   }
 }
 

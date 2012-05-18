@@ -29,15 +29,15 @@ import org.evactor.monitor.Monitored
 
 class TwitterJsonToStatusEvent(collector: ActorRef)  extends Transformer with Monitored with ActorLogging {
 
+  val format = new SimpleDateFormat("EEE MMM dd HH:mm:ss ZZZZZ yyyy", Locale.ENGLISH)
+  val mapper = new ObjectMapper
+    
   def receive = {
     case jsonString: String => transform(jsonString)
     case msg => log.debug("can't handle {}", msg)
   }
   
   def transform(jsonString: String) {
-    val format = new SimpleDateFormat("EEE MMM dd HH:mm:ss ZZZZZ yyyy", Locale.ENGLISH)
-    
-    val mapper = new ObjectMapper
     val map = mapper.readValue(jsonString, classOf[HashMap[String,Any]])
     
     try{

@@ -21,8 +21,8 @@ import org.evactor.model.Timeout
 import org.evactor.monitor.Monitored
 import org.evactor.subscribe.Subscriber
 import org.evactor.subscribe.Subscription
-
 import akka.actor.ActorLogging
+import org.evactor.publish.Publication
 
 /**
  * Creates sub processors for each category. To use this processor type, an implementation of
@@ -45,7 +45,7 @@ abstract class CategoryProcessor (
         getSubProcessor(channel) ! event
       }
       
-    } 
+    }
     case Terminated(supervised) => handleTerminated(supervised)
     case msg => log.warning("Can't handle {}", msg)
   }
@@ -68,3 +68,25 @@ abstract class CategoryProcessor (
   def process(event: Event) {}
 }
 
+/**
+ * Set category to "id" if no categories found in publication. 
+ *
+ * TODO: Better solution here...
+ */
+class CategoryPublication(publication: Publication, category: String) extends Publication{
+  
+  def channel(event: Event) = publication.channel(event)
+  
+  def categories(event: Event) = {
+    
+    val categories = publication.categories(event)
+    
+    if(categories == Set()){
+      Set(category)
+    } else {
+      categories
+    }
+    
+  }
+  
+}

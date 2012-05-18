@@ -21,6 +21,7 @@ import org.evactor.subscribe.Subscription
 import akka.actor.ActorLogging
 import akka.event.Logging
 import org.evactor.ConfigurationException
+import org.evactor.model.Message
 
 class LogProducer (
     override val subscriptions: List[Subscription],
@@ -30,8 +31,15 @@ class LogProducer (
 
   private[this] val level = Logging.levelFor(loglevel).getOrElse(throw new ConfigurationException("Unknown log level: %s".format(loglevel)))
   
+  override def receive = {
+    case Message(channel, category, event) => incr("process"); log.log(level, "[{}]:[{}]: {}", channel, category.mkString(","), event)
+    case msg => log.warning("Can't handle {}", msg)
+  }
+  
   protected def process(event: Event) {
-    log.log(level, "{}", event)
+    // Not in use
   }
 
+  
+  
 }

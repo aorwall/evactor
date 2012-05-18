@@ -36,6 +36,7 @@ import akka.actor.OneForOneStrategy
 import akka.actor.Props
 import akka.util.duration.intToDurationInt
 import scala.collection.mutable.HashSet
+import akka.actor.ActorInitializationException
 
 /**
  * Collecting incoming events
@@ -52,6 +53,7 @@ class Collector(
   
   override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries = 10, withinTimeRange = 1 minute) {
     case e: ConfigurationException => Escalate
+    case e: ActorInitializationException => Escalate
     case e: ListenerException => log.error("Caught exception: {}", e); Restart
     case e: Exception => log.error("Caught exception: {}", e); Restart
   }

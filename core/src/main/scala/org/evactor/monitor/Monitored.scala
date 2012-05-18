@@ -25,7 +25,6 @@ import akka.actor.ActorLogging
 trait Monitored extends Actor with ActorLogging {
 
   val monitor = MonitoringExtension(context.system).getMonitoring
-  if(monitor.isEmpty) log.warning("No monitoring implementation found")
   
   private val label = (key: String) => {
     "%s:%s".format(context.self.path, key)

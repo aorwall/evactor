@@ -32,13 +32,13 @@ trait TimeWindow extends Window with ActorLogging {
   lazy val cancellable = context.system.scheduler.schedule(timeframe milliseconds, timeframe milliseconds, self, Timeout)
 
   abstract override def preStart = {
-    log.info("starting scheduler")
+    log.debug("starting scheduler with timeframe set to {} ms", timeframe)
     cancellable
     super.preStart()
   }
   
   abstract override def postStop = {
-    log.info("stopping scheduler")
+    log.debug("stopping scheduler")
     cancellable.cancel()
     super.postStop()
   }

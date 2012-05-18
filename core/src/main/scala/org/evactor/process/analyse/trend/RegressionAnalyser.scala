@@ -33,6 +33,7 @@ import scala.collection.mutable.LinkedList
 import java.util.ArrayList
 import org.evactor.monitor.Monitored
 import org.evactor.model.events.ValueEvent
+import org.evactor.process.CategoryPublication
 
 /**
  * Analysing trends by checking the regression coefficient on growth of event occurrences within
@@ -49,7 +50,7 @@ class RegressionAnalyser (
     val timeframe: Long) extends CategoryProcessor(subscriptions, categorize) {
 
   protected def createSubProcessor(id: String): SubProcessor = {
-    new RegressionSubAnalyser(publication, id, minSize, timeframe)
+    new RegressionSubAnalyser(new CategoryPublication(publication, id), id, minSize, timeframe)
   }
 }
 
