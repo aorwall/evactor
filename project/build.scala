@@ -71,6 +71,7 @@ object BamBuild extends Build {
 
   override lazy val settings = super.settings ++ Seq(
         resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/",
+        resolvers += "Typesafe Snapshot Repository" at "http://repo.typesafe.com/typesafe/snapshots/",
         resolvers += "Twitter Repository" at "http://maven.twttr.com/",
         resolvers += "Scala Tools" at "http://www.scala-tools.org/repo-releases/"
   )
@@ -91,7 +92,7 @@ object BamBuild extends Build {
   lazy val exampleAssemblySettings = assemblySettings ++ Seq(
     test in assembly := {},
 	excludedJars in assembly <<= (fullClasspath in assembly) map { cp => 
-	  cp filter { _.data.getName == "uuid-3.2.0.jar" }},
+	  cp filter { x => x.data.getName == "uuid-3.2.0.jar" ||  x.data.getName == "slf4j-log4j12-1.6.1.jar" || x.data.getName == "log4j-1.2.16.jar" }},
 	excludedFiles in assembly := { (bases: Seq[File]) =>
 	  bases flatMap { base =>
 	    (base / "META-INF" * "*").get collect {
@@ -120,7 +121,7 @@ object Dependencies {
   
   val core = Seq(akkaActor, jacksonCore, jacksonMapper, mvel2, Test.scalatest, Test.junit, Test.mockito, Test.akkaTestkit)
   val api = Seq (grizzled, jacksonCore, jacksonMapper, jacksonScala, unfilteredFilter, unfilteredNetty, unfilteredNettyServer)
-  val example = Seq (akkaKernel, grizzled, httpClient, unfilteredNettyServer, Test.scalatest, Test.junit, Test.akkaTestkit)
+  val example = Seq (akkaKernel, akkaSlf4j, grizzled, httpClient, logback, unfilteredNettyServer, Test.scalatest, Test.junit, Test.akkaTestkit)
   val storageCassandra = Seq(akkaActor, cassandraThrift, grizzled, guava, hectorCore, jodaConvert, jodaTime, perf4j, thrift, Test.scalatest, Test.junit)
   val monitoringOstrich = Seq(ostrich)
 
@@ -130,7 +131,7 @@ object Dependency {
 
   // Versions
   object V {
-    val Akka = "2.0.1"
+    val Akka = "2.1-20120513-092052"
     val Camel = "2.6.0"
     val Cassandra = "1.0.6"
     val Hector = "1.0-2"
@@ -144,12 +145,14 @@ object Dependency {
   val akkaActor = "com.typesafe.akka" % "akka-actor" % V.Akka
   val akkaKernel = "com.typesafe.akka" % "akka-kernel" % V.Akka
   val akkaRemote = "com.typesafe.akka" % "akka-remote" % V.Akka
+  val akkaSlf4j = "com.typesafe.akka" % "akka-slf4j" % V.Akka
   val camelAtom = "org.apache.camel" % "camel-atom" % V.Camel
   val camelCore = "org.apache.camel" % "camel-core" % V.Camel
   val camelIrc = "org.apache.camel" % "camel-irc" % V.Camel
   val cassandraAll = "org.apache.cassandra" % "cassandra-all" % V.Cassandra
   val cassandraThrift = "org.apache.cassandra" % "cassandra-thrift" % V.Cassandra
   val grizzled = "org.clapper" % "grizzled-slf4j_2.9.1" % "0.6.6"
+  val groovy = "org.codehaus.groovy" % "groovy" % "1.8.6" % "runtime"
   val guava = "com.google.guava" % "guava" % "r09"
   val hector = "me.prettyprint" % "hector" % V.Hector
   val hectorCore = "me.prettyprint" % "hector-core" % V.Hector
@@ -160,7 +163,7 @@ object Dependency {
   val jacksonScala = "com.fasterxml" % "jackson-module-scala" % "1.9.3"
   val jodaConvert = "org.joda" % "joda-convert" % "1.1"
   val jodaTime = "joda-time" % "joda-time" % "2.0"
-  val log4j = "log4j" % "log4j" % "1.2.14"
+  val logback = "ch.qos.logback" % "logback-classic" % "1.0.0" % "runtime"
   val mvel2 = "org.mvel" % "mvel2" % "2.0.9"
   val netty = "io.netty" % "netty" % "3.3.0.Final"  
   val ostrich = "com.twitter" % "ostrich_2.9.1" % "4.10.6"
