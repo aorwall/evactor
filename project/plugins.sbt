@@ -1,4 +1,4 @@
-resolvers += "Typesafe Repo" at "http://repo.typesafe.com/typesafe/releases/"
+resolvers += Classpaths.typesafeResolver
 
 resolvers += Resolver.url("sbt-plugin-releases", new URL("http://scalasbt.artifactoryonline.com/scalasbt/sbt-plugin-releases/"))(Resolver.ivyStylePatterns)
 
