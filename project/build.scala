@@ -17,7 +17,6 @@ import sbt._
 import Keys._
 import sbtassembly.Plugin._
 import AssemblyKeys._
-import com.typesafe.startscript.StartScriptPlugin
 
 object BamBuild extends Build {
   
@@ -25,8 +24,6 @@ object BamBuild extends Build {
   val Version      = "0.2-SNAPSHOT"
   val ScalaVersion = "2.9.2"
 
-  val appConf = SettingKey[String]("appconf", "")
-    
   lazy val evactor = Project(
     id = "evactor",
     base = file(".")
@@ -107,12 +104,12 @@ object BamBuild extends Build {
 	    }
 	  }
 	},
-//	mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
-//	  {
-//	    case "application.conf" => MergeStrategy.concat
-//	    case x => old(x)
-//	  }
-//	},
+	mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
+	  {
+	    case "application.conf" => MergeStrategy.concat
+	    case x => old(x)
+	  }
+	},
 	mainClass in assembly := Some("org.evactor.ExampleKernel"),
 	jarName in assembly := "evactorExample.jar"
   )
