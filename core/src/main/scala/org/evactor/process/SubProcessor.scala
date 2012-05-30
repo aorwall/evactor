@@ -22,3 +22,35 @@ import akka.actor.ActorLogging
 import akka.actor.Actor
 import java.util.UUID
 
+/**
+ * Processor used as a child to another processor. It can't subscribe to channels and
+ * will only receive events (not encapsulated in a Message object) from it's parent
+ * processor.
+ * 
+ * A SubProcessor isn't meant to be a persistent processor but should able to close itself down
+ * when it's done.
+ */
+abstract class SubProcessor(val id: String) extends Actor with ActorLogging {
+  
+  final override def receive = {
+    case event:Event => process(event)
+    case Timeout => timeout()
+    case msg => log.warning("Can't handle {}", msg)
+  }
+
+  protected def process(event: Event)
+  
+  protected def timeout() = {}
+
+  
+  /**
+   * Inform parent when stopped. Would like to use death watch here but
+   * waiting for http://www.assembla.com/spaces/akka/tickets/1901
+   */
+  override def postStop = {
+     context.parent ! new Terminated(id)
+  }
+  
+  def uuid = UUID.randomUUID.toString
+  def currentTime = System.currentTimeMillis
+}
