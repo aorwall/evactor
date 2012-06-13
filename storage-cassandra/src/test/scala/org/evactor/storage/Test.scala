@@ -41,7 +41,7 @@ import org.evactor.model.Message
 class Test extends FunSuite with Logging {
   
   val conf = ConfigFactory.parseString("""
-			akka {
+
 			  evactor {
 			    storage {
 			        
@@ -59,7 +59,7 @@ class Test extends FunSuite with Logging {
 			      }
 			    }
 			  }
-			}
+
   """)
   
   val system = ActorSystem("EventStorageSpec", conf)
@@ -104,7 +104,7 @@ class Test extends FunSuite with Logging {
   val log2 = new Message("logs", Set("1"), new LogEvent("329380921339", System.currentTimeMillis, "329380921308", "component", "client", "server", Success, "message"))
      
   test("Log event"){
-   
+   (pending)
     storage.storeMessage(log1)
     storage.storeMessage(log2)
     println("LogEventStorage 1: " + storage.getEvents("logs", Some("1"), None, None, 10, 0))
