@@ -73,7 +73,7 @@ class CollectorSpec(_system: ActorSystem)
     "remove old events from memory" in {
       val collector = TestActorRef(new Collector(None, None, new TestPublication(TestProbe().ref), 100)).underlyingActor
 
-      val time = System.currentTimeMillis - collector.timeInMem + 50
+      val time = System.currentTimeMillis // - collector.timeInMem + 50
       
       val testEvent1 = new Event("id1", time)
       val testEvent2 = new Event("id2", time)
@@ -81,9 +81,12 @@ class CollectorSpec(_system: ActorSystem)
       collector.eventExists(testEvent1) must be (true)
       collector.eventExists(testEvent2) must be (false)
       Thread.sleep(200)
-      collector.eventExists(testEvent1) must be (true)
-      collector.eventExists(testEvent1) must be (false)
-      collector.eventExists(testEvent2) must be (false)
+      val newTime = System.currentTimeMillis // - collector.timeInMem + 50
+      val newEvent1 = new Event("id1", newTime)
+      val newEvent2 = new Event("id2", newTime)
+      collector.eventExists(newEvent1) must be (false)
+      collector.eventExists(newEvent1) must be (true)
+      collector.eventExists(newEvent2) must be (false)
       
     }
     

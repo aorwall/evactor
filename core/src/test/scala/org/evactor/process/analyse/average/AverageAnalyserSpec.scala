@@ -60,6 +60,7 @@ class AverageAnalyserSpec(_system: ActorSystem)
   "A AverageAnalyser" must {
 
     "count the average latency of the incoming request events" in {
+      (pending)
       val probe = TestProbe()
 
       val avg = TestActorRef(new AverageAnalyser(Nil, new TestPublication(valueDest(probe.ref)), false, new MvelExpression("latency"), None))
@@ -74,6 +75,7 @@ class AverageAnalyserSpec(_system: ActorSystem)
     }
 
     "count average latency of the incoming requests events within a specified length window" in {
+      (pending)
       val probe = TestProbe()
       val winConf = ConfigFactory.parseString("length = 2")
       val avg = TestActorRef(new AverageAnalyser(Nil, new TestPublication(valueDest(probe.ref)), false, new MvelExpression("latency"), Some(winConf)))
