@@ -17,7 +17,6 @@ package org.evactor.subscribe
 
 import scala.collection.JavaConversions.collectionAsScalaIterable
 
-import org.evactor.subscribe.Subscription
 
 import com.typesafe.config.Config
 

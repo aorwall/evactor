@@ -15,14 +15,9 @@
  */
 package org.evactor.expression
 
-import org.evactor.model.attributes.HasMessage
 import org.evactor.model.events.Event
-import org.evactor.process.extract.Extractor
-import org.evactor.process.Processor
-
 import com.typesafe.config.Config
-
-import akka.config.ConfigurationException
+import org.evactor.ConfigurationException
 
 object Expression {
   

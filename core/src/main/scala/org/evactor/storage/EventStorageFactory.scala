@@ -15,14 +15,10 @@
  */
 package org.evactor.storage
 
-import scala.util.DynamicVariable
 import com.typesafe.config.Config
 import akka.actor.Extension
-import akka.config.ConfigurationException
-import org.evactor.model.events.Event
 import akka.actor.ExtendedActorSystem
 import akka.actor.ActorSystem
-import java.util.logging.Logger
 
 object EventStorageFactory {
   
