@@ -89,8 +89,6 @@ class Collector(
   }
   
   protected[collect] def eventExists(event: Event) = {
-    false
-    val exists = ids.contains(event.id)
     
     // remove old
     val oldTime = System.currentTimeMillis - timeInMem
@@ -104,7 +102,8 @@ class Collector(
       timeline.remove(timestamp)
     }
     
-    if(!exists){
+    val exists = ids.contains(event.id)
+    if(!exists && event.timestamp > oldTime){
       ids += event.id
       
       val timedIds = if(timeline.containsKey(event.timestamp)){
