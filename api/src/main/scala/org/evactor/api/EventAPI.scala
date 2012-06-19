@@ -17,7 +17,6 @@ package org.evactor.api
 
 import java.net.URLDecoder
 
-import org.codehaus.jackson.map.ObjectMapper
 import org.evactor.model.events.Event
 import org.evactor.model.State
 import org.evactor.storage.EventStorage
@@ -34,6 +33,7 @@ import unfiltered.response.BadRequest
 import unfiltered.response.NotFound
 import unfiltered.response.ResponseFunction
 import unfiltered.response.ResponseString
+import com.fasterxml.jackson.databind.ObjectMapper
 
 class EventAPI (val system: ActorSystem) {
 

@@ -119,7 +119,7 @@ object BamBuild extends Build {
 object Dependencies {
   import Dependency._
   
-  val core = Seq(akkaActor, jacksonCore, jacksonMapper, mvel2, Test.scalatest, Test.junit, Test.mockito, Test.akkaTestkit)
+  val core = Seq(akkaActor, akkaCamel, camelCore, jacksonScala, activemq, camelJms, jacksonCore, jacksonMapper, mvel2, Test.scalatest, Test.junit, Test.mockito, Test.akkaTestkit)
   val api = Seq (grizzled, jacksonCore, jacksonMapper, jacksonScala, unfilteredFilter, unfilteredNetty, unfilteredNettyServer)
   val example = Seq (akkaKernel, akkaSlf4j, httpClient, logback, Test.scalatest, Test.junit, Test.akkaTestkit)
   val storageCassandra = Seq(akkaActor, cassandraThrift, grizzled, guava, hectorCore, jodaConvert, jodaTime, thrift, Test.scalatest, Test.junit)
@@ -142,10 +142,14 @@ object Dependency {
     val Unfiltered = "0.5.3"
   }
 
+  val activemq = "org.apache.activemq" % "activemq-core" % "5.1.0"
+  val camelJms = "org.apache.camel" % "camel-jms" % V.Camel
+
   val akkaActor = "com.typesafe.akka" % "akka-actor" % V.Akka
   val akkaKernel = "com.typesafe.akka" % "akka-kernel" % V.Akka
   val akkaRemote = "com.typesafe.akka" % "akka-remote" % V.Akka
   val akkaSlf4j = "com.typesafe.akka" % "akka-slf4j" % V.Akka
+  val akkaCamel = "com.typesafe.akka" % "akka-camel" % V.Akka
   val camelAtom = "org.apache.camel" % "camel-atom" % V.Camel
   val camelCore = "org.apache.camel" % "camel-core" % V.Camel
   val camelIrc = "org.apache.camel" % "camel-irc" % V.Camel
@@ -160,7 +164,7 @@ object Dependency {
   val httpClient = "org.apache.httpcomponents" % "httpclient" % "4.1"
   val jacksonMapper = "org.codehaus.jackson" % "jackson-mapper-asl" % V.Jackson
   val jacksonCore = "org.codehaus.jackson" % "jackson-core-asl" % V.Jackson
-  val jacksonScala = "com.fasterxml" % "jackson-module-scala" % "1.9.3"
+  val jacksonScala = "com.fasterxml.jackson.module" % "jackson-module-scala" % "2.0.2"
   val jodaConvert = "org.joda" % "joda-convert" % "1.1"
   val jodaTime = "joda-time" % "joda-time" % "2.0"
   val logback = "ch.qos.logback" % "logback-classic" % "1.0.0" % "runtime"
