@@ -41,8 +41,8 @@ object Transformer {
     
     if(hasPath("type")){
       getString("type") match{
-        // No listener types implemented yet!
-        case o => throw new ConfigurationException("listener type not recognized: %s".format(o))
+        // No tranformer types implemented yet!
+        case o => throw new ConfigurationException("tranformer type not recognized: %s".format(o))
       }
     } else if (hasPath("class")) {
       val clazz = getString("class")
@@ -55,7 +55,7 @@ object Transformer {
             
       dynamicAccess.createInstanceFor[Transformer](clazz, Seq((classOf[ActorRef], sendTo)) ++ args).fold(throw _, p => p)
     } else {
-      throw new ConfigurationException("listener must specify either a type or a class")
+      throw new ConfigurationException("transformer must specify either a type or a class")
     }
   }
 }

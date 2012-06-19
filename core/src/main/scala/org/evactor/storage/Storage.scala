@@ -32,7 +32,7 @@ trait Storage extends Actor with Monitored with ActorLogging {
    * Store an event and returns true if successful.
    */
   def storeMessage(message: Message): Unit = storage.getEventStorage match {
-    case Some(storageImpl) => time ("storeMessage") { storageImpl.storeMessage(message) } 
+    case Some(storageImpl) => log.debug("Event: %s" format message.event ); time ("storeMessage") { storageImpl.storeMessage(message) }
     case None => log.debug("No storage implementation found") 
   }
   
