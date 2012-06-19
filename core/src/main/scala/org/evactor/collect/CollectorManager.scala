@@ -22,6 +22,8 @@ import akka.util.duration._
 import scala.collection.JavaConversions._
 import org.evactor.ConfigurationException
 import org.evactor.Start
+import akka.camel.CamelExtension
+import org.apache.activemq.camel.component.ActiveMQComponent
 
 class CollectorManager extends Actor with ActorLogging {
 
@@ -42,7 +44,16 @@ class CollectorManager extends Actor with ActorLogging {
   }
 
   def start() {
-    
+    val camel = CamelExtension(context.system)
+
+    //Add camel brokers
+    if(config.hasPath("evactor.brokers")){
+      config.getConfig("evactor.brokers").root.keySet.foreach { broker =>
+        val brokerUri = config.getConfig("evactor.brokers").getString(broker)
+        camel.context.addComponent(broker, ActiveMQComponent.activeMQComponent(brokerUri))
+      }
+    }
+
     config.getConfig("evactor.collectors").root.keySet.foreach { k =>
       addCollector(k, config.getConfig("evactor.collectors").getConfig(k))
     }

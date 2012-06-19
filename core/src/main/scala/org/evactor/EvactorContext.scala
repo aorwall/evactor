@@ -18,6 +18,7 @@ package org.evactor
 import akka.actor.ActorLogging
 import akka.actor.Actor
 import akka.actor.Props
+import broker.BrokerManager
 import org.evactor.collect.CollectorManager
 import org.evactor.process.ProcessorManager
 import org.evactor.storage.StorageManager
@@ -35,6 +36,7 @@ class EvactorContext extends Actor with ActorLogging {
   }
   
   // managers
+  lazy val bm = actorOf(Props[BrokerManager], name = "brokers")
   lazy val pm = actorOf(Props[ProcessorManager], name = "process")
   lazy val cm = actorOf(Props[CollectorManager], name = "collect")
   lazy val sm = actorOf(Props[StorageManager], name = "store")
@@ -47,9 +49,10 @@ class EvactorContext extends Actor with ActorLogging {
   
   override def preStart() = {
     log.info("Starting Evactor")
-    
+
     pm ! Start
     cm ! Start
+    if(system.settings.config.hasPath("evactor.brokers")) bm ! Start
     if(system.settings.config.hasPath("evactor.storage.implementation")) sm ! Start
   }
   
@@ -58,4 +61,4 @@ class EvactorContext extends Actor with ActorLogging {
   }
 }
 
-case class Start
+case class Start()
