@@ -17,7 +17,8 @@ package org.evactor.model.events
 
 import org.evactor.model.attributes.HasMessage
 import org.evactor.model.attributes.HasState
-import org.evactor.model.State
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import org.evactor.model.{StateDeserializer, State}
 
 /**
  * Represents a simple log event from a component
@@ -29,14 +30,14 @@ case class LogEvent(
     val component: String,
     val client: String,
     val server: String,
-    val state: State,
-    val message: String) 
+    @JsonDeserialize(using=classOf[StateDeserializer])  state: State,
+    val message: String)
   extends Event(id, timestamp) 
   with HasMessage 
   with HasState {
 
   // Java friendly constructor
-  def this(id: String, timestamp: Long, correlationId: String, component: String, client: String, server: String, state: String, message: String) = {
-    this(id, timestamp, correlationId, component, client, server, State(state), message )
-  }
+//  def this(id: String, timestamp: Long, correlationId: String, component: String, client: String, server: String, state: String, message: String) = {
+//    this(id, timestamp, correlationId, component, client, server, State(state), message )
+//  }
 }

@@ -15,6 +15,9 @@
  */
 package org.evactor.model
 
+import com.fasterxml.jackson.core.JsonParser
+import com.fasterxml.jackson.databind.{DeserializationContext, JsonDeserializer}
+
 object State {
   
   val START = "START"
@@ -52,3 +55,10 @@ case object Failure extends State { val name = State.FAILURE }
 case object Cancellation extends State { val name = State.CANCELLATION }
 
 case object Timeout extends State { val name = State.TIMEOUT }
+
+
+class StateDeserializer() extends JsonDeserializer[State] {
+  override def deserialize(jp: JsonParser, ctxt: DeserializationContext): State = {
+    State(jp getText)
+  }
+}
