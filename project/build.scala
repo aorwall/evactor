@@ -118,7 +118,7 @@ object BamBuild extends Build {
 
 object Dependencies {
   import Dependency._
-  
+
   val core = Seq(akkaActor, akkaCamel, camelCore, jacksonScala, activemq, camelJms, jacksonCore, jacksonMapper, mvel2, Test.scalatest, Test.junit, Test.mockito, Test.akkaTestkit)
   val api = Seq (grizzled, jacksonCore, jacksonMapper, jacksonScala, unfilteredFilter, unfilteredNetty, unfilteredNettyServer)
   val example = Seq (akkaKernel, akkaSlf4j, httpClient, logback, Test.scalatest, Test.junit, Test.akkaTestkit)
@@ -131,7 +131,7 @@ object Dependency {
 
   // Versions
   object V {
-    val Akka = "2.1-20120513-092052"
+    val Akka = "2.1-SNAPSHOT"
     val Camel = "2.6.0"
     val Cassandra = "1.0.6"
     val Hector = "1.0-2"
@@ -169,12 +169,12 @@ object Dependency {
   val jodaTime = "joda-time" % "joda-time" % "2.0"
   val logback = "ch.qos.logback" % "logback-classic" % "1.0.0" % "runtime"
   val mvel2 = "org.mvel" % "mvel2" % "2.0.9"
-  val netty = "io.netty" % "netty" % "3.3.0.Final"  
+  val netty = "io.netty" % "netty" % "3.3.0.Final"
   val ostrich = "com.twitter" % "ostrich_2.9.1" % "4.10.6"
   val perf4j = "org.perf4j" % "perf4j" % "0.9.14"
   val protobuf = "com.google.protobuf" % "protobuf-java" % "2.4.1"
   val slf4jApi = "org.slf4j" % "slf4j-api" % V.Slf4j
-  val thrift = "org.apache.thrift" % "libthrift" % "0.6.1"  
+  val thrift = "org.apache.thrift" % "libthrift" % "0.6.1"
   val twitterJson = "com.twitter" % "json_2.9.1" % "2.1.7"
   val twitterUtilCore = "com.twitter" % "util-core_2.9.1" % V.TwitterUtil
   val twitterUtilEval = "com.twitter" % "util-eval_2.9.1" % V.TwitterUtil
@@ -182,7 +182,7 @@ object Dependency {
   val unfilteredFilter = "net.databinder" % "unfiltered-filter_2.9.1" % V.Unfiltered
   val unfilteredNetty = "net.databinder" % "unfiltered-netty_2.9.1" % V.Unfiltered
   val unfilteredNettyServer = "net.databinder" % "unfiltered-netty-server_2.9.1" % V.Unfiltered
-  
+
   object Test {
     val junit = "junit" % "junit" % "4.4" % "test"
     val scalatest = "org.scalatest" % "scalatest_2.9.1" % V.Scalatest % "test"
