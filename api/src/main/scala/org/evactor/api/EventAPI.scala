@@ -18,7 +18,7 @@ package org.evactor.api
 import java.net.URLDecoder
 
 import org.evactor.model.events.Event
-import org.evactor.model.State
+import org.evactor.model.{Success, State}
 import org.evactor.storage.EventStorage
 import org.evactor.storage.EventStorageExtension
 import org.evactor.storage.KpiStorage
@@ -72,9 +72,8 @@ class EventAPI (val system: ActorSystem) {
 
   protected[api] def getStats(path: Seq[String], params: Map[String, Seq[String]]): Map[String, Any] =
     path match {
-      case channel :: Nil => storage.getStatistics(decode(channel), None, Some(0L), Some(now), getInterval(params.get("interval")))
-   	  case channel :: category :: Nil => storage.getStatistics(decode(channel), Some(decode(category)), Some(0L), Some(now), getInterval(params.get("interval")))
-//   	  case channel :: category :: state :: Nil => storage.getStatistics(decode(channel), Some(decode(category)), getState(state), Some(0L), Some(now), getInterval(params.get("interval")))
+      case channel :: Nil => storage.getStatistics(decode(channel), None, getState(params.get("state")), Some(0L), Some(now), getInterval(params.get("interval")))
+   	  case channel :: category :: Nil => storage.getStatistics(decode(channel), Some(decode(category)), getState(params.get("state")), Some(0L), Some(now), getInterval(params.get("interval")))
    	  case e => throw new IllegalArgumentException("Illegal stats request: %s".format(e))
   }
   
@@ -124,8 +123,11 @@ class EventAPI (val system: ActorSystem) {
     case Some( i :: Nil) => i
 		case None => "day"
   }
-  
-  protected[api] def getState(state: Seq[String]) = State.apply(state.mkString)
+
+  protected[api] def getState (state: Option[Seq[String]]) = state match {
+    case Some(s) => Some(State.apply(s.mkString))
+    case None => None
+  }
   
   implicit protected[api] def toCountMap(list: List[(String, Long)]): List[Map[String, Any]] =
     list.map { (t) => Map("name" -> t._1, "count" -> t._2) }
