@@ -164,7 +164,7 @@ class CassandraStorage(override val system: ActorSystem)
     // column key: event timestamp
     // value: event id
     event match {
-      case hasState: HasState => mutator.addInsertion("%s/%s".format(key, hasState.state.name), STATE_CF, HFactory.createColumn(timeuuid, "", UUIDSerializer.get, StringSerializer.get))
+      case hasState: HasState => mutator.addInsertion("%s/%s".format(key, hasState.state.name), STATE_CF, HFactory.createColumn(timeuuid, event.id, UUIDSerializer.get, StringSerializer.get))
       case _ =>
     }
     
@@ -270,7 +270,7 @@ class CassandraStorage(override val system: ActorSystem)
     debug("Reading events with name " + key + " from " + fromTimestamp + " to " + fromTimestamp)
 
     val eventIds = HFactory.createSliceQuery(keyspace, StringSerializer.get, UUIDSerializer.get, StringSerializer.get)
-            .setColumnFamily(TIMELINE_CF)
+            .setColumnFamily(if(state.isDefined){STATE_CF}else{TIMELINE_CF})
             .setKey(key)
             .setRange(fromTimeuuid, toTimeuuid, true, count)
             .execute()
@@ -502,7 +502,10 @@ class CassandraStorage(override val system: ActorSystem)
   }
   
   // TODO: Make use of the statistics CF to count faster
-  def count(channel: String, category: Option[String], fromTimestamp: Option[Long], toTimestamp: Option[Long]): Long = {
+  def count(channel: String, category: Option[String], fromTimestamp: Option[Long], toTimestamp: Option[Long]): Long =
+    count(channel, category, None, fromTimestamp, toTimestamp)
+    
+  def count(channel: String, category: Option[String], state: Option[State], fromTimestamp: Option[Long], toTimestamp: Option[Long]): Long = {
     val fromTimeuuid = fromTimestamp match {
       case Some(from) => TimeUUIDUtils.getTimeUUID(from)
       case None => null
@@ -512,10 +515,10 @@ class CassandraStorage(override val system: ActorSystem)
       case None => null
     }
     
-    val key =  createKey(channel, category)
+    val key =  createKey(channel, category, state)
     
     return HFactory.createCountQuery(keyspace, StringSerializer.get, UUIDSerializer.get)
-            .setColumnFamily(TIMELINE_CF)
+            .setColumnFamily(if(state.isDefined){STATE_CF}else{TIMELINE_CF})
             .setKey(key)
             .setRange(fromTimeuuid, toTimeuuid, 1000000)
             .execute()

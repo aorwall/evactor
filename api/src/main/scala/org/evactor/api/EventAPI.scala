@@ -84,8 +84,8 @@ class EventAPI (val system: ActorSystem) {
     val count = params.get("count").getOrElse("0")
     
     path match {
-      case channel :: Nil => storage.getEvents(decode(channel), None, from, to, 10, 0)
-      case channel :: category :: Nil => storage.getEvents(decode(channel), Some(decode(category)), from, to, 10, 0)
+      case channel :: Nil => storage.getEvents(decode(channel), None, getState(params.get("state")), from, to, 10, 0)
+      case channel :: category :: Nil => storage.getEvents(decode(channel), Some(decode(category)), getState(params.get("state")), from, to, 10, 0)
       case e => throw new IllegalArgumentException("Illegal events request: %s".format(e))
     }
   }
@@ -94,8 +94,8 @@ class EventAPI (val system: ActorSystem) {
     val from = getLongOption(params.get("from"))
     val to = getLongOption(params.get("to"))
     path match {
-      case channel :: Nil => storage.count(decode(channel), None, from, to)
-      case channel :: category :: Nil => storage.count(decode(channel), Some(decode(category)), from, to)
+      case channel :: Nil => storage.count(decode(channel), None, getState(params.get("state")), from, to)
+      case channel :: category :: Nil => storage.count(decode(channel), Some(decode(category)), getState(params.get("state")), from, to)
       case e => throw new IllegalArgumentException("Illegal events request: %s".format(e))
     } 
   }

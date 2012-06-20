@@ -24,4 +24,6 @@ trait StateStorage {
   
   def getStatistics(name: String, category: Option[String], state: Option[State], fromTimestamp: Option[Long], toTimestamp: Option[Long], interval: String): (Long, List[Long])
   
+  def count(name: String, category: Option[String], state: Option[State], fromTimestamp: Option[Long], toTimestamp: Option[Long]): Long
+
 }
