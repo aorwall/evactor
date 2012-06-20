@@ -30,6 +30,8 @@ abstract class EventStorage (val system: ActorSystem) {
   
   def getStatistics(name: String, category: Option[String], fromTimestamp: Option[Long], toTimestamp: Option[Long], interval: String): (Long, List[Long])
   
+  def count(name: String, category: Option[String], fromTimestamp: Option[Long], toTimestamp: Option[Long]): Long
+  
   def eventExists(event: Event): Boolean
   
   def getEventChannels(count: Int): List[(String, Long)]

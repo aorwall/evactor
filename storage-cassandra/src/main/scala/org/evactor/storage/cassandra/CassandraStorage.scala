@@ -490,14 +490,35 @@ class CassandraStorage(override val system: ActorSystem)
       case _ => throw new IllegalArgumentException("Couldn't handle request")
     }  
 
-	var fromDate = new DateTime(stats._1) 
-	  
-	val sumList = stats._2.map { count =>
-	  val sum = getSum(cf, "%s/%s".format(key, interval), fromDate.toDate.getTime)
-	  fromDate = fromDate.plus(period)
-	  (count, sum)
-	} 
-	  
-	(stats._1, sumList)
+    var fromDate = new DateTime(stats._1) 
+    
+    val sumList = stats._2.map { count =>
+      val sum = getSum(cf, "%s/%s".format(key, interval), fromDate.toDate.getTime)
+      fromDate = fromDate.plus(period)
+      (count, sum)
+    } 
+    
+    (stats._1, sumList)
+  }
+  
+  // TODO: Make use of the statistics CF to count faster
+  def count(channel: String, category: Option[String], fromTimestamp: Option[Long], toTimestamp: Option[Long]): Long = {
+    val fromTimeuuid = fromTimestamp match {
+      case Some(from) => TimeUUIDUtils.getTimeUUID(from)
+      case None => null
+    }
+    val toTimeuuid = toTimestamp match {
+      case Some(to) => TimeUUIDUtils.getTimeUUID(to)
+      case None => null
+    }
+    
+    val key =  createKey(channel, category)
+    
+    return HFactory.createCountQuery(keyspace, StringSerializer.get, UUIDSerializer.get)
+            .setColumnFamily(TIMELINE_CF)
+            .setKey(key)
+            .setRange(fromTimeuuid, toTimeuuid, 1000000)
+            .execute()
+            .get.toInt
   }
 }

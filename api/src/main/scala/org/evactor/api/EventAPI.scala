@@ -54,14 +54,15 @@ class EventAPI (val system: ActorSystem) {
     path match {
       case "channels" :: Nil => getChannels(getCount(params.get("count"), 100))
       case "categories" :: channel :: Nil => getCategories(decode(channel), getCount(params.get("count"), 100))
-   	  case "stats" :: tail => getStats(tail, params)
-   	  case "timeline" :: tail => getTimeline(tail, params)
-   	  case "event" :: id :: Nil => getEvent(id) 
-   	  case "latency" :: channel :: Nil => getAvgLatency(decode(channel), None, getInterval(params.get("interval")))
-   	  case "latency" :: channel :: category :: Nil => getAvgLatency(decode(channel), Some(decode(category)), getInterval(params.get("interval")))
+      case "stats" :: tail => getStats(tail, params)
+      case "timeline" :: tail => getTimeline(tail, params)
+      case "event" :: id :: Nil => getEvent(id) 
+      case "count" :: tail => getCount(tail, params)
+      case "latency" :: channel :: Nil => getAvgLatency(decode(channel), None, getInterval(params.get("interval")))
+      case "latency" :: channel :: category :: Nil => getAvgLatency(decode(channel), Some(decode(category)), getInterval(params.get("interval")))
       case "avg" :: channel :: Nil => getAverage(decode(channel), None, getInterval(params.get("interval")))
       case "avg" :: channel :: category :: Nil => getAverage(decode(channel), Some(decode(category)), getInterval(params.get("interval")))
-   	  case _ => BadRequest
+      case _ => BadRequest
   }
   
   protected[api] def getChannels(count: Int): List[Map[String, Any]] = 
@@ -73,23 +74,43 @@ class EventAPI (val system: ActorSystem) {
   protected[api] def getStats(path: Seq[String], params: Map[String, Seq[String]]): Map[String, Any] =
     path match {
       case channel :: Nil => storage.getStatistics(decode(channel), None, Some(0L), Some(now), getInterval(params.get("interval")))
-   	  case channel :: category :: Nil => storage.getStatistics(decode(channel), Some(decode(category)), Some(0L), Some(now), getInterval(params.get("interval")))
-//   	  case channel :: category :: state :: Nil => storage.getStatistics(decode(channel), Some(decode(category)), getState(state), Some(0L), Some(now), getInterval(params.get("interval")))
-   	  case e => throw new IllegalArgumentException("Illegal stats request: %s".format(e))
+      case channel :: category :: Nil => storage.getStatistics(decode(channel), Some(decode(category)), Some(0L), Some(now), getInterval(params.get("interval")))
+//      case channel :: category :: state :: Nil => storage.getStatistics(decode(channel), Some(decode(category)), getState(state), Some(0L), Some(now), getInterval(params.get("interval")))
+      case e => throw new IllegalArgumentException("Illegal stats request: %s".format(e))
   }
   
-  protected[api] def getTimeline(path: Seq[String], params: Map[String, Seq[String]]): List[Event] = 
+  protected[api] def getTimeline(path: Seq[String], params: Map[String, Seq[String]]): List[Event] = {
+    val from = getLongOption(params.get("from"))
+    val to = getLongOption(params.get("to"))
+    val count = params.get("count").getOrElse("0")
+    
     path match {
- 	    case channel :: Nil => storage.getEvents(decode(channel), None, None, None, 10, 0)
- 	    case channel :: category :: Nil => storage.getEvents(decode(channel), Some(decode(category)), None, None, 10, 0)
- 	    case e => throw new IllegalArgumentException("Illegal events request: %s".format(e))
+      case channel :: Nil => storage.getEvents(decode(channel), None, from, to, 10, 0)
+      case channel :: category :: Nil => storage.getEvents(decode(channel), Some(decode(category)), from, to, 10, 0)
+      case e => throw new IllegalArgumentException("Illegal events request: %s".format(e))
     }
-  	
+  }
+  
+  protected[api] def getCount(path: Seq[String], params: Map[String, Seq[String]]): Long = {
+    val from = getLongOption(params.get("from"))
+    val to = getLongOption(params.get("to"))
+    path match {
+      case channel :: Nil => storage.count(decode(channel), None, from, to)
+      case channel :: category :: Nil => storage.count(decode(channel), Some(decode(category)), from, to)
+      case e => throw new IllegalArgumentException("Illegal events request: %s".format(e))
+    } 
+  }
+  
+  protected[api] def getLongOption(in: Option[Seq[String]]): Option[Long] = in match{
+    case Some(s) => Some(s.toString.toLong)
+    case _ => None
+  }
+  
   protected[api] def getEvent(id: String): Option[Event] = 
     storage.getEvent(id) match {
- 	 	  case Some(e: Event) => Some(e)
- 	 	  case _ => None
-	}
+      case Some(e: Event) => Some(e)
+      case _ => None
+  }
   
   protected[api] def getAvgLatency(channel: String, category: Option[String], interval: String): Map[String, Any] = 
     average(storage.getLatencyStatistics(channel, None, Some(0L), Some(now), interval))
@@ -105,12 +126,12 @@ class EventAPI (val system: ActorSystem) {
                   else 0
   })
   
-  implicit protected[api] def anyToResponse(any: AnyRef): ResponseFunction[HttpResponse] = any match {
+  implicit protected[api] def anyToResponse(any: Any): ResponseFunction[HttpResponse] = any match {
     case None => NotFound
     case Some(obj) => ResponseString(mapper.writeValueAsString(obj))
     case _ => ResponseString(mapper.writeValueAsString(any))
   }  
-  	
+  
   protected[api] def decode(name: String) = {
     URLDecoder.decode(name, "UTF-8")
   }
@@ -122,7 +143,7 @@ class EventAPI (val system: ActorSystem) {
   
   protected[api] def getInterval (interval: Option[Seq[String]]) = interval match {
     case Some( i :: Nil) => i
-		case None => "day"
+    case None => "day"
   }
   
   protected[api] def getState(state: Seq[String]) = State.apply(state.mkString)
