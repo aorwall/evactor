@@ -9,12 +9,14 @@ import java.text.SimpleDateFormat
 import xml.{XML, Elem}
 import org.evactor.model.{Start, Success, State}
 import java.util.UUID
+import com.typesafe.config.Config
+import org.evactor.ConfigurationException
 
 /**
  * User: anders
  */
 
-class SimpleJsonToLogEventTransformer(collector: ActorRef)  extends Transformer with Monitored with ActorLogging {
+class SimpleJsonToLogEventTransformer(collector: ActorRef) extends Transformer with Monitored with ActorLogging {
   val jsonSerializer = {
     val m = new ObjectMapper()
     m.registerModule(DefaultScalaModule)
@@ -31,7 +33,8 @@ class SimpleJsonToLogEventTransformer(collector: ActorRef)  extends Transformer 
 }
 
 
-class SimpleXmlToLogEventTransformer(collector: ActorRef)  extends Transformer with Monitored with ActorLogging {
+class InfoLogEventTransformer(collector: ActorRef) extends Transformer with Monitored with ActorLogging {
+
   def receive = {
     case msg: String => {
       log.debug("Recived msg %s for transformation", msg)
@@ -40,11 +43,21 @@ class SimpleXmlToLogEventTransformer(collector: ActorRef)  extends Transformer w
       val runtimeInfo = (value: String) => (logEntry \ "runtimeInfo" \ value)(0) text
       val metadataInfo = (value: String) => (logEntry \ "metadataInfo" \ value)(0) text
       val messageInfo = (value: String) => (logEntry \ "messageInfo" \ value)(0) text
+      val extraInfo = (value: String) => (logEntry \ "extraInfo" \ value)(0) text
       val payload = (logEntry \ "payload")(0) text
       val timestamp = runtimeInfo("timestamp").reverse.replaceFirst(":", "").reverse
       val state = matchState(messageInfo("message"))
+
       if (state.isDefined)
-        collector ! LogEvent(runtimeInfo("messageId"), new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").parse(timestamp).getTime, runtimeInfo("businessCorrelationId"), runtimeInfo("componentId"), runtimeInfo("hostIp"), metadataInfo("endpoint"), state.get, payload)
+        collector ! LogEvent(
+          id = runtimeInfo("messageId"),
+          timestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").parse(timestamp).getTime,
+          correlationId = runtimeInfo("businessCorrelationId"),
+          component = extraInfo("servicenamespace"),
+          client = extraInfo("senderid"),
+          server = extraInfo("receiverid"),
+          state = state.get,
+          message = payload)
     }
     case msg => log.debug("can't handle {}", msg)
   }

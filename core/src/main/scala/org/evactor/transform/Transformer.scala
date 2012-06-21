@@ -34,25 +34,28 @@ trait Transformer extends Actor {
 object Transformer {
 
   lazy val dynamicAccess = new ReflectiveDynamicAccess(this.getClass.getClassLoader)
-  
+
   def apply(config: Config, sendTo: ActorRef): Transformer = {
-    
+
     import config._
-    
-    if(hasPath("type")){
-      getString("type") match{
+
+
+    if (hasPath("type")) {
+      getString("type") match {
         // No tranformer types implemented yet!
         case o => throw new ConfigurationException("tranformer type not recognized: %s".format(o))
       }
     } else if (hasPath("class")) {
       val clazz = getString("class")
-      
-      val args = if(hasPath("arguments")){
-        getList("arguments").map { a => (a.unwrapped.getClass, a.unwrapped.asInstanceOf[AnyRef]) }
+
+      val args = if (hasPath("arguments")) {
+        getList("arguments").map {
+          a => (a.unwrapped.getClass, a.unwrapped.asInstanceOf[AnyRef])
+        }
       } else {
         Nil
       }
-            
+
       dynamicAccess.createInstanceFor[Transformer](clazz, Seq((classOf[ActorRef], sendTo)) ++ args).fold(throw _, p => p)
     } else {
       throw new ConfigurationException("transformer must specify either a type or a class")
