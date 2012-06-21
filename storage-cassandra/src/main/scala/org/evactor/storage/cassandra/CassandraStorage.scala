@@ -26,7 +26,7 @@ import org.evactor.model.attributes.HasState
 import org.evactor.model.events.Event
 import org.evactor.storage.EventStorage
 import java.util.UUID
-import org.evactor.model.State
+import org.evactor.model.{Timeout, Success, State, Message}
 import akka.event.Logging
 import me.prettyprint.hector.api.mutation.Mutator
 import me.prettyprint.cassandra.utils.TimeUUIDUtils
@@ -40,11 +40,10 @@ import org.evactor.model.attributes.HasLatency
 import akka.actor.ExtendedActorSystem
 import org.evactor.storage.LatencyStorage
 import org.evactor.storage.StateStorage
-import org.evactor.model.Message
 import org.evactor.model.attributes.HasLong
 import org.evactor.storage.KpiStorage
 
-class CassandraStorage(override val system: ActorSystem) 
+class CassandraStorage(override val system: ActorSystem)
   extends EventStorage(system) 
   with LatencyStorage 
   with StateStorage 
@@ -136,10 +135,10 @@ class CassandraStorage(override val system: ActorSystem)
     }    
     
     mutator.incrementCounter("channels", CHANNEL_CF, message.channel, 1)
-    
+
     event match {
-      case latencyEvent: Event with HasLatency => storeLatency(message.channel, message.categories, latencyEvent)
-      case _ => 
+      case le: Event with HasLatency with HasState if (le.state eq Success) => logger debug("Store latency") ; storeLatency(message.channel, message.categories, le)
+      case _ => logger debug("Don't store latency for non-latency events")
     }
     
     event match {
@@ -367,7 +366,7 @@ class CassandraStorage(override val system: ActorSystem)
           .execute()
           .get
           .getColumns
-          
+
     val statsMap: Map[Long, Long] = columns.map {col => col.getName match {
             case k: java.lang.Long =>
             	col.getValue match {
@@ -480,7 +479,7 @@ class CassandraStorage(override val system: ActorSystem)
   }
   
   protected def getSumStatisticsFromInterval(cf: String, channel: String, category: Option[String], from: Long, to: Long, interval: String): (Long, List[(Long, Long)]) = {
-    val stats = readStatisticsFromInterval(channel, category, None, from, to, interval)
+    val stats = readStatisticsFromInterval(channel, category, Some(Success), from, to, interval)
     val key = createKey(channel, category)
     val period = interval match {
       case YEAR => Years.ONE
@@ -491,7 +490,6 @@ class CassandraStorage(override val system: ActorSystem)
     }  
 
     var fromDate = new DateTime(stats._1) 
-    
     val sumList = stats._2.map { count =>
       val sum = getSum(cf, "%s/%s".format(key, interval), fromDate.toDate.getTime)
       fromDate = fromDate.plus(period)
