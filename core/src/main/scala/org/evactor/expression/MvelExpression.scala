@@ -86,7 +86,13 @@ case class MvelExpression(val expression: String) extends Expression {
     
     fields.foreach { f =>
       f.setAccessible(true)
-      map.put(f.getName, f.get(cc))
+      
+      f.get(cc) match {
+        case Some(o) => map.put(f.getName, o)
+        case None => // do nothing
+        case o => map.put(f.getName, o)
+      }
+      
     }
     map
   }
