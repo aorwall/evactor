@@ -125,7 +125,7 @@ class EvactorIntegrationSuite(_system: ActorSystem)
     // Collect logs
     val currentTime = System.currentTimeMillis
 
-    Thread.sleep(100)
+    Thread.sleep(500)
     
     val startCollector = system.actorFor("%s/collect/startCollector".format(context.path))
     val endCollector = system.actorFor("%s/collect/endCollector".format(context.path)) 

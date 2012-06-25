@@ -55,6 +55,9 @@ class TestEventStorage(override val system: ActorSystem) extends EventStorage(sy
     List[(String, Long)]() 
   }
   
+  def count(channel: String, category: Option[String], fromTimestamp: Option[Long], toTimestamp: Option[Long]): Long = {
+    0l
+  }
 }
 
 object EventStorageSpec {
