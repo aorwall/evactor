@@ -28,8 +28,8 @@ case class LogEvent(
     override val timestamp: Long,
     val correlationId: String,
     val component: String,
-    val client: String,
-    val server: String,
+    val client: String = "",
+    val server: String = "",
     @JsonDeserialize(using=classOf[StateDeserializer])  state: State,
     val message: String)
   extends Event(id, timestamp) 
