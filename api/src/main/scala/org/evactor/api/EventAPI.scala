@@ -29,11 +29,10 @@ import org.jboss.netty.handler.codec.http.HttpResponse
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 
 import akka.actor.ActorSystem
-import unfiltered.response.BadRequest
-import unfiltered.response.NotFound
-import unfiltered.response.ResponseFunction
-import unfiltered.response.ResponseString
+import unfiltered.response._
 import com.fasterxml.jackson.databind.ObjectMapper
+import scala.Some
+import unfiltered.response.ResponseString
 
 class EventAPI (val system: ActorSystem) {
 
@@ -62,7 +61,7 @@ class EventAPI (val system: ActorSystem) {
       case "latency" :: channel :: category :: Nil => getAvgLatency(decode(channel), Some(decode(category)), getInterval(params.get("interval")))
       case "avg" :: channel :: Nil => getAverage(decode(channel), None, getInterval(params.get("interval")))
       case "avg" :: channel :: category :: Nil => getAverage(decode(channel), Some(decode(category)), getInterval(params.get("interval")))
-      case _ => BadRequest
+      case _ => BadRequest ~> ResponseString("Unknown resource...")
   }
   
   protected[api] def getChannels(count: Int): List[Map[String, Any]] = 
@@ -81,6 +80,7 @@ class EventAPI (val system: ActorSystem) {
   protected[api] def getTimeline(path: Seq[String], params: Map[String, Seq[String]]): List[Event] = {
     val from = getLongOption(params.get("from"))
     val to = getLongOption(params.get("to"))
+
     val count = params.get("count").getOrElse("0")
     
     path match {
