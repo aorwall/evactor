@@ -41,9 +41,8 @@ class InfoLogEventTransformer(collector: ActorRef) extends Transformer with Moni
       val node = XML.loadString(msg)
       val logEntry = node \ "logEntry"
       val runtimeInfo = (value: String) => (logEntry \ "runtimeInfo" \ value)(0) text
-      val metadataInfo = (value: String) => (logEntry \ "metadataInfo" \ value)(0) text
       val messageInfo = (value: String) => (logEntry \ "messageInfo" \ value)(0) text
-      val extraInfo = (value: String) => (logEntry \ "extraInfo" \ value)(0) text
+      val extraInfo = (name: String) => (logEntry \"extraInfo" filter (x => (x \ "name").text == name)) \ "value" text
       val payload = (logEntry \ "payload")(0) text
       val timestamp = runtimeInfo("timestamp").reverse.replaceFirst(":", "").reverse
       val state = matchState(messageInfo("message"))
@@ -53,9 +52,7 @@ class InfoLogEventTransformer(collector: ActorRef) extends Transformer with Moni
           id = runtimeInfo("messageId"),
           timestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").parse(timestamp).getTime,
           correlationId = runtimeInfo("businessCorrelationId"),
-          component = extraInfo("servicenamespace"),
-          client = extraInfo("senderid"),
-          server = extraInfo("receiverid"),
+          component = extraInfo("producerId"),
           state = state.get,
           message = payload)
     }
