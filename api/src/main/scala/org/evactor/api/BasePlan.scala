@@ -17,11 +17,10 @@ package org.evactor.api
 
 import akka.actor.ActorSystem
 import grizzled.slf4j.Logging
-import unfiltered.response.BadRequest
+import unfiltered.response.{ContentType, BadRequest, ResponseString}
 import unfiltered.request.Path
 import unfiltered.request.Seg
 import scala.io.Source
-import unfiltered.response.ResponseString
 import unfiltered.request.Params
 
 class BasePlan (system: ActorSystem) extends NettyPlan with Logging {
@@ -36,7 +35,7 @@ class BasePlan (system: ActorSystem) extends NettyPlan with Logging {
 //    } catch { case e => warn("error while getting index page", e); BadRequest }
     case req @ Path(Seg("api" :: path)) => try {
       val Params(params) = req
-      api.doRequest(path, params)
+      api.doRequest(path, params) ~> ContentType("application/json")
     } catch { case e => warn("error while calling event api", e); BadRequest }
     case _ => ResponseString("Couldn't handle request")
       
