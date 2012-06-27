@@ -15,20 +15,13 @@
  */
 package org.evactor.process.extract.kpi
 
-import org.codehaus.jackson.JsonFactory
-import org.codehaus.jackson.JsonParser
-import org.codehaus.jackson.JsonToken
 import org.evactor.model.attributes.HasMessage
 import org.evactor.model.events.Event
 import org.evactor.model.events.KpiEvent
 import org.evactor.process.extract.Extractor
-import org.evactor.process.Processor
 import org.evactor.subscribe.Subscription
 import org.evactor.process.extract.EventCreator
-import org.evactor.expression.MvelExpression
-import org.evactor.expression.XPathExpression
 import org.evactor.expression.Expression
-import akka.actor.ActorLogging
 import org.evactor.publish.Publication
 import java.util.UUID
 import org.evactor.publish.Publisher
