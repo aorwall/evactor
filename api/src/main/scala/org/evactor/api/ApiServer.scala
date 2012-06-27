@@ -24,11 +24,11 @@ class ApiServer(
     val port: Int)
   extends Actor with ActorLogging {
 
-  lazy val nettyServer = unfiltered.netty.Http(port).plan(new BasePlan(system))
+//  lazy val nettyServer = unfiltered.netty.Http(port).plan(new BasePlan(system))
 
   def receive = {
-    case "startup" => log.info("Starting api..."); nettyServer.run
-    case _      	 => nettyServer.stop
+    case "startup" => log.info("Starting api...")//; nettyServer.run
+//    case _      	 => nettyServer.stop
   }
   
 }

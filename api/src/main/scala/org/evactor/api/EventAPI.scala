@@ -18,13 +18,12 @@ package org.evactor.api
 import java.net.URLDecoder
 
 import org.evactor.model.events.Event
-import org.evactor.model.{Success, State}
+import org.evactor.model.State
 import org.evactor.storage.EventStorage
 import org.evactor.storage.EventStorageExtension
 import org.evactor.storage.KpiStorage
 import org.evactor.storage.LatencyStorage
 import org.evactor.storage.StateStorage
-import org.jboss.netty.handler.codec.http.HttpResponse
 
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 
@@ -33,6 +32,7 @@ import unfiltered.response._
 import com.fasterxml.jackson.databind.ObjectMapper
 import scala.Some
 import unfiltered.response.ResponseString
+import javax.servlet.http.HttpServletResponse
 
 class EventAPI (val system: ActorSystem) {
 
@@ -49,7 +49,7 @@ class EventAPI (val system: ActorSystem) {
   
   def doRequest(
       path: Seq[String], 
-      params: Map[String, Seq[String]]): ResponseFunction[HttpResponse] = 
+      params: Map[String, Seq[String]]): ResponseFunction[HttpServletResponse] =
     path match {
       case "channels" :: Nil => getChannels(getCount(params.get("count"), 100))
       case "categories" :: channel :: Nil => getCategories(decode(channel), getCount(params.get("count"), 100))
@@ -125,7 +125,7 @@ class EventAPI (val system: ActorSystem) {
                   else 0
   })
   
-  implicit protected[api] def anyToResponse(any: Any): ResponseFunction[HttpResponse] = any match {
+  implicit protected[api] def anyToResponse(any: Any): ResponseFunction[HttpServletResponse] = any match {
     case None => NotFound
     case Some(obj) => ResponseString(mapper.writeValueAsString(obj))
     case _ => ResponseString(mapper.writeValueAsString(any))

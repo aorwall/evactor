@@ -46,8 +46,8 @@ class ExampleKernel extends Bootable {
     8080
   }
 
-  lazy val nettyServer = unfiltered.netty.Http(port).plan(new BasePlan(system))
-  
+//  lazy val nettyServer = unfiltered.netty.Http(port).plan(new BasePlan(system))
+
   def startup = {
     
     if(!system.settings.config.hasPath("evactor")) throw new RuntimeException("No configuration found!")
@@ -57,7 +57,7 @@ class ExampleKernel extends Bootable {
     
     if(system.settings.config.hasPath("evactor.api")){
       // start api server
-      nettyServer.start()
+//      nettyServer.start()
     }
     
     if(system.settings.config.hasPath("evactor.monitoring.ostrich")){
@@ -73,7 +73,7 @@ class ExampleKernel extends Bootable {
 
   def shutdown = {
     if(system.settings.config.hasPath("evactor.api")){
-      nettyServer.stop()
+//      nettyServer.stop()
     }
     system.shutdown()
   }

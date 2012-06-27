@@ -120,7 +120,7 @@ object Dependencies {
   import Dependency._
 
   val core = Seq(akkaActor, akkaCamel, camelCore, jacksonScala, activemq, camelJms, jacksonCore, jacksonMapper, mvel2, Test.scalatest, Test.junit, Test.mockito, Test.akkaTestkit)
-  val api = Seq (grizzled, jacksonCore, jacksonMapper, jacksonScala, unfilteredFilter, unfilteredNetty, unfilteredNettyServer)
+  val api = Seq (grizzled, jacksonCore, jacksonMapper, jacksonScala, unfilteredFilter, unfilteredNetty, unfilteredNettyServer, servletApi)
   val example = Seq (akkaKernel, akkaSlf4j, httpClient, logback, Test.scalatest, Test.junit, Test.akkaTestkit)
   val storageCassandra = Seq(akkaActor, cassandraThrift, grizzled, guava, hectorCore, jodaConvert, jodaTime, thrift, Test.scalatest, Test.junit)
   val monitoringOstrich = Seq(ostrich)
@@ -182,6 +182,7 @@ object Dependency {
   val unfilteredFilter = "net.databinder" % "unfiltered-filter_2.9.1" % V.Unfiltered
   val unfilteredNetty = "net.databinder" % "unfiltered-netty_2.9.1" % V.Unfiltered
   val unfilteredNettyServer = "net.databinder" % "unfiltered-netty-server_2.9.1" % V.Unfiltered
+  val servletApi = "javax.servlet" % "servlet-api" % "2.5"
 
   object Test {
     val junit = "junit" % "junit" % "4.4" % "test"

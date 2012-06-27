@@ -17,25 +17,23 @@ package org.evactor.api
 
 import akka.actor.ActorSystem
 import grizzled.slf4j.Logging
-import unfiltered.response.{ContentType, BadRequest, ResponseString}
+import unfiltered.response.{JsonContent, ContentType, BadRequest, ResponseString}
 import unfiltered.request.Path
 import unfiltered.request.Seg
-import scala.io.Source
 import unfiltered.request.Params
+import unfiltered.filter.Plan
 
-class BasePlan (system: ActorSystem) extends NettyPlan with Logging {
+class BasePlan extends Plan with Logging {
 
-  val api = new EventAPI(system)
-  
-//  val indexFile = Source.fromFile("/index.html", "UTF-8").mkString
-  
+   val api = {
+     lazy val system = ActorSystem("EvactorApi")
+     new EventAPI(system)
+   }
+
   def intent = {
-//    case req @ Path(Seg(Nil)) => try {
-//      ResponseString(indexFile)
-//    } catch { case e => warn("error while getting index page", e); BadRequest }
     case req @ Path(Seg("api" :: path)) => try {
       val Params(params) = req
-      api.doRequest(path, params) ~> ContentType("application/json")
+      JsonContent ~> api.doRequest(path, params)
     } catch { case e => warn("error while calling event api", e); BadRequest }
     case _ => ResponseString("Couldn't handle request")
       
