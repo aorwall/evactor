@@ -21,7 +21,7 @@ import AssemblyKeys._
 object BamBuild extends Build {
   
   val Organization = "org.evactor"
-  val Version      = "0.2-SNAPSHOT"
+  val Version      = "0.3-SNAPSHOT"
   val ScalaVersion = "2.9.2"
 
   lazy val evactor = Project(
@@ -142,7 +142,7 @@ object Dependency {
     val Unfiltered = "0.5.3"
   }
 
-  val activemq = "org.apache.activemq" % "activemq-core" % "5.1.0"
+  val activemq = "org.apache.activemq" % "activemq-all" % "5.3.0"
   val camelJms = "org.apache.camel" % "camel-jms" % V.Camel
 
   val akkaActor = "com.typesafe.akka" % "akka-actor" % V.Akka
@@ -187,7 +187,7 @@ object Dependency {
     val junit = "junit" % "junit" % "4.4" % "test"
     val scalatest = "org.scalatest" % "scalatest_2.9.1" % V.Scalatest % "test"
     val mockito = "org.mockito" % "mockito-core" % "1.8.1" % "test"
-    val akkaTestkit = "com.typesafe.akka" % "akka-testkit" % "2.0" % "test"
+    val akkaTestkit = "com.typesafe.akka" % "akka-testkit" % V.Akka % "test"
   }
   
 }
