@@ -17,7 +17,7 @@ package org.evactor.api
 
 import akka.actor.ActorSystem
 import grizzled.slf4j.Logging
-import unfiltered.response.{JsonContent, ContentType, BadRequest, ResponseString}
+import unfiltered.response.{JsonContent, BadRequest, ResponseString}
 import unfiltered.request.Path
 import unfiltered.request.Seg
 import unfiltered.request.Params

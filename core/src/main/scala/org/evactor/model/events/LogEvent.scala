@@ -30,7 +30,8 @@ case class LogEvent(
     val component: String,
     val client: String = "",
     val server: String = "",
-    @JsonDeserialize(using=classOf[StateDeserializer])  state: State,
+    @JsonDeserialize(using=classOf[StateDeserializer])
+    val state: State,
     val message: String)
   extends Event(id, timestamp) 
   with HasMessage 

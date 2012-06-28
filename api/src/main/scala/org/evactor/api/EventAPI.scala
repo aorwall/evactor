@@ -29,15 +29,30 @@ import com.fasterxml.jackson.module.scala.DefaultScalaModule
 
 import akka.actor.ActorSystem
 import unfiltered.response._
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.{SerializerProvider, JsonSerializer, SerializationFeature, ObjectMapper}
 import scala.Some
 import unfiltered.response.ResponseString
 import javax.servlet.http.HttpServletResponse
+import grizzled.slf4j.Logging
+import com.fasterxml.jackson.databind.module.SimpleModule
+import com.fasterxml.jackson.core.JsonGenerator
 
-class EventAPI (val system: ActorSystem) {
+class EventAPI (val system: ActorSystem) extends Logging {
 
-  val mapper = new ObjectMapper()
-  mapper.registerModule(DefaultScalaModule)
+
+  val mapper = {
+    val m = new ObjectMapper()
+
+    val stateModule = new SimpleModule()
+    stateModule.addSerializer(classOf[State], new JsonSerializer[State] {
+      def serialize(state: State, jgen: JsonGenerator, provider: SerializerProvider) {jgen.writeString(state.name)}
+    })
+
+    m.registerModule(stateModule)
+    m.registerModule(DefaultScalaModule)
+
+    m
+  }
 
   // TODO: Some other system to decide which storage solutions that is available.
   // Maybe a LatencyAPI and StateAPI trait extending this one
@@ -129,7 +144,7 @@ class EventAPI (val system: ActorSystem) {
     case None => NotFound
     case Some(obj) => ResponseString(mapper.writeValueAsString(obj))
     case _ => ResponseString(mapper.writeValueAsString(any))
-  }  
+  }
   
   protected[api] def decode(name: String) = {
     URLDecoder.decode(name, "UTF-8")

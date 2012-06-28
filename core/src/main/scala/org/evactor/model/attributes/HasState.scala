@@ -16,7 +16,6 @@
 package org.evactor.model.attributes
 
 import org.evactor.model.State
-import org.evactor.model.events.Event
 
 trait HasState {
   val state: State
