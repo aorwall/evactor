@@ -17,6 +17,7 @@ package org.evactor.storage
 
 import org.evactor.model.events.Event
 
+@deprecated("kpi's should be calculated with a processor instead", "0.2")
 trait KpiStorage {
 
   def getSumStatistics(channel: String, category: Option[String], fromTimestamp: Option[Long], toTimestamp: Option[Long], interval: String): (Long, List[(Long, Long)])
