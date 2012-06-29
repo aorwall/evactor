@@ -17,7 +17,6 @@ package org.evactor.twitter.transformer
 
 import java.text.SimpleDateFormat
 import java.util.HashMap
-import org.codehaus.jackson.map.ObjectMapper
 import org.evactor.transform.Transformer
 import org.evactor.twitter.StatusEvent
 import akka.actor.ActorLogging
@@ -26,6 +25,7 @@ import java.util.ArrayList
 import scala.collection.JavaConversions._
 import java.util.Locale
 import org.evactor.monitor.Monitored
+import com.fasterxml.jackson.databind.ObjectMapper
 
 class TwitterJsonToStatusEvent(collector: ActorRef)  extends Transformer with Monitored with ActorLogging {
 

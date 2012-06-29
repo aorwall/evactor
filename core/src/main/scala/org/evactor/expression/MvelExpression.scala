@@ -17,16 +17,12 @@ package org.evactor.expression
 
 import java.util.HashMap
 
-import scala.Double._
-import scala.collection.JavaConversions.asJavaSet
 
-import org.codehaus.jackson.map.ObjectMapper
 import org.evactor.model.attributes.HasMessage
 import org.evactor.model.events.Event
 import org.mvel2.MVEL
-import scala.collection.JavaConversions.asJavaMap
+import com.fasterxml.jackson.databind.ObjectMapper
 
-import akka.actor.ActorLogging
 
 /**
  * Evaluate MVEL Expressions. Supports JSON and strings in message. XML to come...?

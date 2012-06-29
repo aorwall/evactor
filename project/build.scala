@@ -135,7 +135,7 @@ object Dependency {
     val Camel = "2.6.0"
     val Cassandra = "1.0.6"
     val Hector = "1.0-2"
-    val Jackson = "1.9.0"
+    val Jackson = "2.0.2"
     val Scalatest = "1.6.1"
     val Slf4j = "1.6.4"
     val TwitterUtil = "1.12.13"
@@ -162,9 +162,9 @@ object Dependency {
   val hectorCore = "me.prettyprint" % "hector-core" % V.Hector
   val highScaleLib = "org.cliffc.high_scale_lib" % "high-scale-lib" % "1.0"
   val httpClient = "org.apache.httpcomponents" % "httpclient" % "4.1"
-  val jacksonMapper = "org.codehaus.jackson" % "jackson-mapper-asl" % V.Jackson
-  val jacksonCore = "org.codehaus.jackson" % "jackson-core-asl" % V.Jackson
-  val jacksonScala = "com.fasterxml.jackson.module" % "jackson-module-scala" % "2.0.2"
+  val jacksonMapper = "com.fasterxml.jackson.core" % "jackson-databind" % V.Jackson
+  val jacksonCore = "com.fasterxml.jackson.core" % "jackson-core" % V.Jackson
+  val jacksonScala = "com.fasterxml.jackson.module" % "jackson-module-scala" % V.Jackson
   val jodaConvert = "org.joda" % "joda-convert" % "1.1"
   val jodaTime = "joda-time" % "joda-time" % "2.0"
   val logback = "ch.qos.logback" % "logback-classic" % "1.0.0" % "runtime"

@@ -15,17 +15,12 @@
  */
 package org.evactor.expression
 
-import java.util.HashMap
-import org.codehaus.jackson.map.ObjectMapper
-import org.mvel2.MVEL
 import org.evactor.model.attributes.HasMessage
 import org.evactor.model.events.Event
-import scala.Double._
 import javax.xml.xpath.XPathFactory
 import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.xpath.XPathConstants
 import java.io.ByteArrayInputStream
-import akka.actor.ActorLogging
 
 /**
  * Evaluate XPath Expressions. 
