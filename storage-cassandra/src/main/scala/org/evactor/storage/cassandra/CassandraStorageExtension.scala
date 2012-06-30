@@ -36,17 +36,17 @@ class CassandraStorageSettings(val config: Config) extends Extension {
   val Keyspace = getString("evactor.storage.cassandra.keyspace")
   val Clustername = getString("evactor.storage.cassandra.clustername")
   
-  val ChannelIndex = getConfig("evactor.storage.cassandra.index.channels").root.keySet.map { k =>
-      
-      k -> getConfig("evactor.storage.cassandra.index.channels.%s".format(k)).root.values.map { vs =>
-        
+  val ChannelIndex = getIndex("evactor.storage.cassandra.index.channels")
+  val EventTypeIndex = getIndex("evactor.storage.cassandra.index.events")
+  
+  private[this] def getIndex(path: String): Map[String, List[Set[String]]] = getConfig(path).root.keySet.map { k =>
+      k -> getConfig("%s.%s".format(path, k)).root.values.map { vs =>
         vs.unwrapped match {
           case s: String => Set(s)
           case l: java.util.ArrayList[String] => l.sortWith(_ < _).toSet 
         }
-      }
+      }.toList
     }.toMap
   
-  //val EventTypeIndex = getConfig("evactor.storage.cassandra.index.events")
   
 }

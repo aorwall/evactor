@@ -58,8 +58,14 @@ class Test extends FunSuite with Logging {
       
               index {
                 channels {
-                  channel6 {
+                  channel7 {
                     idx1 = state
+                    idx2 = [component, state]
+                  }
+                }
+                events {
+                  RequestEvent {
+                    idx1 = component
                     idx2 = [component, state]
                   }
                 }
@@ -126,10 +132,10 @@ class Test extends FunSuite with Logging {
 //    println("LogEventStorage: " + storage.getEvents("logs", None, None, None, None, 10, 0))
 //  }     
   
-  val req1 = new Message("channel6", Set(), new RequestEvent("10", System.currentTimeMillis, "329380921328", "component1", Some("329380921338"), Some("329380921338"), Success, 10L))
-  val req2 = new Message("channel6", Set(), new RequestEvent("20", System.currentTimeMillis+1, "329380921328", "component2", Some("329380921338"), Some("329380921338"), Success, 10L))
-  val req3 = new Message("channel6", Set(), new RequestEvent("30", System.currentTimeMillis+2, "329380921328", "component1", Some("329380921338"), Some("329380921338"), Success, 10L))
-  val req4 = new Message("channel6", Set(), new RequestEvent("40", System.currentTimeMillis+3, "329380921328", "component2", Some("329380921338"), Some("329380921338"), Failure, 10L))    
+  val req1 = new Message("channel7", Set(), new RequestEvent("10", System.currentTimeMillis, "329380921328", "component1", Some("329380921338"), Some("329380921338"), Success, 10L))
+  val req2 = new Message("channel7", Set(), new RequestEvent("20", System.currentTimeMillis+1, "329380921328", "component2", Some("329380921338"), Some("329380921338"), Success, 10L))
+  val req3 = new Message("channel7", Set(), new RequestEvent("30", System.currentTimeMillis+2, "329380921328", "component1", Some("329380921338"), Some("329380921338"), Success, 10L))
+  val req4 = new Message("channel7", Set(), new RequestEvent("40", System.currentTimeMillis+3, "329380921328", "component2", Some("329380921338"), Some("329380921338"), Failure, 10L))    
   
   test("Request event") {
    
@@ -137,9 +143,9 @@ class Test extends FunSuite with Logging {
     storage.storeMessage(req2)
     storage.storeMessage(req3)
     storage.storeMessage(req4)
-    println("RequestEventStorage: " + storage.getEvents("channel6", None, None, None, None, 10, 0))
-    println("RequestEventStorage succ: " + storage.getEvents("channel6", None, Some(TreeMap("state" -> Failure.toString)), None, None, 10, 0))
-    println("RequestEventStorage comp1 succ: " + storage.getEvents("channel6", None, Some(TreeMap("component" -> "component1", "state" -> Success.toString)), None, None, 10, 0))
+    println("RequestEventStorage: " + storage.getEvents("channel7", None, None, None, None, 10, 0))
+    println("RequestEventStorage succ: " + storage.getEvents("channel7", None, Some(TreeMap("state" -> Failure.toString)), None, None, 10, 0))
+    println("RequestEventStorage comp1 succ: " + storage.getEvents("channel7", None, Some(TreeMap("component" -> "component1", "state" -> Success.toString)), None, None, 10, 0))
     
   }
   /*

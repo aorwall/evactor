@@ -15,7 +15,6 @@ class CassandraStorageExtensionSpec extends WordSpec with MustMatchers with Shou
         evactor {
           storage {
               
-          
             cassandra {
 
               index {
@@ -27,6 +26,13 @@ class CassandraStorageExtensionSpec extends WordSpec with MustMatchers with Shou
       
                   test_channel2 {
                     idx1 = [foo, abc, def]
+                  }
+                }
+      
+                events {
+                  LogEvent {
+                    idx1 = a
+                    idx2 = [b, c]
                   }
                 }
               }
@@ -48,6 +54,7 @@ class CassandraStorageExtensionSpec extends WordSpec with MustMatchers with Shou
       val settings = new CassandraStorageSettings(conf)
       
       println(settings.ChannelIndex)
+      println(settings.EventTypeIndex)
       
     }
   }

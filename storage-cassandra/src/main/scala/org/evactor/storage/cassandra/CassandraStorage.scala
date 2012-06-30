@@ -121,9 +121,12 @@ class CassandraStorage(override val system: ActorSystem)
     storeEventCounters(mutator, event, new BasicKey(message.channel, None, None))
     mutator.incrementCounter("channels", CHANNEL_CF, message.channel, 1)
 
+    val eventType = event.getClass.getSimpleName
     
     // extract index values from event and add by index 
-    settings.ChannelIndex.getOrElse(message.channel, Nil).foreach { set => 
+    
+    val idxs = (settings.ChannelIndex.getOrElse(message.channel, Nil) ++ settings.EventTypeIndex.getOrElse(eventType, Nil)).toSet
+    idxs.foreach { set => 
       val idx = set.map { name => 
         try {
           val field = event.getClass.getDeclaredField(name)
@@ -149,7 +152,7 @@ class CassandraStorage(override val system: ActorSystem)
     }
 
     // add state as index if no indexes are set (deprecated)
-    if(!settings.ChannelIndex.contains(message.channel)){
+    if(!settings.ChannelIndex.contains(message.channel) && !settings.EventTypeIndex.contains(eventType)){
       event match {
         case e: HasState => {
           storeEventTimeline(mutator, event, new BasicKey(message.channel, None, Some(Map("state" -> e.state.toString))), timeuuid)
@@ -282,7 +285,8 @@ class CassandraStorage(override val system: ActorSystem)
       case None => null
     }
     
-   
+    // TODO: Need to traverse through all events if no index is set for the provided filter 
+    
     val key =  new BasicKey(channel, category, filter)
 
     debug("Reading events with key '" + key.keyValue + "' from " + fromTimestamp + " to " + fromTimestamp)
@@ -297,8 +301,6 @@ class CassandraStorage(override val system: ActorSystem)
             .map { _.getValue match {
                     case s:String => s
                  }}.toList
-                 
-     info("ids:" + eventIds)
                  
      val queryResult = HFactory.createMultigetSliceQuery(keyspace, StringSerializer.get, StringSerializer.get, ObjectSerializer.get)
         .setColumnFamily(EVENT_CF)
