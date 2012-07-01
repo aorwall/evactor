@@ -32,7 +32,7 @@ class LogProducer (
   private[this] val level = Logging.levelFor(loglevel).getOrElse(throw new ConfigurationException("Unknown log level: %s".format(loglevel)))
   
   override def receive = {
-    case Message(channel, category, event) => incr("process"); log.log(level, "[{}]:[{}]: {}", channel, category.mkString(","), event)
+    case Message(channel, event) => incr("process"); log.log(level, "[{}]: {}", channel, event)
     case msg => log.warning("Can't handle {}", msg)
   }
   

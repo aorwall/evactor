@@ -47,7 +47,7 @@ abstract class Processor (
   with ActorLogging {
 
   def receive = {
-    case Message(_, _, event) => incr("process"); process(event)
+    case Message(_, event) => incr("process"); process(event)
     case Timeout => timeout()
     case msg => log.warning("Can't handle {}", msg)
   }

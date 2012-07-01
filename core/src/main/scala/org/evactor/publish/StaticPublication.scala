@@ -24,7 +24,5 @@ case class StaticPublication (
     val channel: String,
     val categories: Set[String]) extends Publication {
     
-  def channel(event: Event) = channel
-  def categories(event: Event) = categories
-    
+  def channel(event: Event) = channel    
 }

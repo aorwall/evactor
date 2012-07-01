@@ -13,20 +13,18 @@ class PublicationSpec extends EvactorSpec {
   "A Publication" must {
     
     "be able to be created with static values" in {
-      val pubConfig = parseConfig("{ channel = \"chan\", categories = [\"foo\", \"bar\"] }")
+      val pubConfig = parseConfig("{ channel = \"chan\" }")
       val publication = Publication(pubConfig)
       
       publication.channel(mockEvent) must be ("chan")
-      publication.categories(mockEvent) must be (Set("bar", "foo"))
       
     }
     
     "be able to be created with expressions" in {
-      val pubConfig = parseConfig("{ channel = { static = \"foo\"}, categories = { static = \"bar\"} }")
+      val pubConfig = parseConfig("{ channel = { static = \"foo\"} }")
       val publication = Publication(pubConfig)
       
       publication.channel(mockEvent) must be ("foo")
-      publication.categories(mockEvent) must be (Set("bar")) 
     }
   }
 }

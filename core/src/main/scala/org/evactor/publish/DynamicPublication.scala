@@ -32,18 +32,4 @@ case class DynamicPublication (
       case _ => throw new PublishException("couldn't extract a channel from event %s with expression %s".format(event, channelExpr))
   }
   
-  def categories(event: Event): Set[String] = categoryExpr match {
-    case Some(expr) => expr.evaluate(event) match {
-      case Some(l: Traversable[Any]) => set(l)
-      case Some(v: Any) => Set(v.toString)
-      case _ => throw new PublishException("couldn't extract a category from event %s with expression %s".format(event, expr))
-    }
-    case None => Set()
-  }
-  
-  def set(l: Traversable[Any]): Set[String] = l match {
-    case head :: tail => if (head != null) { TreeSet(head.toString) ++ set(tail) } else { set(tail) } 
-    case Nil => TreeSet() 
-  }
-  
 }

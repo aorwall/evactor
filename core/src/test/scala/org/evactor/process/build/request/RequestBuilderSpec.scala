@@ -58,8 +58,8 @@ class RequestBuilderSpec(_system: ActorSystem)
       val probe = TestProbe()
       val buildActor = TestActorRef(new RequestBuilder(Nil, new TestPublication(probe.ref), 1000))
       
-      buildActor ! new Message("", Set(), new LogEvent("1", 0L, "329380921309", "component", "client", "server", Start, "hello"))
-      buildActor ! new Message("", Set(), new LogEvent("2", 1L, "329380921309", "component", "client", "server", Success, "hello"))
+      buildActor ! new Message("", new LogEvent("1", 0L, "329380921309", "component", "client", "server", Start, "hello"))
+      buildActor ! new Message("", new LogEvent("2", 1L, "329380921309", "component", "client", "server", Success, "hello"))
 
       probe.expectMsgAllClassOf(1 seconds, classOf[RequestEvent])
     }
@@ -68,8 +68,8 @@ class RequestBuilderSpec(_system: ActorSystem)
       val probe = TestProbe()
       val buildActor = TestActorRef(new RequestBuilder(Nil, new TestPublication(probe.ref), 1000))
       
-      buildActor ! new Message("", Set(), new LogEvent("1", 0L, "329380921309", "component", "client", "server", Start, "hello"))
-      buildActor ! new Message("", Set(), new LogEvent("2", 1L, "329380921310", "component", "client", "server", Success, "hello"))
+      buildActor ! new Message("", new LogEvent("1", 0L, "329380921309", "component", "client", "server", Start, "hello"))
+      buildActor ! new Message("", new LogEvent("2", 1L, "329380921310", "component", "client", "server", Success, "hello"))
 
       probe.expectNoMsg(1 seconds) 
     }
@@ -78,8 +78,8 @@ class RequestBuilderSpec(_system: ActorSystem)
       val probe = TestProbe()
       val buildActor = TestActorRef(new RequestBuilder(Nil, new TestPublication(probe.ref), 1000))
       
-      buildActor ! new Message("", Set(), new LogEvent("1", 0L, "329380921310", "component1", "client", "server", Start, "hello"))
-      buildActor ! new Message("", Set(), new LogEvent("2", 1L, "329380921310", "component2", "client", "server", Success, "hello"))
+      buildActor ! new Message("", new LogEvent("1", 0L, "329380921310", "component1", "client", "server", Start, "hello"))
+      buildActor ! new Message("", new LogEvent("2", 1L, "329380921310", "component2", "client", "server", Success, "hello"))
 
       probe.expectNoMsg(1 seconds)     
     }
@@ -89,10 +89,10 @@ class RequestBuilderSpec(_system: ActorSystem)
 
     "create a RequestEvent with state SUCCESS when a component is succesfully processed" in {
       val buildActor = TestActorRef(new BuildActor("329380921309", 1000, new StaticPublication("", Set())) 
-      		with RequestEventBuilder { 
-      			//def timeout = Some(1000L)
-      		})
-      	
+        with RequestEventBuilder { 
+          //def timeout = Some(1000L)
+        })
+     
       val eventBuilder = buildActor.underlyingActor
       		
       eventBuilder.addEvent(createLogEvent(0L, Start))

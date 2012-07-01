@@ -16,17 +16,15 @@ class SubscriptionSpec extends EvactorSpec{
       
       subs.size must be (1)
       subs.get(0).channel must be (Some("foo"))
-      subs.get(0).category must be (None)
       
     }
     
     "must be able to create a subscription to a channel and a category" in {
-      val subConfig = parseConfig("subscriptions = [ {channel = \"foo\", category = \"bar\" } ]").getConfigList("subscriptions").toList
+      val subConfig = parseConfig("subscriptions = [ {channel = \"foo\" } ]").getConfigList("subscriptions").toList
       val subs = Subscriptions(subConfig)
       
       subs.size must be (1)
       subs.get(0).channel must be (Some("foo"))
-      subs.get(0).category must be (Some("bar"))
     }
     
     "must be able to create a subscription to everything" in {
@@ -35,7 +33,6 @@ class SubscriptionSpec extends EvactorSpec{
       
       subs.size must be (1)
       subs.get(0).channel must be (None)
-      subs.get(0).category must be (None)
     }
     
     "must be able to create a list of subscriptions" in {

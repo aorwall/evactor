@@ -120,7 +120,7 @@ class EvactorIntegrationSuite(_system: ActorSystem)
     
     val context = TestActorRef[EvactorContext]("evactor")
     
-    ProcessorEventBusExtension(system).subscribe(probe.ref, new Subscription(Some("latency"), None))
+    ProcessorEventBusExtension(system).subscribe(probe.ref, new Subscription(Some("latency")))
     
     // Collect logs
     val currentTime = System.currentTimeMillis

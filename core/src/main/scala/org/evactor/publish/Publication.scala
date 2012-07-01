@@ -43,36 +43,12 @@ object Publication {
       throw new ConfigurationException("invalid type: %s".format(chanType))
     }
     
-    val _categories = if(!config.hasPath("categories")){  
-      (event: Event) => Set[String]()
-    } else {
-      val catType = config.getValue("categories").valueType
-      if(catType == ConfigValueType.LIST){
-        val set: Set[String] = config.getStringList("categories").toSet
-        (event: Event) => set
-      } else if(catType == ConfigValueType.OBJECT){
-        val expr = Expression(config.getConfig("categories"))
-        (event: Event) => expr.evaluate(event) match {
-          case Some(l: Traversable[Any]) => set(l)
-          case Some(v: Any) => Set[String](v.toString)
-          case _ => throw new PublishException("couldn't extract a category from event %s with expression %s".format(event, expr))
-        }
-      } else {
-        throw new ConfigurationException("invalid type: %s".format(catType))
-      }
-    }
-    
     new Publication {
       def channel(event: Event) = _channel(event)
-      def categories(event: Event) = _categories(event)
     }
     
   }
   
-  def set(l: Traversable[Any]): Set[String] = l match {
-    case head :: tail => if (head != null) { ListSet(head.toString) ++ set(tail) } else { set(tail) } 
-    case Nil => ListSet() 
-  }
 }
 
 /**
@@ -81,7 +57,6 @@ object Publication {
 abstract class Publication {
 
   def channel(event: Event): String
-  def categories(event: Event): Set[String] 
   
 }
 

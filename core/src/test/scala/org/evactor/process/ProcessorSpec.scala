@@ -79,7 +79,7 @@ class ProcessorSpec(_system: ActorSystem)
       
       val testEvent = createDataEvent("")
       
-      processor ! new Message("", Set(), testEvent)
+      processor ! new Message("", testEvent)
       
       testProbe.expectMsg(1 seconds, testEvent)
     }
@@ -89,7 +89,7 @@ class ProcessorSpec(_system: ActorSystem)
       val testProbe = TestProbe()
       val processor = TestActorRef(new TestProcessor(Nil, new TestPublication(testProbe.ref)))
       
-      processor ! new Message("", Set(), testEvent)
+      processor ! new Message("", testEvent)
       
       testProbe.expectMsg(1 seconds, testEvent)
     }

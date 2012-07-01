@@ -46,22 +46,13 @@ class ProcessorEventBusSpec (_system: ActorSystem)
     
   val bus = ProcessorEventBusExtension(_system)
   
-  val subscriptionCategory = new Subscription(Some("foo"), Some("bar"))
-  val subscription = new Subscription(Some("foo"), None)
+  val subscription = new Subscription(Some("foo"))
   
-  val event1 = new Message("foo", Set("bar"), new DataEvent("", 0L, ""))
-  val event2 = new Message("bar", Set(), new DataEvent("", 0L, ""))
+  val event1 = new Message("foo", new DataEvent("", 0L, ""))
+  val event2 = new Message("bar", new DataEvent("", 0L, ""))
   
   "A ProcessorEventBus" must {
     
-    "publish the given event to the subscriber subscribing to a channel and a category" in {
-      val subscriber = TestProbe()
-      bus.subscribe(subscriber.ref, subscriptionCategory)
-      bus.publish(event1)
-      subscriber.expectMsg(1 second, event1)
-      subscriber.expectNoMsg(1 second)
-      bus.unsubscribe(subscriber.ref, subscriptionCategory)
-    }
 
     "publish the given event to the subscriber subscribing to a channel" in {
       val subscriber = TestProbe()

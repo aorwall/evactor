@@ -44,7 +44,7 @@ class SimpleProcessSpec(_system: ActorSystem)
   val startCompId = "startComponent"
   val endCompId = "endComponent"
 
-  val subscriptions = List(new Subscription(Some(startCompId), None), new Subscription(Some(startCompId), None))  
+  val subscriptions = List(new Subscription(Some(startCompId)), new Subscription(Some(startCompId)))  
     
   val actor = TestActorRef(new SimpleProcessBuilder(subscriptions, new StaticPublication(processId, Set()), List(startCompId, endCompId), 120000L))
   val processor = actor.underlyingActor

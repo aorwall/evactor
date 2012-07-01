@@ -95,7 +95,7 @@ class CollectorSpec(_system: ActorSystem)
       val collectorConfig = ConfigFactory.parseString("publication = { channel = \"foo\"}")
           
       val probe = TestProbe()
-      ProcessorEventBusExtension(system).subscribe(probe.ref, new Subscription(Some("foo"), None))
+      ProcessorEventBusExtension(system).subscribe(probe.ref, new Subscription(Some("foo")))
     
       val collector = TestActorRef(Collector(collectorConfig))    
       
@@ -106,7 +106,7 @@ class CollectorSpec(_system: ActorSystem)
       
       val event = new Event("id", 0L)
       collector ! event
-      probe.expectMsg(new Message("foo", Set(), event))
+      probe.expectMsg(new Message("foo", event))
       
     }
     
