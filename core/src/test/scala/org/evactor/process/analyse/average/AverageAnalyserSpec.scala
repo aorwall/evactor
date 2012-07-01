@@ -40,6 +40,7 @@ import akka.actor.Actor
 import org.evactor.model.events.ValueEvent
 import akka.actor.ActorRef
 import com.typesafe.config.ConfigFactory
+import org.evactor.process.NoCategorization
 
 @RunWith(classOf[JUnitRunner])
 class AverageAnalyserSpec(_system: ActorSystem) 
@@ -63,7 +64,7 @@ class AverageAnalyserSpec(_system: ActorSystem)
       (pending)
       val probe = TestProbe()
 
-      val avg = TestActorRef(new AverageAnalyser(Nil, new TestPublication(valueDest(probe.ref)), false, new MvelExpression("latency"), None))
+      val avg = TestActorRef(new AverageAnalyser(Nil, new TestPublication(valueDest(probe.ref)), new NoCategorization(), new MvelExpression("latency"), None))
 
       avg ! new Message("", Set(), createRequestEvent(0L, None, None, "corr", "comp", Success, 4))
       probe.expectMsg(200 milliseconds, 4.0)
@@ -78,7 +79,7 @@ class AverageAnalyserSpec(_system: ActorSystem)
       (pending)
       val probe = TestProbe()
       val winConf = ConfigFactory.parseString("length = 2")
-      val avg = TestActorRef(new AverageAnalyser(Nil, new TestPublication(valueDest(probe.ref)), false, new MvelExpression("latency"), Some(winConf)))
+      val avg = TestActorRef(new AverageAnalyser(Nil, new TestPublication(valueDest(probe.ref)), new NoCategorization(), new MvelExpression("latency"), Some(winConf)))
       
       avg ! new Message("", Set(), createRequestEvent(1L, None, None, "corr", "comp", Success, 10))
       probe.expectMsg(200 milliseconds, 10.0)

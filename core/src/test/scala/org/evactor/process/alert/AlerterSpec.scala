@@ -16,23 +16,24 @@
 package org.evactor.process.alert
 
 import org.evactor.expression.MvelExpression
+import org.evactor.model.events.AlertEvent
 import org.evactor.model.events.ValueEvent
-import org.evactor.process.analyse.average.AverageAnalyser
+import org.evactor.model.Message
+import org.evactor.process.NoCategorization
 import org.evactor.publish.TestPublication
 import org.evactor.EvactorSpec
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.BeforeAndAfterAll
+import akka.actor.Actor
+import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.testkit.TestActorRef
 import akka.testkit.TestKit
 import akka.testkit.TestProbe
 import akka.util.duration._
-import akka.actor.ActorRef
-import org.evactor.model.events.AlertEvent
-import akka.actor.Actor
 import org.evactor.subscribe.Subscriptions
-import org.evactor.model.Message
+import org.evactor.process.OneAndOne
 
 @RunWith(classOf[JUnitRunner])
 class AlerterSpec (_system: ActorSystem) 
@@ -51,18 +52,18 @@ class AlerterSpec (_system: ActorSystem)
     "alert when an expression isn't met" in {
       (pending)
       val probe = TestProbe()
-      val alerter = TestActorRef(new Alerter(Subscriptions("channel"), new TestPublication(valueDest(probe.ref)), false, new MvelExpression("value > 0")), name="test1")
-      alerter ! new Message("channel", Set(), new ValueEvent("id", System.currentTimeMillis, 1))
+      val alerter = TestActorRef(new Alerter(Subscriptions("channel"), new TestPublication(valueDest(probe.ref)), new NoCategorization(), new MvelExpression("value > 0")), name="test1")
+      alerter ! new Message("channel", Set(), new ValueEvent("id", System.currentTimeMillis, Set(), 1))
       probe.expectMsg(300 milliseconds, true)
     }
     
     "handle back to normal" in {
       (pending)
       val probe = TestProbe()
-      val alerter = TestActorRef(new Alerter(Subscriptions("channel"), new TestPublication(valueDest(probe.ref)), false, new MvelExpression("value > 0")), name="test2")
-      alerter ! new Message("channel", Set(), new ValueEvent("id", System.currentTimeMillis, 1))
+      val alerter = TestActorRef(new Alerter(Subscriptions("channel"), new TestPublication(valueDest(probe.ref)), new NoCategorization(), new MvelExpression("value > 0")), name="test2")
+      alerter ! new Message("channel", Set(), new ValueEvent("id", System.currentTimeMillis, Set(), 1))
       probe.expectMsg(300 milliseconds, true)
-      alerter ! new Message("channel", Set(), new ValueEvent("id", System.currentTimeMillis, 0))
+      alerter ! new Message("channel", Set(), new ValueEvent("id", System.currentTimeMillis, Set(), 0))
       probe.expectMsg(300 milliseconds, false)
     }
     
@@ -70,12 +71,12 @@ class AlerterSpec (_system: ActorSystem)
     "alert when an expression isn't met on events with different categories (categorize = true)" in {
       (pending)
       val probe = TestProbe()
-      val alerter = TestActorRef(new Alerter(Subscriptions("channel"), new TestPublication(valueDest(probe.ref)), true, new MvelExpression("value > 0")), name="test1")
-      alerter ! new Message("channel", Set("1"), new ValueEvent("id", System.currentTimeMillis, 1))
+      val alerter = TestActorRef(new Alerter(Subscriptions("channel"), new TestPublication(valueDest(probe.ref)), new OneAndOne(new MvelExpression("categories")), new MvelExpression("value > 0")), name="test1")
+      alerter ! new Message("channel", Set("1"), new ValueEvent("id", System.currentTimeMillis, Set("1"), 1))
       probe.expectMsg(300 milliseconds, true)
-      alerter ! new Message("channel", Set("2"), new ValueEvent("id", System.currentTimeMillis, 1))
+      alerter ! new Message("channel", Set("2"), new ValueEvent("id", System.currentTimeMillis, Set("2"), 1))
       probe.expectMsg(300 milliseconds, true)
-      alerter ! new Message("channel", Set("1"), new ValueEvent("id", System.currentTimeMillis, 0))
+      alerter ! new Message("channel", Set("1"), new ValueEvent("id", System.currentTimeMillis, Set("1"), 0))
       probe.expectMsg(300 milliseconds, false)
     }
     

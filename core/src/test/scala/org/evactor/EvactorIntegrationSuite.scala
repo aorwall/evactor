@@ -80,7 +80,7 @@ object EvactorIntegrationSuite {
           type = averageAnalyser
           subscriptions = [ {channel = "process"} ]
           publication = { channel = "latency" } 
-          categorize = false
+          categorization = { NoCategorization {} }
           expression = { mvel = "latency" }
           window = { length = 2 }
         },
@@ -89,7 +89,7 @@ object EvactorIntegrationSuite {
           type = alerter
           subscriptions = [ {channel = "latency"} ]
           publication = { channel = "latency:alert" }
-          categorize = false
+          categorization = { NoCategorization {} }
           expression = { mvel = "value >= 2000" }
         }
       
@@ -124,12 +124,10 @@ class EvactorIntegrationSuite(_system: ActorSystem)
     
     // Collect logs
     val currentTime = System.currentTimeMillis
-
-    Thread.sleep(500)
-    
+    Thread.sleep(1000)
     val startCollector = system.actorFor("%s/collect/startCollector".format(context.path))
     val endCollector = system.actorFor("%s/collect/endCollector".format(context.path)) 
-    
+        
     if(startCollector.isTerminated || endCollector.isTerminated) fail ("couldn't find the collectors" )
     
     startCollector ! new LogEvent("329380921309", currentTime, "329380921309", "startComponent", "client", "server", model.Start, "hello")

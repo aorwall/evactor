@@ -23,6 +23,7 @@ import org.evactor.model.attributes.HasMessage
 case class ValueEvent (    
     override val id: String, 
     override val timestamp: Long, 
+    val categories: Set[String],
     val value: Any) 
   extends Event(id, timestamp) {
 

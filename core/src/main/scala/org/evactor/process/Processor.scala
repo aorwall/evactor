@@ -81,14 +81,14 @@ object Processor {
     try {
       if(hasPath("type")){
         getString("type") match{
-          case "countAnalyser" => new CountAnalyser(sub, pub, getBoolean("categorize"), getMilliseconds("timeframe"))
-          case "regressionAnalyser" => new RegressionAnalyser(sub, pub, getBoolean("categorize"), getLong("minSize"), getMilliseconds("timeframe"))
+          case "countAnalyser" => new CountAnalyser(sub, pub, Categorization(getConfig("categorization")), getMilliseconds("timeframe"))
+          case "regressionAnalyser" => new RegressionAnalyser(sub, pub, Categorization(getConfig("categorization")), getLong("minSize"), getMilliseconds("timeframe"))
           case "filter" => new Filter(sub, pub, Expression(getConfig("expression")), getBoolean("accept"))
           case "forwarder" => new Forwarder(sub, pub)
           case "requestBuilder" => new RequestBuilder(sub, pub, getMilliseconds("timeout"))
           case "simpleProcessBuilder" => new SimpleProcessBuilder(sub, pub, getStringList("components").toList, getMilliseconds("timeout"))
-          case "averageAnalyser" => new AverageAnalyser(sub, pub, getBoolean("categorize"), Expression(getConfig("expression")), if(hasPath("window")){ Some(getConfig("window"))} else {None}) 
-          case "alerter" => new Alerter(sub, pub, getBoolean("categorize"), Expression(getConfig("expression")))
+          case "averageAnalyser" => new AverageAnalyser(sub, pub, Categorization(getConfig("categorization")), Expression(getConfig("expression")), if(hasPath("window")){ Some(getConfig("window"))} else {None}) 
+          case "alerter" => new Alerter(sub, pub, Categorization(getConfig("categorization")), Expression(getConfig("expression")))
           case "logProducer" => new LogProducer(sub, getString("loglevel"))
           case o => throw new ConfigurationException("processor type not recognized: %s".format(o))
         }

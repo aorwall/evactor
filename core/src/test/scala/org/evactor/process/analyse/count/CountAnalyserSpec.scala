@@ -36,6 +36,8 @@ import org.evactor.model.events.ValueEvent
 import akka.actor.ActorRef
 import akka.actor.Actor
 import org.evactor.subscribe.Subscriptions
+import org.evactor.process.NoCategorization
+import org.evactor.process.OneAndOne
 
 @RunWith(classOf[JUnitRunner])
 class CountAnalyserSpec(_system: ActorSystem) 
@@ -54,7 +56,7 @@ class CountAnalyserSpec(_system: ActorSystem)
     "count all events that occured within a specified time frame" in {
       (pending)
       val testProbe = TestProbe()
-      val actor = TestActorRef(new CountAnalyser(Subscriptions("channel"), new TestPublication(valueDest(testProbe.ref)), false, 500 ), name="test1")
+      val actor = TestActorRef(new CountAnalyser(Subscriptions("channel"), new TestPublication(valueDest(testProbe.ref)), new NoCategorization(), 500 ), name="test1")
       actor ! new Message("channel", Set(), new Event("id1", System.currentTimeMillis ))
       testProbe.expectMsg(300 milliseconds, 1L)
       actor ! new Message("channel", Set(), new Event("id2", System.currentTimeMillis ))
@@ -65,12 +67,12 @@ class CountAnalyserSpec(_system: ActorSystem)
     "count all events with different categories that occured within a specified time frame" in {
       (pending)
       val testProbe = TestProbe()
-      val actor = TestActorRef(new CountAnalyser(Nil, new TestPublication(valueDest(testProbe.ref)), true, 500 ), name="test2")
-      actor ! new Message("channel", Set("a"), new Event("id1", System.currentTimeMillis))
+      val actor = TestActorRef(new CountAnalyser(Nil, new TestPublication(valueDest(testProbe.ref)), new OneAndOne(new MvelExpression("id")), 500 ), name="test2")
+      actor ! new Message("channel", Set(), new Event("id1", System.currentTimeMillis))
       testProbe.expectMsg(100 milliseconds, 1L)
-      actor ! new Message("channel", Set("b"), new Event("id2", System.currentTimeMillis+1))
+      actor ! new Message("channel", Set(), new Event("id2", System.currentTimeMillis+1))
       testProbe.expectMsg(100 milliseconds, 1L)
-      actor ! new Message("channel", Set("a"), new Event("id3", System.currentTimeMillis+2))
+      actor ! new Message("channel", Set(), new Event("id1", System.currentTimeMillis+2))
       testProbe.expectMsg(100 milliseconds, 2L)
       actor.stop()
     }
@@ -78,7 +80,7 @@ class CountAnalyserSpec(_system: ActorSystem)
     "count different events with the same timestamp" in {
       (pending)
       val testProbe = TestProbe()
-      val actor = TestActorRef(new CountAnalyser(Subscriptions("channel"), new TestPublication(valueDest(testProbe.ref)), false, 500 ), name="test3")
+      val actor = TestActorRef(new CountAnalyser(Subscriptions("channel"), new TestPublication(valueDest(testProbe.ref)), new NoCategorization(), 500 ), name="test3")
       val currentTime = System.currentTimeMillis
       actor ! new Message("channel", Set(), new Event("id1", currentTime))
       testProbe.expectMsg(100 milliseconds, 1L)
@@ -90,7 +92,7 @@ class CountAnalyserSpec(_system: ActorSystem)
     "stop counter on timeout " in {
       (pending)
       val testProbe = TestProbe()
-      val actor = TestActorRef(new CountAnalyser(Subscriptions("channel"), new TestPublication(valueDest(testProbe.ref)), false, 100 ), name="test4")
+      val actor = TestActorRef(new CountAnalyser(Subscriptions("channel"), new TestPublication(valueDest(testProbe.ref)), new NoCategorization(), 100 ), name="test4")
       actor ! new Message("channel", Set(), new Event("id1", System.currentTimeMillis))
       testProbe.expectMsg(100 milliseconds, 1L)
       Thread.sleep(150)
@@ -101,7 +103,7 @@ class CountAnalyserSpec(_system: ActorSystem)
     "timeout if categorize is set to false and no events arrive within the specified timeframe" in {
       (pending)
       val testProbe = TestProbe()
-      val actor = TestActorRef(new CountAnalyser(Subscriptions("channel"), new TestPublication(valueDest(testProbe.ref)), false, 10 ), name="test5")
+      val actor = TestActorRef(new CountAnalyser(Subscriptions("channel"), new TestPublication(valueDest(testProbe.ref)), new NoCategorization(), 10 ), name="test5")
       testProbe.expectMsg(100 milliseconds, 0L)
       actor.stop()
     }

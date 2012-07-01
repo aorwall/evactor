@@ -14,20 +14,17 @@
  * limitations under the License.
  */
 package org.evactor.process.alert
+
 import akka.actor.ActorLogging
 import org.evactor.subscribe.Subscription
-import org.evactor.process.Processor
+import org.evactor.process._
 import org.evactor.publish.Publication
 import org.evactor.publish.Publisher
 import org.evactor.expression.Expression
-import org.evactor.process.CategoryProcessor
-import org.evactor.process.SubProcessor
 import org.evactor.model.events.AlertEvent
 import org.evactor.model.events.Event
 import java.util.UUID
 import org.evactor.EvactorException
-import org.evactor.process.ProcessException
-import org.evactor.process.CategoryPublication
 
 /**
  * Alerts when the specified expression isn't followed (ie returns false).
@@ -38,22 +35,22 @@ import org.evactor.process.CategoryPublication
 class Alerter(
     override val subscriptions: List[Subscription], 
     val publication: Publication,
-    override val categorize: Boolean,
+    override val categorization: Categorization, 
     val expression: Expression) 
-  extends CategoryProcessor(subscriptions, categorize) 
+  extends CategorizedProcessor(subscriptions, categorization) 
   with Publisher
   with ActorLogging {
   
-  protected def createSubProcessor(id: String): SubProcessor = {
-    new SubAlerter(new CategoryPublication(publication, id), id, expression)
+  protected def createCategoryProcessor(categories: Set[String]): CategoryProcessor = {
+    new SubAlerter(publication, categories, expression)
   }
 }
 
 class SubAlerter(
     val publication: Publication,
-    override val id: String,
+    override val categories: Set[String],
     val expression: Expression) 
-  extends SubProcessor(id) 
+  extends CategoryProcessor(categories) 
   with Publisher
   with ActorLogging {
   

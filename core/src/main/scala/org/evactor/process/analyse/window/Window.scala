@@ -18,8 +18,6 @@ package org.evactor.process.analyse.window
 import akka.actor.Actor
 import scala.collection.immutable.SortedMap
 import com.typesafe.config.Config
-import org.evactor.process.Processor
-import org.evactor.process.SubProcessor
 
 /**
  * Specifies an event window to a sub processor

@@ -17,9 +17,7 @@ package org.evactor.process.analyse.count
 
 import org.evactor.publish.Publication
 import org.evactor.subscribe.Subscription
-import org.evactor.process.Processor
-import org.evactor.process.CategoryProcessor
-import org.evactor.process.SubProcessor
+import org.evactor.process._
 import org.evactor.model.events.Event
 import org.evactor.process.analyse.window.TimeWindow
 import akka.actor.ActorLogging
@@ -31,7 +29,6 @@ import java.util.UUID
 import org.evactor.model.Timeout
 import org.evactor.model.events.ValueEvent
 import scala.None
-import org.evactor.process.CategoryPublication
 
 /**
  * Counting events in channels and creates
@@ -41,19 +38,19 @@ import org.evactor.process.CategoryPublication
 class CountAnalyser (
     override val subscriptions: List[Subscription],
     val publication: Publication,
-    override val categorize: Boolean, 
-    val timeframe: Long) extends CategoryProcessor(subscriptions, categorize) {
+    override val categorization: Categorization, 
+    val timeframe: Long) extends CategorizedProcessor(subscriptions, categorization) {
 
-  protected def createSubProcessor(id: String): SubProcessor = {
-    new CountSubAnalyser(new CategoryPublication(publication, id), id, timeframe)
+  protected def createCategoryProcessor(categories: Set[String]): CategoryProcessor = {
+    new CountSubAnalyser(publication, categories, timeframe)
   }
 }
 
 class CountSubAnalyser (
     val publication: Publication,
-    override val id: String,
+    override val categories: Set[String],
     val timeframe: Long) 
-  extends SubProcessor(id) 
+  extends CategoryProcessor(categories)
   with TimeWindow 
   with Publisher
   with ActorLogging {
@@ -64,12 +61,12 @@ class CountSubAnalyser (
   var sum = 0L
   
   override def preStart = {
-    log.debug("Starting sub counter with id {} and timeframe {} ms", id, timeframe)
+    log.debug("Starting sub counter with categories {} and timeframe {} ms", categories, timeframe)
     super.preStart()
   }
   
   override def postStop = {
-    log.debug("Stopping sub counter with id {} and timeframe {} ms", id, timeframe)
+    log.debug("Stopping sub counter with categories {} and timeframe {} ms", categories, timeframe)
     super.postStop()
   }
   
@@ -98,7 +95,7 @@ class CountSubAnalyser (
     } else {
       currentTime
     }
-    publish(new ValueEvent(uuid, time, sum))
+    publish(new ValueEvent(uuid, time, categories, sum))
    
     if(allEvents.size == 0){
       context.stop(context.self)
