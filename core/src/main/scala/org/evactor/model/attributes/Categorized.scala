@@ -13,18 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.evactor.model.events
-
-import org.evactor.model.attributes.Categorized
+package org.evactor.model.attributes
 
 /**
- * An event with a value
+ * Represents categorized events. 
+ * 
+ * TODO: Categories should be represented in a hierarchy 
+ * 
  */
-case class ValueEvent (    
-    override val id: String, 
-    override val timestamp: Long, 
-    val categories: Set[String],
-    val value: Any) 
-  extends Event(id, timestamp) with Categorized {
-
+trait Categorized {
+  val categories: Set[String]
 }

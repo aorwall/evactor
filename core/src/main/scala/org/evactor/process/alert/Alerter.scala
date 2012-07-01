@@ -78,12 +78,12 @@ class SubAlerter(
   
   protected def alert(event: Event) {
     log.debug("Alert: {}", event)
-    publish(new AlertEvent(uuid, currentTime, true, event))
+    publish(new AlertEvent(uuid, currentTime, categories, true, event))
   }
 
   protected def backToNormal(event: Event) {
     log.debug("Back to normal: {}", event)
-    publish(new AlertEvent(uuid, currentTime, false, event))
+    publish(new AlertEvent(uuid, currentTime, categories, false, event))
   }
   
   protected def evaluate(event: Event): Boolean = {
