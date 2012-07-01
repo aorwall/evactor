@@ -6,17 +6,15 @@ trait CassandraKey {
 
 case class BasicKey  (
     val channel: String,
-    val category: Option[String],
     val index: Option[Map[String, String]])
   extends CassandraKey{
 
-  def keyValue = channel + category.getOrElse("") + index.getOrElse("")
+  def keyValue = channel + index.getOrElse("")
   
 }
 
 case class IndexKey  (
     val channel: String,
-    val category: Option[String],
     val fields: Iterable[String])
   extends CassandraKey{
 
