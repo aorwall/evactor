@@ -54,7 +54,6 @@ class CountAnalyserSpec(_system: ActorSystem)
   "A CountAnalyser" must {
 
     "count all events that occured within a specified time frame" in {
-      (pending)
       val testProbe = TestProbe()
       val actor = TestActorRef(new CountAnalyser(Subscriptions("channel"), new TestPublication(valueDest(testProbe.ref)), new NoCategorization(), 500 ), name="test1")
       actor ! new Message("channel", new Event("id1", System.currentTimeMillis ))
@@ -65,20 +64,18 @@ class CountAnalyserSpec(_system: ActorSystem)
     }
     
     "count all events with different categories that occured within a specified time frame" in {
-      (pending)
       val testProbe = TestProbe()
-      val actor = TestActorRef(new CountAnalyser(Nil, new TestPublication(valueDest(testProbe.ref)), new OneAndOne(new MvelExpression("id")), 500 ), name="test2")
-      actor ! new Message("channel", new Event("id1", System.currentTimeMillis))
+      val actor = TestActorRef(new CountAnalyser(Nil, new TestPublication(valueDest(testProbe.ref)), new OneAndOne(new MvelExpression("categories")), 500 ), name="test2")
+      actor ! new Message("channel", new ValueEvent("id1", System.currentTimeMillis, Set("1"), 0.0))
       testProbe.expectMsg(100 milliseconds, 1L)
-      actor ! new Message("channel", new Event("id2", System.currentTimeMillis+1))
+      actor ! new Message("channel", new ValueEvent("id2", System.currentTimeMillis+1, Set("2"), 0.0))
       testProbe.expectMsg(100 milliseconds, 1L)
-      actor ! new Message("channel", new Event("id1", System.currentTimeMillis+2))
+      actor ! new Message("channel", new ValueEvent("id3", System.currentTimeMillis+2, Set("1"), 0.0))
       testProbe.expectMsg(100 milliseconds, 2L)
       actor.stop()
     }
     
     "count different events with the same timestamp" in {
-      (pending)
       val testProbe = TestProbe()
       val actor = TestActorRef(new CountAnalyser(Subscriptions("channel"), new TestPublication(valueDest(testProbe.ref)), new NoCategorization(), 500 ), name="test3")
       val currentTime = System.currentTimeMillis
@@ -90,7 +87,6 @@ class CountAnalyserSpec(_system: ActorSystem)
     }
     
     "stop counter on timeout " in {
-      (pending)
       val testProbe = TestProbe()
       val actor = TestActorRef(new CountAnalyser(Subscriptions("channel"), new TestPublication(valueDest(testProbe.ref)), new NoCategorization(), 100 ), name="test4")
       actor ! new Message("channel", new Event("id1", System.currentTimeMillis))
@@ -101,7 +97,6 @@ class CountAnalyserSpec(_system: ActorSystem)
     }
     
     "timeout if categorize is set to false and no events arrive within the specified timeframe" in {
-      (pending)
       val testProbe = TestProbe()
       val actor = TestActorRef(new CountAnalyser(Subscriptions("channel"), new TestPublication(valueDest(testProbe.ref)), new NoCategorization(), 10 ), name="test5")
       testProbe.expectMsg(100 milliseconds, 0L)

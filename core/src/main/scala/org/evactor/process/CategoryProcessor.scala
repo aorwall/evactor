@@ -15,22 +15,24 @@
  */
 package org.evactor.process
 
+import java.util.UUID
+
+import scala.collection.immutable.ListSet
+import scala.collection.mutable.HashMap
+
+import org.evactor.expression.Expression
 import org.evactor.model.events.Event
 import org.evactor.model.Message
 import org.evactor.model.Timeout
 import org.evactor.monitor.Monitored
 import org.evactor.subscribe.Subscriber
 import org.evactor.subscribe.Subscription
-import akka.actor._
-import org.evactor.publish.Publication
 import org.evactor.ConfigurationException
-import scala.collection.immutable.HashSet
-import scala.collection.mutable.HashMap
-import java.util.UUID
-import org.evactor.expression.Expression
-import scala.collection.immutable.ListSet
+import org.evactor.ConfigurationException
+
 import com.typesafe.config.Config
-import org.evactor.ConfigurationException
+
+import akka.actor._
 
 /**
  * Creates sub processors for each category. To use this processor type, an implementation of
@@ -60,6 +62,7 @@ abstract class CategorizedProcessor (
   
   def getCategories(expr: Expression)(e: Event): Set[String] = {
     expr.evaluate(e) match {
+      case Some(s: Set[String]) => s
       case Some(l: Traversable[Any]) => set(l)
       case Some(v: Any) => Set[String](v.toString)
     }
@@ -89,6 +92,7 @@ abstract class CategorizedProcessor (
       case NoCategorization() => {
         getCategoryProcessor(Set())  
       }
+      case _ => 
     }
     addGauge("children", children.size)
     super.preStart() 
@@ -121,7 +125,7 @@ abstract class CategorizedProcessor (
   
   private[this] def set(l: Traversable[Any]): Set[String] = l match {
     case head :: tail => if (head != null) { ListSet(head.toString) ++ set(tail) } else { set(tail) } 
-    case Nil => ListSet() 
+    case Nil => Set() 
   }
 }
 
