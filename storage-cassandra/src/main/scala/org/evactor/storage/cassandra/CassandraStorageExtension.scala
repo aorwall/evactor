@@ -39,14 +39,18 @@ class CassandraStorageSettings(val config: Config) extends Extension {
   val ChannelIndex = getIndex("evactor.storage.cassandra.index.channels")
   val EventTypeIndex = getIndex("evactor.storage.cassandra.index.events")
   
-  private[this] def getIndex(path: String): Map[String, List[Set[String]]] = getConfig(path).root.keySet.map { k =>
-      k -> getConfig("%s.%s".format(path, k)).root.values.map { vs =>
-        vs.unwrapped match {
-          case s: String => Set(s)
-          case l: java.util.ArrayList[String] => l.sortWith(_ < _).toSet 
-        }
-      }.toList
-    }.toMap
-  
+  private[this] def getIndex(path: String): Map[String, List[Set[String]]] =
+    if(hasPath(path)){
+      getConfig(path).root.keySet.map { k =>
+        k -> getConfig("%s.%s".format(path, k)).root.values.map { vs =>
+          vs.unwrapped match {
+            case s: String => Set(s)
+            case l: java.util.ArrayList[String] => l.sortWith(_ < _).toSet 
+          }
+        }.toList
+      }.toMap
+    } else {
+      Map()
+    }
   
 }
