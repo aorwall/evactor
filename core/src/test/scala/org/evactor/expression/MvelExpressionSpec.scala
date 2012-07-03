@@ -42,7 +42,9 @@ class MvelExpressionSpec extends EvactorSpec {
     }
     
     "evaluate case class and return list variable" in {
-      (pending)
+      val evaluator = new MvelExpression("[message, message]")
+      val event = new DataEvent("foo", 0L, "msg")
+      evaluator.evaluate(event) must be (Some(List("msg", "msg")))
     }
     
     "evaluate case class and return string boolean (fail)" in {
@@ -71,6 +73,9 @@ class MvelExpressionSpec extends EvactorSpec {
       val event1 = createDataEvent("{ \"first\": \"2012-01-27T15:57:00+01:00\", \"second\": \"2012-01-27T16:01:00+01:00\" }")
       evaluator.evaluate(event1) must be (Some(4 * 60 * 1000))
     }
+    
+     
+    
   }
 
 }
