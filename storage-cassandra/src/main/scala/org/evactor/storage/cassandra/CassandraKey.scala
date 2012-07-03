@@ -9,8 +9,10 @@ case class BasicKey  (
     val index: Option[Map[String, String]])
   extends CassandraKey{
 
-  def keyValue = channel + index.getOrElse("")
-  
+  def keyValue = channel + { index match {
+    case Some(m) => "?" + m.map(p => p._1+"="+p._2).mkString("&")
+    case None => ""
+  }}
 }
 
 case class IndexKey  (
@@ -18,16 +20,15 @@ case class IndexKey  (
     val fields: Iterable[String])
   extends CassandraKey{
 
-  def keyValue = channel + fields
+  def keyValue = channel + { if(fields.size > 0) "?" + fields.mkString("&") }
   
 }
-
 
 case class StatisticsKey  (
     val key: CassandraKey,
     val interval: String)
   extends CassandraKey{
 
-  def keyValue = key.keyValue + interval
+  def keyValue = key.keyValue + "&interval=" + interval
   
 }

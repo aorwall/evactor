@@ -130,10 +130,12 @@ class CassandraStorage(override val system: ActorSystem)
           val field = event.getClass.getDeclaredField(name)
           if(field != null){
             field.setAccessible(true)
-            field.get(event) match {
-              case a: Any => name -> a.toString
-              case _ => name -> ""
-            }
+            name -> (field.get(event) match {
+              case Some(a: Any) => a.toString
+              case a: Iterable[Any] => a.mkString(",")
+              case a: Any => a.toString
+              case _ => ""
+            })
           } else {
             name -> ""
           }
