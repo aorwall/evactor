@@ -61,11 +61,15 @@ abstract class CategorizedProcessor (
   }
   
   def getCategories(expr: Expression)(e: Event): Set[String] = {
-    expr.evaluate(e) match {
+    val cs = expr.evaluate(e) match {
       case Some(s: Set[String]) => s
       case Some(l: Traversable[Any]) => set(l)
       case Some(v: Any) => Set[String](v.toString)
     }
+    if(cs.size == 0){
+      log.warning("No categories extracted from {}", e)
+    }
+    cs
   }
   
   final override def receive = {
@@ -124,7 +128,7 @@ abstract class CategorizedProcessor (
   def process(event: Event) {}
   
   private[this] def set(l: Traversable[Any]): Set[String] = l match {
-    case head :: tail => if (head != null) { ListSet(head.toString) ++ set(tail) } else { set(tail) } 
+    case head :: tail => if (head != null) { Set(head.toString) ++ set(tail) } else { set(tail) } 
     case Nil => Set() 
   }
 }
