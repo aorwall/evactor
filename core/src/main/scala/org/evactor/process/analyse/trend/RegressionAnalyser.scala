@@ -66,6 +66,7 @@ class RegressionSubAnalyser (
   val start = System.currentTimeMillis
   protected[trend] val eventCount = new Array[Long](10)
   var iteration = start
+  var currentCoeff = 0.0
   
   override def preStart = {
     log.debug("Starting sub counter with categories {} and timeframe {} ms", categories, timeframe)
@@ -100,8 +101,10 @@ class RegressionSubAnalyser (
 //        addLabel("coefficient: %s (%s), id: %s, eventCount: %s".format(coeff, coefficient, id, listToCheck))
         
 //          log.info("coefficient: {}, id: {}, eventCount: {}", coefficient, id, listToCheck)
-      
-        publish(new ValueEvent(uuid, currentTime, categories, coeff))
+        if(currentCoeff != coeff){
+          publish(new ValueEvent(uuid, currentTime, categories, coeff))
+          currentCoeff = coeff;
+        }
 
       }
     }
