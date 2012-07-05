@@ -86,6 +86,17 @@ class CountAnalyserSpec(_system: ActorSystem)
       actor.stop()
     }
     
+    "only publish an event when count has changed" in {
+      val testProbe = TestProbe()
+      val actor = TestActorRef(new CountAnalyser(Subscriptions("channel"), new TestPublication(valueDest(testProbe.ref)), new NoCategorization(), 200 ), name="test1")
+      actor ! new Message("channel", new Event("id1", System.currentTimeMillis ))
+      testProbe.expectMsg(100 milliseconds, 1L)
+      Thread.sleep(200)
+      actor ! new Message("channel", new Event("id2", System.currentTimeMillis ))
+      testProbe.expectNoMsg(200 milliseconds)
+      actor.stop()
+    }
+    
     "stop counter on timeout " in {
       val testProbe = TestProbe()
       val actor = TestActorRef(new CountAnalyser(Subscriptions("channel"), new TestPublication(valueDest(testProbe.ref)), new NoCategorization(), 100 ), name="test4")
@@ -99,7 +110,7 @@ class CountAnalyserSpec(_system: ActorSystem)
     "timeout if categorize is set to false and no events arrive within the specified timeframe" in {
       val testProbe = TestProbe()
       val actor = TestActorRef(new CountAnalyser(Subscriptions("channel"), new TestPublication(valueDest(testProbe.ref)), new NoCategorization(), 10 ), name="test5")
-      testProbe.expectMsg(100 milliseconds, 0L)
+      testProbe.expectMsg(200 milliseconds, 0L)
       actor.stop()
     }
   }

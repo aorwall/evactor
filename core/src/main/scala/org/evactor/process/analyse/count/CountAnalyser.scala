@@ -71,39 +71,53 @@ class CountSubAnalyser (
   }
   
   override protected def process(event: Event) {
-    val count = allEvents.getOrElse(event.timestamp, 0L)+1
-    allEvents += (event.timestamp -> count)
-    sum += 1
-    analyse()
+    analyse(Some(event))
   }
   
-  protected def analyse() {
+  protected def analyse(event: Option[Event]) {
+    
+    // Count up one if an event is provided
+    var diff = event match {
+      case Some(e) => {
+        val count = allEvents.getOrElse(e.timestamp, 0L)+1
+        allEvents += (e.timestamp -> count)
+        1L
+      }
+      case None => 0L
+    }
+    
     // Remove old
-    val inactiveEvents = getInactive(allEvents) 
-    allEvents = allEvents.drop(inactiveEvents.size)
-
-    log.debug("inactive events: {}", inactiveEvents)
-    
-    sum += inactiveEvents.foldLeft(0L) {
-      case (a, (k, v)) => a - v
+    val inactiveEvents = getInactive(allEvents)
+    if(inactiveEvents.size > 0){
+      allEvents = allEvents.drop(inactiveEvents.size)
+  
+      log.debug("inactive events: {}", inactiveEvents)
+      
+      diff += inactiveEvents.foldLeft(0L) {
+        case (a, (k, v)) => a - v
+      }
+    }
+  
+    // I the count changed, change sum and publish a value event
+    if(diff != 0L || sum == 0){
+      sum += diff;
+      log.debug("there are currently {} active events ({})", sum, allEvents)
+      
+      val time = if(!allEvents.isEmpty){
+        allEvents.last._1
+      } else {
+        currentTime
+      }
+      publish(new ValueEvent(uuid, time, categories, sum))
     }
     
-    log.debug("there are currently {} active events ({})", sum, allEvents)
-    
-    val time = if(!allEvents.isEmpty){
-      allEvents.last._1
-    } else {
-      currentTime
-    }
-    publish(new ValueEvent(uuid, time, categories, sum))
-   
-    if(allEvents.size == 0){
+    if(sum == 0){
       context.stop(context.self)
     }
   }
   
   override protected def timeout() {
-    analyse()
+    analyse(None)
   }
   
 }
