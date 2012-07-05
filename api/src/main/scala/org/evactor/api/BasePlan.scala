@@ -20,6 +20,7 @@ import grizzled.slf4j.Logging
 import unfiltered.response.{JsonContent, BadRequest, ResponseString}
 import unfiltered.request.Path
 import unfiltered.request.Seg
+import unfiltered.filter.request.ContextPath
 import unfiltered.request.Params
 import unfiltered.filter.Plan
 
@@ -31,11 +32,11 @@ class BasePlan extends Plan with Logging {
    }
 
   def intent = {
-    case req @ Path(Seg("api" :: path)) => try {
+    case req @ ContextPath(_, Seg("api" :: path)) => try {
       val Params(params) = req
       JsonContent ~> api.doRequest(path, params)
     } catch { case e => warn("error while calling event api", e); BadRequest }
-    case _ => ResponseString("Couldn't handle request")
+   case _ => ResponseString("Couldn't handle request")
       
   }
   
