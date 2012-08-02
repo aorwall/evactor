@@ -15,8 +15,6 @@
  */
 import sbt._
 import Keys._
-import sbtassembly.Plugin._
-import AssemblyKeys._
 
 object BamBuild extends Build {
   
@@ -27,7 +25,7 @@ object BamBuild extends Build {
   lazy val evactor = Project(
     id = "evactor",
     base = file(".")
-  ) aggregate (core, storageCassandra, api, example)
+  ) aggregate (core, storageCassandra, api)
 
   lazy val core = Project(
     id = "core",
@@ -60,14 +58,6 @@ object BamBuild extends Build {
       libraryDependencies ++= Dependencies.monitoringOstrich
     )
   ) dependsOn (core)
-                     
-  lazy val example = Project(
-    id = "example",
-    base = file("example"),
-    settings = defaultSettings ++ exampleAssemblySettings ++ Seq(
-      libraryDependencies ++= Dependencies.example
-    )
-  ) dependsOn (core, storageCassandra, api, monitoringOstrich)
 	
   override lazy val settings = super.settings ++ Seq(
         resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/",
@@ -89,30 +79,6 @@ object BamBuild extends Build {
 	  javacOptions  ++= Seq("-Xlint:unchecked", "-Xlint:deprecation")
   )  
 
-  lazy val exampleAssemblySettings = assemblySettings ++ Seq(
-    test in assembly := {},
-	excludedJars in assembly <<= (fullClasspath in assembly) map { cp => 
-	  cp filter { x => x.data.getName == "uuid-3.2.0.jar" ||  x.data.getName == "slf4j-log4j12-1.6.1.jar" || x.data.getName == "log4j-1.2.16.jar" }},
-	excludedFiles in assembly := { (bases: Seq[File]) =>
-	  bases flatMap { base =>
-        (base / "META-INF" * "*").get collect {
-          case f if f.getName.toLowerCase == "license" => f
-          case f if f.getName.toLowerCase == "license.txt" => f
-          case f if f.getName.toLowerCase == "manifest.mf" => f
-          case f if f.getName.toLowerCase == "notice.txt" => f
-          case f if f.getName.toLowerCase == "notice" => f
-	    }
-	  }
-	},
-	mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
-	  {
-	    case "application.conf" => MergeStrategy.concat
-	    case x => old(x)
-	  }
-	},
-	mainClass in assembly := Some("org.evactor.ExampleKernel"),
-	jarName in assembly := "evactorExample.jar"
-  )
 }
 
 
@@ -121,7 +87,6 @@ object Dependencies {
 
   val core = Seq(akkaActor, akkaCamel, camelCore, jacksonScala, activemq, camelJms, jacksonCore, jacksonMapper, mvel2, Test.scalatest, Test.junit, Test.mockito, Test.akkaTestkit)
   val api = Seq (grizzled, jacksonCore, jacksonMapper, jacksonScala, unfilteredFilter, unfilteredNetty, unfilteredNettyServer)
-  val example = Seq (akkaKernel, akkaSlf4j, httpClient, logback, Test.scalatest, Test.junit, Test.akkaTestkit)
   val storageCassandra = Seq(akkaActor, cassandraThrift, grizzled, guava, hectorCore, jodaConvert, jodaTime, thrift, Test.scalatest, Test.junit)
   val monitoringOstrich = Seq(ostrich)
 
@@ -131,7 +96,7 @@ object Dependency {
 
   // Versions
   object V {
-    val Akka = "2.1-SNAPSHOT"
+    val Akka = "2.1-20120707-000837"
     val Camel = "2.6.0"
     val Cassandra = "1.0.6"
     val Hector = "1.0-2"
