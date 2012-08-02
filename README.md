@@ -1,6 +1,6 @@
 Evactor
 =====================
-***Check out the [example](https://github.com/aorwall/evactor/tree/master/example) module to get a better understanding on how all this works.***
+***Check out the [example](https://github.com/aorwall/evactor-twitter) module to get a better understanding on how all this works.***
 
 This is an attempt to create a complex event processing implementation in Akka. The idea is that *processors* subscribe to *channels* to receive *events* published on the channels. The event processor can then process the events in some way and publish new events on other event channels. 
 
