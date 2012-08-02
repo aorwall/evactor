@@ -34,7 +34,7 @@ class BasePlan (system: ActorSystem) extends NettyPlan with Logging {
 //    case req @ Path(Seg(Nil)) => try {
 //      ResponseString(indexFile)
 //    } catch { case e => warn("error while getting index page", e); BadRequest }
-    case req @ ContextPath(_, Seg("api" :: path)) => try {
+    case req @ Path(Seg("api" :: path)) => try {
       val Params(params) = req
       api.doRequest(path, params) ~> ContentType("application/json")
     } catch { case e => warn("error while calling event api", e); BadRequest }
