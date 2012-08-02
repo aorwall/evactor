@@ -49,7 +49,7 @@ class StorageManager extends Actor with ActorLogging {
     if(config.hasPath(CHANNELS)){
       val valType = config.getValue(CHANNELS).valueType
       if(valType == ConfigValueType.STRING && config.getString(CHANNELS).equals("all")){ 
-        context.actorOf(Props(new StorageProcessorRouter(List(new Subscription(None, None)), maxThreads)), name = "all")
+        context.actorOf(Props(new StorageProcessorRouter(List(new Subscription(None)), maxThreads)), name = "all")
       } else if(valType == ConfigValueType.LIST) {
         val channels = config.getConfigList(CHANNELS)
         context.actorOf(Props(new StorageProcessorRouter(Subscriptions(channels.toList), maxThreads)))

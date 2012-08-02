@@ -24,6 +24,5 @@ import org.evactor.model.events.Event
 case class TestPublication (val testActor: ActorRef) extends Publication {
     
   def channel(event: Event) = "none"
-  def categories(event: Event) = Set()
     
 }

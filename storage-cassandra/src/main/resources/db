@@ -5,7 +5,8 @@ create column family Channel with default_validation_class=CounterColumnType and
 create column family Category with default_validation_class=CounterColumnType and comparator = UTF8Type and replicate_on_write=true;
 create column family Event with comparator = UTF8Type;
 create column family Timeline with comparator = UUIDType;
-create column family StateTimeline with comparator = UUIDType;
 create column family Statistics with default_validation_class=CounterColumnType and comparator = LongType and replicate_on_write=true;
+create column family 'Index' with default_validation_class=CounterColumnType and comparator = UTF8Type and replicate_on_write=true;
 create column family Latency with default_validation_class=CounterColumnType and comparator = LongType and replicate_on_write=true;
 create column family KpiSum with comparator = LongType;
+

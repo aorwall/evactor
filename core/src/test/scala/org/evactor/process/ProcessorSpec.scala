@@ -79,7 +79,7 @@ class ProcessorSpec(_system: ActorSystem)
       
       val testEvent = createDataEvent("")
       
-      processor ! new Message("", Set(), testEvent)
+      processor ! new Message("", testEvent)
       
       testProbe.expectMsg(1 seconds, testEvent)
     }
@@ -89,7 +89,7 @@ class ProcessorSpec(_system: ActorSystem)
       val testProbe = TestProbe()
       val processor = TestActorRef(new TestProcessor(Nil, new TestPublication(testProbe.ref)))
       
-      processor ! new Message("", Set(), testEvent)
+      processor ! new Message("", testEvent)
       
       testProbe.expectMsg(1 seconds, testEvent)
     }
@@ -126,13 +126,13 @@ class ProcessorSpec(_system: ActorSystem)
           type = countAnalyser
           subscriptions = [ {channel = "foo"} ]
           publication = { channel = "bar" } 
-          categorize = true
+          categorization = { NoCategorization {} }
           timeframe = 2 hours
         """)
         
       TestActorRef(Processor(countAnalyserConfig)).underlyingActor match {
         case c: CountAnalyser => {
-          c.categorize must be (true)
+          c.categorization must be (NoCategorization())
           c.timeframe must be (2*3600*1000L)
         }
         case _ => fail
@@ -144,13 +144,13 @@ class ProcessorSpec(_system: ActorSystem)
           type = regressionAnalyser
           subscriptions = [ {channel = "foo"} ]
           publication = { channel = "bar" } 
-          categorize = true
+          categorization = { NoCategorization {} }
           minSize = 25
           timeframe = 15 minutes
         """)
       TestActorRef(Processor(regressionAnalyserConfig)).underlyingActor match {
         case r: RegressionAnalyser => {
-          r.categorize must be (true)
+          r.categorization must be (NoCategorization())
           r.minSize must be (25)
           r.timeframe must be (15*60*1000L)
         }
@@ -163,7 +163,7 @@ class ProcessorSpec(_system: ActorSystem)
           type = averageAnalyser
           subscriptions = [ {channel = "foo"} ]
           publication = { channel = "bar" }
-          categorize = false
+          categorization = { NoCategorization {} }
           expression = { static = "foo" }
           window = { time = 1 minute }
         """)
@@ -171,7 +171,7 @@ class ProcessorSpec(_system: ActorSystem)
       val actor =  TestActorRef(Processor(averageAnalyserConfig)).underlyingActor 
       
       actor match {
-        case l: AverageAnalyser => l.categorize must be (false)
+        case l: AverageAnalyser => l.categorization must be (NoCategorization())
         case _ => fail
       }
     }
@@ -181,12 +181,12 @@ class ProcessorSpec(_system: ActorSystem)
           type = alerter
           subscriptions = [ {channel = "foo"} ]
           publication = { channel = "bar" } 
-          categorize = false
+          categorization = { NoCategorization {} }
           expression = { mvel = "true" }
         """)
       TestActorRef(Processor(alerterConfig)).underlyingActor match {
         case a: Alerter => {
-          a.categorize must be (false)
+          a.categorization must be (NoCategorization())
         }
         case _ => fail
       }

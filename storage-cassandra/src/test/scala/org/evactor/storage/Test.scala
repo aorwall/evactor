@@ -31,6 +31,8 @@ import org.scalatest.FunSuite
 import org.evactor.storage.cassandra.CassandraStorage
 import akka.actor.ExtendedActorSystem
 import org.evactor.model.Message
+import org.evactor.model.Failure
+import scala.collection.immutable.TreeMap
 
 /**
  * Not really a test yet. Just doing some write and read tests against
@@ -52,6 +54,23 @@ class Test extends FunSuite with Logging {
 			      }
 			    
 			      cassandra {
+      
+      
+              index {
+                channels {
+                  channel7 {
+                    idx1 = state
+                    idx2 = [component, state]
+                  }
+                }
+                events {
+                  RequestEvent {
+                    idx1 = component
+                    idx2 = [component, state]
+                  }
+                }
+              }
+      
 			        hostname = "localhost"
 			        port = 9160
 			        clustername = "TestCluster"
@@ -100,29 +119,35 @@ class Test extends FunSuite with Logging {
     
   }
 */
-  val log1 = new Message("logs", Set("1", "2", "3"), new LogEvent("329380921338", System.currentTimeMillis, "329380921308", "component", "client", "server", Start, "message"))
-  val log2 = new Message("logs", Set("1"), new LogEvent("329380921339", System.currentTimeMillis, "329380921308", "component", "client", "server", Success, "message"))
+  val log1 = new Message("channel", new LogEvent("329380921338", System.currentTimeMillis, "329380921308", "component", "client", "server", Start, "message"))
+  val log2 = new Message("channel", new LogEvent("329380921339", System.currentTimeMillis, "329380921308", "component", "client", "server", Success, "message"))
      
-  test("Log event"){
-   (pending)
-    storage.storeMessage(log1)
-    storage.storeMessage(log2)
-    println("LogEventStorage 1: " + storage.getEvents("logs", Some("1"), None, None, 10, 0))
-    println("LogEventStorage 2: " + storage.getEvents("logs", Some("2"), None, None, 10, 0))
-    println("LogEventStorage 3: " + storage.getEvents("logs", Some("3"), None, None, 10, 0))
-    println("LogEventStorage: " + storage.getEvents("logs", None, None, None, 10, 0))
-  }     
+//  test("Log event"){
+//   (pending)
+//    storage.storeMessage(log1)
+//    storage.storeMessage(log2)
+//    println("LogEventStorage 1: " + storage.getEvents("logs", Some("1"), None, None, None, 10, 0))
+//    println("LogEventStorage 2: " + storage.getEvents("logs", Some("2"), None, None, None, 10, 0))
+//    println("LogEventStorage 3: " + storage.getEvents("logs", Some("3"), None, None, None, 10, 0))
+//    println("LogEventStorage: " + storage.getEvents("logs", None, None, None, None, 10, 0))
+//  }     
   
-  val req1 = new Message("channel2", Set(), new RequestEvent("329380921328", System.currentTimeMillis, "329380921328", "component", Some("329380921338"), Some("329380921338"), Start, 10L))
-  val req2 = new Message("channel2", Set(), new RequestEvent("329380921329", System.currentTimeMillis+1, "329380921328", "component", Some("329380921338"), Some("329380921338"), Start, 10L))
+  val req1 = new Message("channel7", new RequestEvent("10", System.currentTimeMillis, "329380921328", "component1", Some("329380921338"), Some("329380921338"), Success, 10L))
+  val req2 = new Message("channel7", new RequestEvent("20", System.currentTimeMillis+1, "329380921328", "component2", Some("329380921338"), Some("329380921338"), Success, 10L))
+  val req3 = new Message("channel7", new RequestEvent("30", System.currentTimeMillis+2, "329380921328", "component1", Some("329380921338"), Some("329380921338"), Success, 10L))
+  val req4 = new Message("channel7", new RequestEvent("40", System.currentTimeMillis+3, "329380921328", "component2", Some("329380921338"), Some("329380921338"), Failure, 10L))    
+  
+  test("Request event") {
+   
+    storage.storeMessage(req1)
+    storage.storeMessage(req2)
+    storage.storeMessage(req3)
+    storage.storeMessage(req4)
+    println("RequestEventStorage: " + storage.getEvents("channel7", None, None, None, 10, 0))
+    println("RequestEventStorage succ: " + storage.getEvents("channel7", Some(TreeMap("state" -> Failure.toString)), None, None, 10, 0))
+    println("RequestEventStorage comp1 succ: " + storage.getEvents("channel7", Some(TreeMap("component" -> "component1", "state" -> Success.toString)), None, None, 10, 0))
     
-//  test("Request event") {
-//   
-//    storage.storeMessage(req1)
-//    storage.storeMessage(req2)
-//    info("RequestEventStorage: " + storage.getEvents("channel", None, None, None, 10, 0))
-//    
-//  }
+  }
   /*
   test("Simple process event"){
     val simpleStorage = new SimpleProcessEventCassandraStorage(system)    

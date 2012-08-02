@@ -70,18 +70,12 @@ class ProcessorEventBus extends Extension with ActorEventBus with LookupClassifi
     while (k.hasNext) { publish(message, k.next()) }
     
     // send to processors who subscribed to all events on this channel
-    val j = subscribers.valueIterator(new Subscription(Some(message.channel), None))
+    val j = subscribers.valueIterator(new Subscription(Some(message.channel)))
     while (j.hasNext) { publish(message, j.next()) } 
-    
-    // send to processors who subscribed to a specific category
-    message.categories.foreach { cat => 
-      val i = subscribers.valueIterator(new Subscription(Some(message.channel), Some(cat)))
-      while (i.hasNext) { publish(message, i.next()) }
-    }
     
   }
 }
-    
+
 trait UseProcessorEventBus extends Actor {
 
   private[evactor] val bus = ProcessorEventBusExtension(context.system)

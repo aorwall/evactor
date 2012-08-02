@@ -17,9 +17,7 @@ package org.evactor.process.analyse.trend
 
 import org.evactor.publish.Publication
 import org.evactor.subscribe.Subscription
-import org.evactor.process.Processor
-import org.evactor.process.CategoryProcessor
-import org.evactor.process.SubProcessor
+import org.evactor.process._
 import org.evactor.model.events.Event
 import org.evactor.process.analyse.window.TimeWindow
 import akka.actor.ActorLogging
@@ -33,7 +31,6 @@ import scala.collection.mutable.LinkedList
 import java.util.ArrayList
 import org.evactor.monitor.Monitored
 import org.evactor.model.events.ValueEvent
-import org.evactor.process.CategoryPublication
 
 /**
  * Analysing trends by checking the regression coefficient on growth of event occurrences within
@@ -45,21 +42,20 @@ import org.evactor.process.CategoryPublication
 class RegressionAnalyser (
     override val subscriptions: List[Subscription],
     val publication: Publication,
-    override val categorize: Boolean, 
+    override val categorization: Categorization,
     val minSize: Long, 
-    val timeframe: Long) extends CategoryProcessor(subscriptions, categorize) {
+    val timeframe: Long) extends CategorizedProcessor(subscriptions, categorization) {
 
-  protected def createSubProcessor(id: String): SubProcessor = {
-    new RegressionSubAnalyser(new CategoryPublication(publication, id), id, minSize, timeframe)
-  }
+  protected def createCategoryProcessor(categories: Set[String]): CategoryProcessor =
+    new RegressionSubAnalyser(publication, categories, minSize, timeframe)
 }
 
 class RegressionSubAnalyser (
     val publication: Publication,
-    override val id: String,
+    override val categories: Set[String],
     val minSize: Long, 
     val timeframe: Long) 
-  extends SubProcessor (id)
+  extends CategoryProcessor(categories)
   with TimeWindow 
   with Publisher
   with Monitored
@@ -70,14 +66,15 @@ class RegressionSubAnalyser (
   val start = System.currentTimeMillis
   protected[trend] val eventCount = new Array[Long](10)
   var iteration = start
+  var currentCoeff = 0.0
   
   override def preStart = {
-    log.debug("Starting sub counter with id {} and timeframe {} ms", id, timeframe)
+    log.debug("Starting sub counter with categories {} and timeframe {} ms", categories, timeframe)
     super.preStart()
   }
   
   override def postStop = {
-    log.debug("Stopping sub counter with id {} and timeframe {} ms", id, timeframe)
+    log.debug("Stopping sub counter with categories {} and timeframe {} ms", categories, timeframe)
     removeLabel()
     super.postStop()
   }
@@ -104,8 +101,10 @@ class RegressionSubAnalyser (
 //        addLabel("coefficient: %s (%s), id: %s, eventCount: %s".format(coeff, coefficient, id, listToCheck))
         
 //          log.info("coefficient: {}, id: {}, eventCount: {}", coefficient, id, listToCheck)
-      
-        publish(new ValueEvent(uuid, currentTime, coeff))
+        if(currentCoeff != coeff){
+          publish(new ValueEvent(uuid, currentTime, categories, coeff))
+          currentCoeff = coeff;
+        }
 
       }
     }

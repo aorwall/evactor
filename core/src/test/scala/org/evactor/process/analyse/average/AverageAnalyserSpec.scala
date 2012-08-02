@@ -40,6 +40,7 @@ import akka.actor.Actor
 import org.evactor.model.events.ValueEvent
 import akka.actor.ActorRef
 import com.typesafe.config.ConfigFactory
+import org.evactor.process.NoCategorization
 
 @RunWith(classOf[JUnitRunner])
 class AverageAnalyserSpec(_system: ActorSystem) 
@@ -60,33 +61,31 @@ class AverageAnalyserSpec(_system: ActorSystem)
   "A AverageAnalyser" must {
 
     "count the average latency of the incoming request events" in {
-      (pending)
       val probe = TestProbe()
 
-      val avg = TestActorRef(new AverageAnalyser(Nil, new TestPublication(valueDest(probe.ref)), false, new MvelExpression("latency"), None))
+      val avg = TestActorRef(new AverageAnalyser(Nil, new TestPublication(valueDest(probe.ref)), new NoCategorization(), new MvelExpression("latency"), None))
 
-      avg ! new Message("", Set(), createRequestEvent(0L, None, None, "corr", "comp", Success, 4))
+      avg ! new Message("", createRequestEvent(0L, None, None, "corr", "comp", Success, 4))
       probe.expectMsg(200 milliseconds, 4.0)
-      avg ! new Message("", Set(), createRequestEvent(1L, None, None, "corr", "comp", Success, 5)) 
+      avg ! new Message("", createRequestEvent(1L, None, None, "corr", "comp", Success, 5)) 
       probe.expectMsg(200 milliseconds, 4.5)
-      avg ! new Message("", Set(), createRequestEvent(3L, None, None, "corr", "comp", Success, 9)) 
+      avg ! new Message("", createRequestEvent(3L, None, None, "corr", "comp", Success, 9)) 
       probe.expectMsg(200 milliseconds, 6.0)
       avg.stop
     }
 
     "count average latency of the incoming requests events within a specified length window" in {
-      (pending)
       val probe = TestProbe()
       val winConf = ConfigFactory.parseString("length = 2")
-      val avg = TestActorRef(new AverageAnalyser(Nil, new TestPublication(valueDest(probe.ref)), false, new MvelExpression("latency"), Some(winConf)))
+      val avg = TestActorRef(new AverageAnalyser(Nil, new TestPublication(valueDest(probe.ref)), new NoCategorization(), new MvelExpression("latency"), Some(winConf)))
       
-      avg ! new Message("", Set(), createRequestEvent(1L, None, None, "corr", "comp", Success, 10))
+      avg ! new Message("", createRequestEvent(1L, None, None, "corr", "comp", Success, 10))
       probe.expectMsg(200 milliseconds, 10.0)
-      avg ! new Message("", Set(), createRequestEvent(2L, None, None, "corr", "comp", Success, 110))
+      avg ! new Message("", createRequestEvent(2L, None, None, "corr", "comp", Success, 110))
       probe.expectMsg(200 milliseconds, 60.0)
-      avg ! new Message("", Set(), createRequestEvent(3L, None, None, "corr", "comp", Success, 40))
+      avg ! new Message("", createRequestEvent(3L, None, None, "corr", "comp", Success, 40))
       probe.expectMsg(200 milliseconds, 75.0)
-      avg ! new Message("", Set(), createRequestEvent(4L, None, None, "corr", "comp", Success, 60))
+      avg ! new Message("", createRequestEvent(4L, None, None, "corr", "comp", Success, 60))
       probe.expectMsg(200 milliseconds, 50.0)
 
       avg.stop

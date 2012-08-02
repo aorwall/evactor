@@ -16,12 +16,11 @@
 package org.evactor.expression
 
 import java.util.HashMap
-
-
 import org.evactor.model.attributes.HasMessage
 import org.evactor.model.events.Event
 import org.mvel2.MVEL
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.mvel2.util.FastList
 
 
 /**
@@ -67,7 +66,10 @@ case class MvelExpression(val expression: String) extends Expression {
     obj.put("timestamp", event.timestamp)
     
     val result = try {
-      Some(MVEL.executeExpression(compiledExp, obj))
+      MVEL.executeExpression(compiledExp, obj) match {
+        case f: org.mvel2.util.FastList[Any] => Some(f.toArray.toList)
+        case a: Any => Some(a)
+      }
     } catch {
       case e => None
     }

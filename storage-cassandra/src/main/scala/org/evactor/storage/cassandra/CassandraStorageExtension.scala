@@ -15,8 +15,11 @@
  */
 package org.evactor.storage.cassandra
 
+import scala.collection.JavaConversions._
 import com.typesafe.config.Config
 import akka.actor._
+import scala.collection.immutable.SortedSet
+import scala.collection.immutable.TreeSet
 
 object CassandraStorageExtension extends ExtensionId[CassandraStorageSettings] with ExtensionIdProvider {
   override def get(system: ActorSystem): CassandraStorageSettings = super.get(system)
@@ -32,5 +35,22 @@ class CassandraStorageSettings(val config: Config) extends Extension {
   val Port = getInt("evactor.storage.cassandra.port")
   val Keyspace = getString("evactor.storage.cassandra.keyspace")
   val Clustername = getString("evactor.storage.cassandra.clustername")
+  
+  val ChannelIndex = getIndex("evactor.storage.cassandra.index.channels")
+  val EventTypeIndex = getIndex("evactor.storage.cassandra.index.events")
+  
+  private[this] def getIndex(path: String): Map[String, List[Set[String]]] =
+    if(hasPath(path)){
+      getConfig(path).root.keySet.map { k =>
+        k -> getConfig("%s.%s".format(path, k)).root.values.map { vs =>
+          vs.unwrapped match {
+            case s: String => Set(s)
+            case l: java.util.ArrayList[String] => l.sortWith(_ < _).toSet 
+          }
+        }.toList
+      }.toMap
+    } else {
+      Map()
+    }
   
 }

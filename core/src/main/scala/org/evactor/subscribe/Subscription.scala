@@ -25,13 +25,11 @@ object Subscriptions {
   def apply(): List[Subscription] = List(new Subscription());
 
   def apply(channel: String): List[Subscription] = List(new Subscription(channel));
-  
-  def apply(channel: String, category: String): List[Subscription] = List(new Subscription(channel, category));
-  
+    
   def apply(subscriptions: java.util.Collection[Subscription]): List[Subscription] = subscriptions.toList
   
   def apply(configs: List[Config]) = configs.map { c =>
-    new Subscription(get(c, "channel"), get(c, "category"))
+    new Subscription(get(c, "channel"))
   }
   
   def get(config: Config, name: String): Option[String] = 
@@ -39,19 +37,16 @@ object Subscriptions {
       Some(config.getString(name))
     } else {
       None
-    } 
+    }
   
 }
 
 case class Subscription(
-    val channel: Option[String],
-    val category: Option[String]) {
+    val channel: Option[String]) {
   
-  def this() = this(None, None)
+  def this() = this(None)
   
-  def this(channel: String) = this(Some(channel), None)
-  
-  def this(channel: String, category: String) = this(Some(channel), Some(category))
-   
+  def this(channel: String) = this(Some(channel))
+     
   
 }

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 package org.evactor.process.analyse.average
-
 import collection.immutable.TreeMap
 import akka.actor.ActorRef
 import org.evactor.model.events.Event
@@ -23,10 +22,7 @@ import org.evactor.process.analyse.window.Window
 import akka.actor.ActorLogging
 import org.evactor.subscribe.Subscription
 import org.evactor.publish.Publication
-import org.evactor.process.Processor
 import org.evactor.expression.Expression
-import org.evactor.process.CategoryProcessor
-import org.evactor.process.SubProcessor
 import org.evactor.publish.Publisher
 import org.evactor.model.events.ValueEvent
 import java.util.UUID
@@ -35,36 +31,36 @@ import com.typesafe.config.Config
 import org.evactor.process.analyse.window.TimeWindow
 import org.evactor.process.analyse.window.LengthWindow
 import org.evactor.ConfigurationException
-import org.evactor.process.CategoryPublication
+import org.evactor.process._
 
 class AverageAnalyser(
     override val subscriptions: List[Subscription], 
     val publication: Publication,
-    override val categorize: Boolean,
+    override val categorization: Categorization,
     val expression: Expression,
     val windowConf: Option[Config])
-  extends CategoryProcessor(subscriptions, categorize) with ActorLogging {
+  extends CategorizedProcessor(subscriptions, categorization) with ActorLogging {
 
   // TODO: Closure  
-  protected def createSubProcessor(id: String): SubProcessor = windowConf match {
+  protected def createCategoryProcessor(categories: Set[String]): CategoryProcessor = windowConf match {
     case Some(c) => {
       if(c.hasPath("time")){
-        new AverageSubAnalyser(publication, id, expression) with TimeWindow { override val timeframe = c.getMilliseconds("time").toLong }
+        new AverageSubAnalyser(publication, categories, expression) with TimeWindow { override val timeframe = c.getMilliseconds("time").toLong }
       } else if(c.hasPath("length")) {
-        new AverageSubAnalyser(publication, id, expression) with LengthWindow { override val noOfRequests = c.getInt("length") }
+        new AverageSubAnalyser(publication, categories, expression) with LengthWindow { override val noOfRequests = c.getInt("length") }
       } else {
         throw new ConfigurationException("window configuration not recognized: %s".format(c))
       }
     }
-    case None =>  new AverageSubAnalyser(new CategoryPublication(publication, id), id, expression)
+    case None =>  new AverageSubAnalyser(publication, categories, expression)
   }
 }
  
 class AverageSubAnalyser(
     val publication: Publication,
-    override val id: String,
+    override val categories: Set[String],
     val expression: Expression)
-  extends SubProcessor(id) with Publisher with Window with ActorLogging {
+  extends CategoryProcessor(categories) with Publisher with Window with ActorLogging {
  
   type S = Double
 
@@ -111,7 +107,7 @@ class AverageSubAnalyser(
   }
   
   protected def sendValue(value: Any){    
-    publish(new ValueEvent(uuid, currentTime, value))
+    publish(new ValueEvent(uuid, currentTime, categories, value))
   }
   
   override protected def timeout() {

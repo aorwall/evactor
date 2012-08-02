@@ -18,8 +18,9 @@ package org.evactor.storage
 import org.evactor.model.events.Event
 import org.evactor.model.State
 
+@deprecated("latency should be calculated with a processor instead", "0.2")
 trait LatencyStorage {
 
-  def getLatencyStatistics(channel: String, category: Option[String], fromTimestamp: Option[Long], toTimestamp: Option[Long], interval: String): (Long, List[(Long, Long)])
+  def getLatencyStatistics(channel: String, fromTimestamp: Option[Long], toTimestamp: Option[Long], interval: String): (Long, List[(Long, Long)])
   
 }

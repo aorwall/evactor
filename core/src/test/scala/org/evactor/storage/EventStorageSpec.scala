@@ -27,6 +27,7 @@ import org.evactor.model.events.LogEvent
 import org.evactor.model.Start
 import org.evactor.EvactorSpec
 import org.evactor.model.Message
+import scala.collection.immutable.SortedMap
 
 class TestEventStorage(override val system: ActorSystem) extends EventStorage(system) {
  
@@ -36,26 +37,21 @@ class TestEventStorage(override val system: ActorSystem) extends EventStorage(sy
   
   def getEvent(id: String): Option[Event] = None
   
-  def getEvents(channel: String, category: Option[String], fromTimestamp: Option[Long], toTimestamp: Option[Long], count: Int, start: Int): List[Event] = {
+  def getEvents(channel: String, filter: Option[SortedMap[String, String]], fromTimestamp: Option[Long], toTimestamp: Option[Long], count: Int, start: Int): List[Event] = {
     List[Event]()
   }
     
-  def getStatistics(channel: String, category: Option[String], fromTimestamp: Option[Long], toTimestamp: Option[Long], interval: String): (Long, List[Long]) = {
+  def getStatistics(channel: String, filter: Option[SortedMap[String, String]], fromTimestamp: Option[Long], toTimestamp: Option[Long], interval: String): (Long, List[Long]) = {
     (0L, List[Long]())
   }
   
-  def getEventCategories(channel: String, count: Int): List[(String, Long)] = {
-    List[(String, Long)]()
-  }
-  
   def eventExists(event: Event) = false
-  
   
   def getEventChannels(count: Int): List[(String, Long)] = {
     List[(String, Long)]() 
   }
   
-  def count(channel: String, category: Option[String], fromTimestamp: Option[Long], toTimestamp: Option[Long]): Long = {
+  def count(channel: String, filter: Option[SortedMap[String, String]], fromTimestamp: Option[Long], toTimestamp: Option[Long]): Long = {
     0l
   }
 }

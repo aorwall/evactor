@@ -19,6 +19,8 @@ import org.evactor.model.events.Event
 import org.evactor.model.State
 import akka.actor.ActorSystem
 import org.evactor.model.Message
+import scala.collection.immutable.SortedSet
+import scala.collection.immutable.SortedMap
 
 abstract class EventStorage (val system: ActorSystem) {
   
@@ -26,15 +28,17 @@ abstract class EventStorage (val system: ActorSystem) {
   
   def getEvent(id: String): Option[Event]
   
-  def getEvents(channel: String, category: Option[String], fromTimestamp: Option[Long], toTimestamp: Option[Long], count: Int, start: Int): List[Event]
+  def getEvents(channel: String, filter: Option[SortedMap[String, String]], fromTimestamp: Option[Long], toTimestamp: Option[Long], count: Int, start: Int): List[Event]
   
-  def getStatistics(name: String, category: Option[String], fromTimestamp: Option[Long], toTimestamp: Option[Long], interval: String): (Long, List[Long])
+  @deprecated("use analysers to count events instead", "0.3")
+  def getStatistics(channel: String, filter: Option[SortedMap[String, String]], fromTimestamp: Option[Long], toTimestamp: Option[Long], interval: String): (Long, List[Long])
   
-  def count(name: String, category: Option[String], fromTimestamp: Option[Long], toTimestamp: Option[Long]): Long
+  def count(channel: String, filter: Option[SortedMap[String, String]], fromTimestamp: Option[Long], toTimestamp: Option[Long]): Long
   
   def eventExists(event: Event): Boolean
   
   def getEventChannels(count: Int): List[(String, Long)]
+
+  //TODO: def getIndexValues(channel: String, category: Option[String], index: SortedSet[String])
   
-  def getEventCategories(channel: String, count: Int): List[(String, Long)]
 }

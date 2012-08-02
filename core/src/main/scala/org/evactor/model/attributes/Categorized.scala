@@ -13,17 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.evactor.twitter
+package org.evactor.model.attributes
 
-import org.evactor.model.attributes.HasMessage
-import org.evactor.model.events.Event
-
-case class StatusEvent (
-    override val id: String,
-    override val timestamp: Long,
-    val screenName: String,
-    val message: String,
-    val urls: List[String],
-    val hashtags: List[String]) extends Event (id, timestamp) with HasMessage {
-
+/**
+ * Represents categorized events. 
+ * 
+ * TODO: Categories should be represented in a hierarchy 
+ * 
+ */
+trait Categorized {
+  val categories: Set[String]
 }
