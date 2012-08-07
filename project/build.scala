@@ -96,7 +96,7 @@ object Dependency {
 
   // Versions
   object V {
-    val Akka = "2.1-20120701-002745"
+    val Akka = "2.1-20120601-000805"
     val Camel = "2.6.0"
     val Cassandra = "1.0.6"
     val Hector = "1.0-2"
