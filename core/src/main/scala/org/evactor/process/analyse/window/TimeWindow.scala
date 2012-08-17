@@ -19,21 +19,31 @@ import org.evactor.model.Timeout
 import akka.util.duration._
 import akka.actor.ActorLogging
 import scala.collection.immutable.SortedMap
+import akka.actor.Cancellable
 
 trait TimeWindow extends Window with ActorLogging {
 
   type S
   val timeframe: Long
+  
+  var cancellable: Cancellable = context.system.scheduler.scheduleOnce(timeframe milliseconds, self, Timeout)
 
   override protected[analyse] def getInactive(activities: SortedMap[Long, S]): Map[Long, S] = {
+    
+    // refresh scheduled timeout every time this method is executed
+    schedule()
+    
     activities.takeWhile( _._1 < System.currentTimeMillis - timeframe )
   }
-
-  lazy val cancellable = context.system.scheduler.schedule(timeframe milliseconds, timeframe milliseconds, self, Timeout)
+  
+  private def schedule() = {
+    cancellable.cancel()
+    cancellable = context.system.scheduler.scheduleOnce(timeframe milliseconds, self, Timeout)
+  }
 
   abstract override def preStart = {
     log.debug("starting scheduler with timeframe set to {} ms", timeframe)
-    cancellable
+    schedule()
     super.preStart()
   }
   
