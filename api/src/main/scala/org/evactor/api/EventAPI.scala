@@ -76,10 +76,10 @@ class EventAPI (val system: ActorSystem) {
     val from = getLongOption(params.get("from"))
     val to = getLongOption(params.get("to"))
 
-    val count = params.get("count").getOrElse("0")
+    val count = params.get("count").getOrElse(Seq("100")).mkString.toInt
     
     path match {
-      case channel :: Nil => storage.getEvents(decode(channel), getFilter(params), from, to, 10, 0)
+      case channel :: Nil => storage.getEvents(decode(channel), getFilter(params), from, to, count, 0)
       case e => throw new IllegalArgumentException("Illegal events request: %s".format(e))
     }
   }
@@ -139,7 +139,7 @@ class EventAPI (val system: ActorSystem) {
   }
 
   protected[api] def getFilter (params: Map[String, Seq[String]]): Option[SortedMap[String, String]] = {
-    val filteredParams = params.filter(RESERVED_WORDS.contains(_))
+    val filteredParams = params.filter( a => !RESERVED_WORDS.contains(a._1))
     if(filteredParams.size == 0){
       None
     } else {
