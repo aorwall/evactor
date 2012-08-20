@@ -21,6 +21,7 @@ import org.evactor.model.events.Event
 import org.mvel2.MVEL
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.mvel2.util.FastList
+import scala.collection.JavaConversions.asJavaList
 
 
 /**
@@ -88,6 +89,7 @@ case class MvelExpression(val expression: String) extends Expression {
       f.get(cc) match {
         case Some(o) => map.put(f.getName, o)
         case None => // do nothing
+        case l: Iterable[Any] => map.put(f.getName, asJavaList(l.toList))
         case o => map.put(f.getName, o)
       }
       

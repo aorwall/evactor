@@ -16,13 +16,13 @@
 package org.evactor.expression
 
 import scala.collection.JavaConversions._
-
 import org.evactor.model.events.DataEvent
 import org.evactor.model.events.Event
 import org.evactor.EvactorSpec
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.WordSpec
+import org.evactor.model.events.ValueEvent
 
 @RunWith(classOf[JUnitRunner])
 class MvelExpressionSpec extends EvactorSpec {
@@ -47,11 +47,18 @@ class MvelExpressionSpec extends EvactorSpec {
       evaluator.evaluate(event) must be (Some(List("msg", "msg")))
     }
     
-    "evaluate case class and return string boolean (fail)" in {
+    "evaluate case class and return boolean" in {
       val evaluator = new MvelExpression("timestamp > 0")
       val event = new Event("id", 1L)
       evaluator.evaluate(event) must be (Some(true))
     }
+    
+    "evaluate a list and return boolean" in {
+      val evaluator = new MvelExpression("categories[0] == 'foo' && !(categories contains 'somethingelse')")
+      val event = new ValueEvent("foo", 0L, Set("foo", "bar"), 0)
+      evaluator.evaluate(event) must be (Some(true))
+    }
+    
     /*
      "evaluate string and return boolean" in {
        val evaluator = new MvelExpressionEvaluator[Boolean]("message == 'foo'")
