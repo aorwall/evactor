@@ -139,7 +139,6 @@ class RegressionSubAnalyser (
   }
   
   private[this] def stop() {
-    cancellable.cancel()
     context.stop(context.self)
   }
   

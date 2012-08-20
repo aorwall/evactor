@@ -26,8 +26,6 @@ trait TimeWindow extends Window with ActorLogging {
   type S
   val timeframe: Long
   
-  var cancellable: Cancellable = context.system.scheduler.scheduleOnce(timeframe milliseconds, self, Timeout)
-
   override protected[analyse] def getInactive(activities: SortedMap[Long, S]): Map[Long, S] = {
     
     // refresh scheduled timeout every time this method is executed
@@ -37,8 +35,7 @@ trait TimeWindow extends Window with ActorLogging {
   }
   
   private def schedule() = {
-    cancellable.cancel()
-    cancellable = context.system.scheduler.scheduleOnce(timeframe milliseconds, self, Timeout)
+    context.system.scheduler.scheduleOnce(timeframe milliseconds, self, Timeout)
   }
 
   abstract override def preStart = {
@@ -49,7 +46,6 @@ trait TimeWindow extends Window with ActorLogging {
   
   abstract override def postStop = {
     log.debug("stopping scheduler")
-    cancellable.cancel()
     super.postStop()
   }
 }
