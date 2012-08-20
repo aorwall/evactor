@@ -36,6 +36,7 @@ import akka.actor.{ActorLogging, ReflectiveDynamicAccess}
 import com.typesafe.config.{Config, ConfigException}
 import scala.collection.JavaConversions._
 import java.util.UUID
+import org.evactor.process.produce.CamelProducer
 
 /**
  * Abstract class all standard processors should extend
@@ -90,6 +91,7 @@ object Processor {
           case "averageAnalyser" => new AverageAnalyser(sub, pub, Categorization(getConfig("categorization")), Expression(getConfig("expression")), if(hasPath("window")){ Some(getConfig("window"))} else {None}) 
           case "alerter" => new Alerter(sub, pub, Categorization(getConfig("categorization")), Expression(getConfig("expression")))
           case "logProducer" => new LogProducer(sub, getString("loglevel"))
+          case "camelProducer" => new CamelProducer(sub, getString("camelEndpoint"))
           case o => throw new ConfigurationException("processor type not recognized: %s".format(o))
         }
       } else if (hasPath("class")) {
