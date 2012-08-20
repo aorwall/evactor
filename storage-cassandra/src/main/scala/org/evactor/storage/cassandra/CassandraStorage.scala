@@ -251,12 +251,12 @@ class CassandraStorage(override val system: ActorSystem)
     
     val key =  new BasicKey(channel, filter)
 
-    debug("Reading events with key '" + key.keyValue + "' from " + fromTimestamp + " to " + fromTimestamp)
+    debug("Reading events with key '" + key.keyValue + "' from " + fromTimeuuid + " to " + toTimeuuid)
 
     val eventIds = HFactory.createSliceQuery(keyspace, StringSerializer.get, UUIDSerializer.get, StringSerializer.get)
             .setColumnFamily(TIMELINE_CF)
             .setKey(key.keyValue)
-            .setRange(fromTimeuuid, toTimeuuid, true, count)
+            .setRange(toTimeuuid, fromTimeuuid, true, count)
             .execute()
             .get
             .getColumns()
