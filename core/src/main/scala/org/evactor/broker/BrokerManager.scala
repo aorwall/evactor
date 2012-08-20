@@ -41,7 +41,7 @@ class BrokerManager extends Actor with ActorLogging {
     //Add camel brokers
     if(config.hasPath("evactor.brokers")) {
       config.getConfig("evactor.brokers").root.keySet.foreach{ k =>
-        addBroker(k, config.getConfig("evactor.collectors").getConfig(k))
+        addBroker(k, config.getConfig("evactor.brokers").getConfig(k))
       }
     }
   }
