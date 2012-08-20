@@ -94,7 +94,7 @@ class EventAPI (val system: ActorSystem) {
   }
   
   protected[api] def getLongOption(in: Option[Seq[String]]): Option[Long] = in match{
-    case Some(s) => Some(s.toString.toLong)
+    case Some(s) => Some(s.mkString.toLong)
     case _ => None
   }
   
