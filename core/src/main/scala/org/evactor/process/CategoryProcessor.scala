@@ -65,6 +65,7 @@ abstract class CategorizedProcessor (
       case Some(s: Set[String]) => s
       case Some(l: Traversable[Any]) => set(l)
       case Some(v: Any) => Set[String](v.toString)
+      case None => Set[String]()
     }
     if(cs.size == 0){
       log.warning("No categories extracted from {}", e)
