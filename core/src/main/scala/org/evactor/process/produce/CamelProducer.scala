@@ -18,13 +18,17 @@ package org.evactor.process.produce
 import org.evactor.model.events.Event
 import org.evactor.process.Processor
 import org.evactor.subscribe.Subscription
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import akka.actor.ActorLogging
-import akka.event.Logging
-import org.evactor.ConfigurationException
-import org.evactor.model.Message
+import akka.camel.CamelMessage
 import akka.camel.Oneway
 import akka.camel.Producer
+import org.apache.camel.Exchange
 
+/**
+ * Send an event in json format to a camel endpoint
+ */
 class CamelProducer (
     override val subscriptions: List[Subscription],
     val camelEndpoint: String)
@@ -33,9 +37,14 @@ class CamelProducer (
   with Oneway 
   with ActorLogging {
   
+  val mapper = new ObjectMapper()
+  mapper.registerModule(DefaultScalaModule)
+  
   def endpointUri = camelEndpoint
   
   override def receive = produce
+
+  override def transformOutgoingMessage(msg: Any) = CamelMessage(mapper.writeValueAsString(msg), Map(Exchange.CONTENT_TYPE -> "application/json"))
   
   protected def process(event: Event) {
     // Not in use

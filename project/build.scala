@@ -85,7 +85,7 @@ object BamBuild extends Build {
 object Dependencies {
   import Dependency._
 
-  val core = Seq(akkaActor, akkaCamel, camelCore, jacksonScala, activemq, camelJms, jacksonCore, jacksonMapper, mvel2, Test.scalatest, Test.junit, Test.mockito, Test.akkaTestkit)
+  val core = Seq(akkaActor, akkaCamel, camelCore, jacksonScala, activemq, camelJms, jacksonCore, jacksonMapper, mvel2, Test.scalatest, Test.junit, Test.mockito, Test.akkaTestkit, camelHttp)
   val api = Seq (grizzled, jacksonCore, jacksonMapper, jacksonScala, unfilteredFilter, unfilteredNetty, unfilteredNettyServer)
   val storageCassandra = Seq(akkaActor, cassandraThrift, grizzled, guava, hectorCore, jodaConvert, jodaTime, thrift, Test.scalatest, Test.junit)
   val monitoringOstrich = Seq(ostrich)
@@ -97,7 +97,7 @@ object Dependency {
   // Versions
   object V {
     val Akka = "2.1-20120601-000805"
-    val Camel = "2.6.0"
+    val Camel = "2.8.0"
     val Cassandra = "1.0.6"
     val Hector = "1.0-2"
     val Jackson = "2.0.2"
@@ -117,6 +117,7 @@ object Dependency {
   val akkaCamel = "com.typesafe.akka" % "akka-camel" % V.Akka
   val camelAtom = "org.apache.camel" % "camel-atom" % V.Camel
   val camelCore = "org.apache.camel" % "camel-core" % V.Camel
+  val camelHttp = "org.apache.camel" % "camel-http4" % V.Camel
   val camelIrc = "org.apache.camel" % "camel-irc" % V.Camel
   val cassandraAll = "org.apache.cassandra" % "cassandra-all" % V.Cassandra
   val cassandraThrift = "org.apache.cassandra" % "cassandra-thrift" % V.Cassandra
