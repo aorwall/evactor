@@ -25,7 +25,7 @@ import akka.testkit.TestActorRef
 import org.evactor.publish.TestPublication
 import akka.testkit.TestProbe
 import org.evactor.model.events.Event
-import akka.util.duration.intToDurationInt
+import scala.concurrent.util.duration._
 import org.evactor.model.events.AlertEvent
 import org.evactor.model.events.ValueEvent
 

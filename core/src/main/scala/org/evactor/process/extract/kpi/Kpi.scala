@@ -48,7 +48,7 @@ trait KpiEventCreator extends EventCreator {
     case Some(value: String) => try {
       Some(new KpiEvent(UUID.randomUUID.toString, event.timestamp, value.toLong)) 
     } catch {
-      case _ => None
+      case _ : Throwable => None
     }
     case a => None
   }

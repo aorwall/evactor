@@ -31,11 +31,11 @@ import org.evactor.publish.Publication
  * Filter out all events that do or don't match the specified expression
  */
 class Filter (
-    override val subscriptions: List[Subscription],
+    val subscriptions: List[Subscription],
     val publication: Publication,
     val expression: Expression,
     val accept: Boolean)
-  extends Processor(subscriptions) with Publisher {
+  extends Processor with Publisher {
 
   def process(event: Event) {
     

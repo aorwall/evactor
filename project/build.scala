@@ -20,7 +20,7 @@ object BamBuild extends Build {
   
   val Organization = "org.evactor"
   val Version      = "0.3-SNAPSHOT"
-  val ScalaVersion = "2.9.2"
+  val ScalaVersion = "2.10.0-M7"
 
   lazy val evactor = Project(
     id = "evactor",
@@ -96,12 +96,12 @@ object Dependency {
 
   // Versions
   object V {
-    val Akka = "2.1-20120601-000805"
+    val Akka = "2.1-M2"
     val Camel = "2.8.0"
     val Cassandra = "1.0.6"
     val Hector = "1.0-2"
     val Jackson = "2.0.2"
-    val Scalatest = "1.6.1"
+    val Scalatest = "1.9-2.10.0-M7-B1"
     val Slf4j = "1.6.4"
     val TwitterUtil = "1.12.13"
     val Unfiltered = "0.5.3"
@@ -110,11 +110,11 @@ object Dependency {
   val activemq = "org.apache.activemq" % "activemq-all" % "5.3.0"
   val camelJms = "org.apache.camel" % "camel-jms" % V.Camel
 
-  val akkaActor = "com.typesafe.akka" % "akka-actor" % V.Akka
-  val akkaKernel = "com.typesafe.akka" % "akka-kernel" % V.Akka
-  val akkaRemote = "com.typesafe.akka" % "akka-remote" % V.Akka
-  val akkaSlf4j = "com.typesafe.akka" % "akka-slf4j" % V.Akka
-  val akkaCamel = "com.typesafe.akka" % "akka-camel" % V.Akka
+  val akkaActor = "com.typesafe.akka" % "akka-actor_2.10.0-M7" % V.Akka
+  val akkaKernel = "com.typesafe.akka" % "akka-kernel_2.10.0-M7" % V.Akka
+  val akkaRemote = "com.typesafe.akka" % "akka-remote_2.10.0-M7" % V.Akka
+  val akkaSlf4j = "com.typesafe.akka" % "akka-slf4j_2.10.0-M7" % V.Akka
+  val akkaCamel = "com.typesafe.akka" % "akka-camel_2.10.0-M7" % V.Akka
   val camelAtom = "org.apache.camel" % "camel-atom" % V.Camel
   val camelCore = "org.apache.camel" % "camel-core" % V.Camel
   val camelHttp = "org.apache.camel" % "camel-http4" % V.Camel
@@ -151,9 +151,9 @@ object Dependency {
 
   object Test {
     val junit = "junit" % "junit" % "4.4" % "test"
-    val scalatest = "org.scalatest" % "scalatest_2.9.1" % V.Scalatest % "test"
+    val scalatest = "org.scalatest" % "scalatest_2.10.0-M7" % V.Scalatest % "test"
     val mockito = "org.mockito" % "mockito-core" % "1.8.1" % "test"
-    val akkaTestkit = "com.typesafe.akka" % "akka-testkit" % V.Akka % "test"
+    val akkaTestkit = "com.typesafe.akka" % "akka-testkit_2.10.0-M7" % V.Akka % "test"
   }
   
 }

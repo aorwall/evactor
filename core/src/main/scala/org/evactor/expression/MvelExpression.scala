@@ -48,7 +48,7 @@ case class MvelExpression(val expression: String) extends Expression {
           try {
             Some(mapper.readValue(h.message, classOf[HashMap[String,Object]]))
           } catch {
-            case _ => None
+            case _: Throwable => None
           }
         } else {
           None
@@ -72,7 +72,7 @@ case class MvelExpression(val expression: String) extends Expression {
         case a: Any => Some(a)
       }
     } catch {
-      case e => None
+      case _: Throwable => None
     }
     
     result

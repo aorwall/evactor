@@ -16,16 +16,18 @@
 package org.evactor.process.analyse.window
 
 import org.evactor.model.Timeout
-import akka.util.duration._
+import scala.concurrent.util.duration._
 import akka.actor.ActorLogging
 import scala.collection.immutable.SortedMap
 import akka.actor.Cancellable
 
 trait TimeWindow extends Window with ActorLogging {
 
+  import context.dispatcher
+  
   type S
   val timeframe: Long
-  
+    
   override protected[analyse] def getInactive(activities: SortedMap[Long, S]): Map[Long, S] = {
     
     // refresh scheduled timeout every time this method is executed

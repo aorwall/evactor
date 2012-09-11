@@ -32,10 +32,10 @@ import org.evactor.publish.Publisher
  * and then create a new Event, based on the evaluated message, with an EventCreator.
  */
 abstract class Extractor(
-    override val subscriptions: List[Subscription], 
+    val subscriptions: List[Subscription], 
     val publication: Publication,
     val expression: Expression) 
-  extends Processor(subscriptions) 
+  extends Processor 
   with EventCreator
   with Publisher
   with ActorLogging {

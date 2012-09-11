@@ -4,7 +4,7 @@ import com.typesafe.config.Config
 import akka.actor.SupervisorStrategy._
 import akka.actor._
 import akka.actor.ReflectiveDynamicAccess
-import akka.util.duration._
+import scala.concurrent.util.duration._
 import org.evactor.ConfigurationException
 import org.evactor.Start
 import akka.camel.CamelExtension

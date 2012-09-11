@@ -29,7 +29,7 @@ import akka.testkit.TestKit
 import akka.testkit.TestProbe
 import akka.testkit.TestActorRef
 import scala.collection.immutable.TreeMap
-import akka.util.duration._
+import scala.concurrent.util.duration._
 
 @RunWith(classOf[JUnitRunner])
 class LengthWindowSpec (_system: ActorSystem) 

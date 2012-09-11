@@ -26,9 +26,10 @@ import akka.actor.Actor
 import akka.actor.Props
 import akka.pattern.ask
 import akka.util.Timeout
-import akka.util.duration.intToDurationInt
-import akka.dispatch.Await
+import scala.concurrent.util.duration._
+import scala.concurrent.Await
 import org.evactor.model.events.Event
+import scala.concurrent.ExecutionContext
 
 @RunWith(classOf[JUnitRunner])
 class ProcessorManagerSpec(_system: ActorSystem) 
@@ -36,6 +37,8 @@ class ProcessorManagerSpec(_system: ActorSystem)
   with EvactorSpec   
   with BeforeAndAfterAll {
 
+  import _system.dispatcher
+  
   def this() = this(ActorSystem("ProcessorManagerSpec"))
 
   override protected def afterAll(): scala.Unit = {

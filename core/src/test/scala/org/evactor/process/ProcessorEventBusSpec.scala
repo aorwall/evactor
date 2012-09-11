@@ -23,7 +23,7 @@ import org.scalatest.BeforeAndAfterAll
 import akka.actor.ActorSystem
 import akka.testkit.TestProbe
 import org.evactor.model.events.DataEvent
-import akka.util.duration._
+import scala.concurrent.util.duration._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.evactor.model.Message

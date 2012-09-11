@@ -15,17 +15,21 @@
  */
 package org.evactor.process.build
 
-import akka.actor.Cancellable
-import akka.util.duration.longToDurationLong
-import org.evactor.model.Timeout
 import akka.actor.Actor
+import Actor._
+import akka.actor.Cancellable
+import scala.concurrent.util.duration._
+import org.evactor.model.Timeout
+import akka.dispatch.Dispatchers
 
 trait Timed extends Actor  {
   
-  def timeout: Option[Long]
+  import context.dispatcher
   
-  var scheduledTimeout:Option[Cancellable] = None 
+  def timeout: Option[Long]
       
+  var scheduledTimeout:Option[Cancellable] = None 
+  
   override def preStart() {
     scheduledTimeout = timeout match {
       case Some(timeout) => Some(context.system.scheduler.scheduleOnce(timeout milliseconds, self, Timeout))

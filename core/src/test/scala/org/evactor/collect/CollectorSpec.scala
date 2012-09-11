@@ -26,7 +26,7 @@ import akka.actor.ActorSystem
 import akka.testkit.TestActorRef
 import akka.testkit.TestKit
 import akka.testkit.TestProbe
-import akka.util.duration.intToDurationInt
+import scala.concurrent.util.duration._
 import com.typesafe.config.ConfigFactory
 import org.evactor.bus.ProcessorEventBusExtension
 import org.evactor.model.Message

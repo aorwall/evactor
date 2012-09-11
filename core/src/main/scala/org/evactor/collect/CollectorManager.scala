@@ -18,7 +18,7 @@ package org.evactor.collect
 import com.typesafe.config.Config
 import akka.actor.SupervisorStrategy._
 import akka.actor._
-import akka.util.duration._
+import scala.concurrent.util.duration._
 import scala.collection.JavaConversions._
 import org.evactor.ConfigurationException
 import org.evactor.Start

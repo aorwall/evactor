@@ -29,7 +29,7 @@ import akka.actor.ActorSystem
 import akka.testkit.TestActorRef
 import akka.testkit.TestKit
 import akka.testkit.TestProbe
-import akka.util.duration._
+import scala.concurrent.util.duration._
 import org.evactor.expression.MvelExpression
 
 @RunWith(classOf[JUnitRunner])

@@ -17,14 +17,14 @@ package org.evactor.process.build
 
 import akka.actor._
 import akka.actor.SupervisorStrategy._
-import akka.util.duration._
+import scala.concurrent.util.duration._
 import org.evactor.model.events.Event
 import org.evactor.process.Processor
 import scala.collection.mutable.HashMap
 import org.evactor.subscribe.Subscription
 
-abstract class Builder (override val subscriptions: List[Subscription]) 
-  extends Processor (subscriptions) 
+abstract class Builder (val subscriptions: List[Subscription]) 
+  extends Processor 
   with ActorLogging {
   
   

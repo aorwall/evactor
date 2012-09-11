@@ -28,7 +28,7 @@ import akka.testkit.TestKit
 import akka.actor.ActorSystem
 import akka.testkit.TestActorRef
 import akka.testkit.TestProbe
-import akka.util.duration._
+import scala.concurrent.util.duration._
 import akka.actor.Actor
 
 @RunWith(classOf[JUnitRunner])

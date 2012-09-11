@@ -34,7 +34,7 @@ import akka.actor.Actor
 import akka.actor.ActorLogging
 import akka.actor.OneForOneStrategy
 import akka.actor.Props
-import akka.util.duration.intToDurationInt
+import scala.concurrent.util.duration._
 import scala.collection.mutable.HashSet
 import akka.actor.ActorInitializationException
 

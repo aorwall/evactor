@@ -31,7 +31,7 @@ import akka.actor.ActorSystem
 import akka.testkit.TestActorRef
 import akka.testkit.TestKit
 import akka.testkit.TestProbe
-import akka.util.duration._
+import scala.concurrent.util.duration._
 import org.evactor.subscribe.Subscriptions
 import org.evactor.process.OneAndOne
 

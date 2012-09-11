@@ -15,6 +15,7 @@
  */
 package org.evactor.process
 
+import akka.actor.Actor
 import org.evactor.ConfigurationException
 import org.evactor.expression.Expression
 import org.evactor.model.{Message, Timeout}
@@ -41,13 +42,13 @@ import org.evactor.process.produce.CamelProducer
 /**
  * Abstract class all standard processors should extend
  */
-abstract class Processor (
-    val subscriptions: List[Subscription]) 
-  extends Subscriber 
+trait Processor 
+  extends Actor
+  with Subscriber 
   with Monitored
   with ActorLogging {
 
-  def receive = {
+  def receive: Receive = {
     case Message(_, event) => incr("process"); process(event)
     case Timeout => timeout()
     case msg => log.warning("Can't handle {}", msg)
@@ -72,7 +73,7 @@ object Processor {
 
   lazy val dynamicAccess = new ReflectiveDynamicAccess(this.getClass.getClassLoader)
   
-  def apply(config: Config): Processor = {
+  def apply(config: Config): Actor = {
     
     import config._
     

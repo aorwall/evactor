@@ -15,6 +15,7 @@
  */
 package org.evactor.process.produce
 
+import akka.actor.Actor
 import org.evactor.model.events.Event
 import org.evactor.process.Processor
 import org.evactor.subscribe.Subscription
@@ -26,7 +27,7 @@ import org.evactor.model.Message
 class LogProducer (
     override val subscriptions: List[Subscription],
     val loglevel: String)
-  extends Processor (subscriptions) 
+  extends Processor
   with ActorLogging {
 
   private[this] val level = Logging.levelFor(loglevel).getOrElse(throw new ConfigurationException("Unknown log level: %s".format(loglevel)))

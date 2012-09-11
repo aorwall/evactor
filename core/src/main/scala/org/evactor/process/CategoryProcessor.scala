@@ -15,24 +15,19 @@
  */
 package org.evactor.process
 
+import akka.actor._
 import java.util.UUID
-
 import scala.collection.immutable.ListSet
 import scala.collection.mutable.HashMap
-
 import org.evactor.expression.Expression
 import org.evactor.model.events.Event
-import org.evactor.model.Message
-import org.evactor.model.Timeout
+import org.evactor.model.{Message, Timeout}
 import org.evactor.monitor.Monitored
-import org.evactor.subscribe.Subscriber
-import org.evactor.subscribe.Subscription
+import org.evactor.subscribe.{Subscriber, Subscription}
 import org.evactor.ConfigurationException
-import org.evactor.ConfigurationException
-
 import com.typesafe.config.Config
+import scala.concurrent.ExecutionContext
 
-import akka.actor._
 
 /**
  * Creates sub processors for each category. To use this processor type, an implementation of
@@ -45,9 +40,9 @@ import akka.actor._
  * 
  */
 abstract class CategorizedProcessor (
-    override val subscriptions: List[Subscription],
+    val subscriptions: List[Subscription],
     val categorization: Categorization)
-  extends Processor(subscriptions) 
+  extends Processor 
   with Subscriber 
   with Monitored
   with ActorLogging {
@@ -73,11 +68,7 @@ abstract class CategorizedProcessor (
     cs
   }
   
-  final override def receive = {
-    case msg: Message => incr("process"); sendEvent(msg) 
-    case Terminated(supervised) => handleTerminated(supervised)
-    case msg => log.warning("Can't handle {}", msg)
-  }
+  override def receive = super.receive 
   
   private[this] def sendNonCategorized(msg: Message) {
     getCategoryProcessor(Set()) ! msg.event
@@ -167,7 +158,7 @@ sealed trait Categorization {
   override def toString = name
 }
 
-case class NoCategorization extends Categorization { 
+case class NoCategorization() extends Categorization { 
   val name = "NoCategorization" 
 }
 
@@ -192,7 +183,7 @@ abstract class CategoryProcessor(
   extends Actor 
   with ActorLogging {
   
-  final override def receive = {
+  def receive = {
     case event:Event => process(event)
     case Timeout => timeout()
     case msg => log.warning("Can't handle {}", msg)

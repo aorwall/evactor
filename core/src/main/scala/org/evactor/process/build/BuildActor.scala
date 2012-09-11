@@ -17,13 +17,14 @@ package org.evactor.process.build
 
 import java.util.concurrent.{TimeUnit, ScheduledFuture}
 import akka.actor._
-import akka.util.duration._
+import scala.concurrent.util.duration._
 import org.evactor.model.events.Event
 import org.evactor.model.Timeout
 import org.evactor.process._
 import org.evactor.publish.Publication
 import org.evactor.publish.Publisher
-
+import scala.concurrent.ExecutionContext
+ 
 /**
  * One build actor for each running event builder
  */
@@ -34,6 +35,8 @@ abstract class BuildActor(
   extends EventBuilder 
   with Publisher 
   with ActorLogging {
+
+  import context.dispatcher
 
   var scheduledFuture: Option[Cancellable] = None
   
@@ -94,6 +97,6 @@ abstract class BuildActor(
     case Some(s) => s.cancel()
     case None => 
   }
-
+  
 }
 

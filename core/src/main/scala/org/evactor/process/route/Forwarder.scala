@@ -24,9 +24,9 @@ import org.evactor.subscribe.Subscription
  * Forwards events to another channel and category.
  */
 class Forwarder (
-    override val subscriptions: List[Subscription],
+    val subscriptions: List[Subscription],
     val publication: Publication)
-  extends Processor(subscriptions) with Publisher {
+  extends Processor with Publisher {
 
   def process(event: Event) {
     publish(event)

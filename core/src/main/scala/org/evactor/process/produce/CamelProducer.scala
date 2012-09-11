@@ -25,15 +25,16 @@ import akka.camel.CamelMessage
 import akka.camel.Oneway
 import akka.camel.Producer
 import org.apache.camel.Exchange
+import org.evactor.subscribe.Subscriber
 
 /**
  * Send an event in json format to a camel endpoint
  */
 class CamelProducer (
-    override val subscriptions: List[Subscription],
+    val subscriptions: List[Subscription],
     val camelEndpoint: String)
-  extends Processor (subscriptions) 
-  with Producer 
+  extends Producer 
+  with Subscriber
   with Oneway 
   with ActorLogging {
   
@@ -42,7 +43,7 @@ class CamelProducer (
   
   def endpointUri = camelEndpoint
   
-  override def receive = produce
+//  override def receive = produce
 
   override def transformOutgoingMessage(msg: Any) = CamelMessage(mapper.writeValueAsString(msg), Map(Exchange.CONTENT_TYPE -> "application/json"))
   

@@ -100,8 +100,6 @@ class CassandraStorage(override val system: ActorSystem)
     val event = message.event
     
     // TODO: will need some kind of rollback if one of the inserts fails
-    
-    // TODO: Must be raised if timeuuid already exists! 
     val timeuuid = TimeUUIDUtils.getTimeUUID(event.timestamp)
 
     // Check if event already exist. Will abort if the event implementation differs...
@@ -154,7 +152,7 @@ class CassandraStorage(override val system: ActorSystem)
     // add latency (deprecated)
     event match {
       case le: Event with HasLatency with HasState if (le.state eq Success) => logger debug("Store latency") ; storeLatency(message.channel, le)
-      case _ => logger debug("Don't store latency for non-latency events")
+      case _ => 
     }
     
     mutator.execute()

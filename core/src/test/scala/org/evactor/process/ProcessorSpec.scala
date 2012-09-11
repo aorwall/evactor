@@ -26,7 +26,7 @@ import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.actor.actorRef2Scala
 import akka.testkit.TestKit
-import akka.util.duration.intToDurationInt
+import scala.concurrent.util.duration._
 import org.evactor.model.events.DataEvent
 import org.evactor.EvactorSpec
 import org.evactor.model.events.Event
@@ -51,7 +51,7 @@ import org.evactor.process.produce.LogProducer
 class TestProcessor (
     override val subscriptions: List[Subscription],
     val publication: Publication) 
-  extends Processor (subscriptions) with Publisher {
+  extends Processor with Publisher {
   
   override protected def process(event: Event) {
     publish(event)
