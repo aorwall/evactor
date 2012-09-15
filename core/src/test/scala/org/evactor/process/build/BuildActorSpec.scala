@@ -43,7 +43,7 @@ trait TestEventBuilder extends EventBuilder  {
 
   def isFinished = true
 
-  def createEvent() = Right(new Event("id", 0L))
+  def createEvent() = Right(new Event{ val id = "id"; val timestamp = 0L })
 
   def clear() {}
     

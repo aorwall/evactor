@@ -23,15 +23,15 @@ import org.evactor.model.State
  * Represents a completed request to a component 
  */
 case class RequestEvent (
-    override val id: String,
-    override val timestamp: Long, 
+    val id: String,
+    val timestamp: Long, 
     val correlationId: String,
     val component: String,
     val inboundRef: Option[String],
     val outboundRef: Option[String],
     val state: State,
     val latency: Long) 
-  extends Event(id, timestamp)
+  extends Event
   with HasLatency 
   with HasState {
 

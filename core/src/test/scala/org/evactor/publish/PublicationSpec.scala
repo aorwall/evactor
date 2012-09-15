@@ -8,7 +8,7 @@ import org.evactor.model.events.Event
 @RunWith(classOf[JUnitRunner])
 class PublicationSpec extends EvactorSpec {
 
-  val mockEvent = new Event("", 0L)
+  val mockEvent = new Event{ val id = ""; val timestamp = 0L}
   
   "A Publication" must {
     

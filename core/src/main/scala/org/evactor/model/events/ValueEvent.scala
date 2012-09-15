@@ -21,10 +21,10 @@ import org.evactor.model.attributes.Categorized
  * An event with a value
  */
 case class ValueEvent (    
-    override val id: String, 
-    override val timestamp: Long, 
+    val id: String, 
+    val timestamp: Long, 
     val categories: Set[String],
     val value: Any) 
-  extends Event(id, timestamp) with Categorized {
+  extends Event with Categorized {
 
 }

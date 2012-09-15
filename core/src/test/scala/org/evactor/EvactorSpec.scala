@@ -48,7 +48,7 @@ trait EvactorSpec extends WordSpec with MustMatchers with ShouldMatchers {
   
   def createDataEvent(message: String) = new DataEvent(id, timestamp, message)
    
-  def createEvent() = new Event(id, timestamp)
+  def createEvent() = new Event { val id = EvactorSpec.id; val timestamp = EvactorSpec.timestamp }
   def createLogEvent(timestamp: Long, state: State) = new LogEvent(id, timestamp, "329380921309", "component", "client", "server", state, "hello")
 
   def createRequestEvent(timestamp: Long, inboundRef: Option[String], outboundRef: Option[String], corrId: String, comp: String, state: State, latency: Long) = 

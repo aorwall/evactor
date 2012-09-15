@@ -24,15 +24,15 @@ import org.evactor.model.{StateDeserializer, State}
  * Represents a simple log event from a component
  */
 case class LogEvent(
-    override val id: String,
-    override val timestamp: Long,
+    val id: String,
+    val timestamp: Long,
     val correlationId: String,
     val component: String,
     val client: String = "",
     val server: String = "",
     @JsonDeserialize(using=classOf[StateDeserializer])  state: State,
     val message: String)
-  extends Event(id, timestamp) 
+  extends Event
   with HasMessage 
   with HasState {
 

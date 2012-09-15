@@ -8,7 +8,7 @@ import org.evactor.model.events.Event
 @RunWith(classOf[JUnitRunner])
 class ExpressionSpec extends EvactorSpec {
   
-  val mockEvent = new Event("foo", 0L)
+  val mockEvent = new Event { val id ="foo"; val timestamp = 0L}
   
   "An Expression" must {
     

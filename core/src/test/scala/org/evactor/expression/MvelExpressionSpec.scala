@@ -49,7 +49,7 @@ class MvelExpressionSpec extends EvactorSpec {
     
     "evaluate case class and return boolean" in {
       val evaluator = new MvelExpression("timestamp > 0")
-      val event = new Event("id", 1L)
+      val event = new Event{ val id = "id"; val timestamp = 1L}
       evaluator.evaluate(event) must be (Some(true))
     }
     

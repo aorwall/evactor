@@ -18,11 +18,11 @@ package org.evactor.model.events
 import org.evactor.model.attributes.Categorized
 
 case class AlertEvent (
-    override val id: String, 
-    override val timestamp: Long,
+    val id: String, 
+    val timestamp: Long,
     val categories: Set[String],
     val triggered: Boolean,
     val event: Event) 
-  extends Event (id, timestamp) with Categorized {
+  extends Event with Categorized {
 
 }

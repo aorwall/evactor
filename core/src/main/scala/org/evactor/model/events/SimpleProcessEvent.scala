@@ -19,12 +19,12 @@ import org.evactor.model.attributes.HasState
 import org.evactor.model.State
 
 case class SimpleProcessEvent(
-    override val id: String, 
-    override val timestamp: Long,
+    val id: String, 
+    val timestamp: Long,
     val requests: List[String], // eventRefs
     val state: State,    
     val latency: Long) 
-  extends Event(id, timestamp) 
+  extends Event
   with HasLatency
   with HasState  {
   

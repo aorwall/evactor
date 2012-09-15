@@ -51,7 +51,7 @@ class RegressionAnalyserSpec(_system: ActorSystem)
       val actor = TestActorRef(new RegressionSubAnalyser(new TestPublication(testProbe.ref), Set("id"), 10, 300 ))
       
       for(i <- 1 until 100){
-        actor ! new Event("id", System.currentTimeMillis)
+        actor ! new Event{ val id = "id"; val timestamp = System.currentTimeMillis }
         Thread.sleep(300/i)
       }
       

@@ -26,9 +26,7 @@ import java.net.URLEncoder
  * 
  */
 
-class Event (
-    val id: String,
-    val timestamp: Long) 
-  extends Serializable {
-    
+trait Event extends Serializable {
+    val id: String
+    val timestamp: Long
 }

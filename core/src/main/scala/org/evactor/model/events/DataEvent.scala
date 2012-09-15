@@ -21,10 +21,10 @@ import org.evactor.model.attributes.HasMessage
  * An event with a message of some sort
  */
 case class DataEvent (    
-    override val id: String, 
-    override val timestamp: Long, 
+    val id: String, 
+    val timestamp: Long, 
     val message: String) 
-  extends Event(id, timestamp) 
+  extends Event 
   with HasMessage {
 
 }

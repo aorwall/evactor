@@ -50,7 +50,7 @@ class ExtractorSpec(_system: ActorSystem)
      _system.shutdown()
   }
   
-  val expectedEvent = new Event("foo", 0L)
+  val expectedEvent = new Event{ val id = "foo"; val timestamp = 0L}
   
   class TestExtractor (override val subscriptions: List[Subscription],
         override val publication: Publication,
@@ -76,9 +76,9 @@ class ExtractorSpec(_system: ActorSystem)
       val eventPrope = TestProbe()
 
       val actor = TestActorRef(new TestExtractor(Nil, new TestPublication(eventPrope.ref), new StaticExpression("expr")))
-      val event = new Event("id", 0L)
+      val event = new Event{ val id = "id"; val timestamp = 0L}
       
-      actor ! new Message("", new Event("id", 0L))
+      actor ! new Message("", new Event{ val id = "foo"; val timestamp = 0L})
       
       eventPrope.expectNoMsg(1 seconds)
       actor.stop

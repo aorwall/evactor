@@ -51,7 +51,7 @@ class CollectorSpec(_system: ActorSystem)
     "publish events to the event bus" in {
       val testProbe = TestProbe()
       val collector = TestActorRef(new Collector(None, None, new TestPublication(testProbe.ref)))
-      val testEvent = new Event("id", System.currentTimeMillis)
+      val testEvent = new Event { val id = "id"; val timestamp = System.currentTimeMillis}
       collector ! testEvent
       testProbe.expectMsg(1 seconds, testEvent)
     }
@@ -59,7 +59,7 @@ class CollectorSpec(_system: ActorSystem)
     "don't publish events that has already been published" in {
       val testProbe = TestProbe()
       val collector = TestActorRef(new Collector(None, None, new TestPublication(testProbe.ref)))
-      val testEvent = new Event("id", System.currentTimeMillis)
+      val testEvent = new Event {val id = "id"; val timestamp = System.currentTimeMillis }
       collector ! testEvent
       testProbe.expectMsg(1 seconds, testEvent)
       collector ! testEvent
@@ -75,15 +75,15 @@ class CollectorSpec(_system: ActorSystem)
 
       val time = System.currentTimeMillis // - collector.timeInMem + 50
       
-      val testEvent1 = new Event("id1", time)
-      val testEvent2 = new Event("id2", time)
+      val testEvent1 = new Event{ val id = "id1"; val timestamp = time}
+      val testEvent2 = new Event{ val id = "id2"; val timestamp = time}
       collector.eventExists(testEvent1) must be (false)
       collector.eventExists(testEvent1) must be (true)
       collector.eventExists(testEvent2) must be (false)
-      Thread.sleep(200)
+      Thread.sleep(300)
       val newTime = System.currentTimeMillis // - collector.timeInMem + 50
-      val newEvent1 = new Event("id1", newTime)
-      val newEvent2 = new Event("id2", newTime)
+      val newEvent1 = new Event{ val id = "id1"; val timestamp = newTime}
+      val newEvent2 = new Event{ val id = "id2"; val timestamp = newTime}
       collector.eventExists(newEvent1) must be (false)
       collector.eventExists(newEvent1) must be (true)
       collector.eventExists(newEvent2) must be (false)
@@ -104,7 +104,7 @@ class CollectorSpec(_system: ActorSystem)
         case _ => fail
       }
       
-      val event = new Event("id", 0L)
+      val event = new Event{ val id = "id"; val timestamp = 0L}
       collector ! event
       probe.expectMsg(new Message("foo", event))
       
