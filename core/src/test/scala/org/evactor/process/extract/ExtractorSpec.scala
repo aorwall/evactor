@@ -30,7 +30,7 @@ import org.evactor.EvactorSpec
 import org.evactor.subscribe.Subscription
 import akka.testkit.TestActorRef
 import akka.testkit.TestProbe
-import scala.concurrent.util.duration._
+import scala.concurrent.duration._
 import org.evactor.publish.Publication
 import org.evactor.model.Message
 import org.evactor.expression.Expression

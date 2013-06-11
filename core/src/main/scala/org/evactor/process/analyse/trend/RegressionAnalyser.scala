@@ -21,7 +21,7 @@ import org.evactor.process._
 import org.evactor.model.events.Event
 import org.evactor.process.analyse.window.TimeWindow
 import akka.actor.ActorLogging
-import scala.concurrent.util.duration._
+import scala.concurrent.duration._
 import org.evactor.publish.Publisher
 import org.evactor.model.events.AlertEvent
 import scala.collection.immutable.TreeMap

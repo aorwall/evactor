@@ -22,6 +22,7 @@ import akka.actor.ReflectiveDynamicAccess
 import com.typesafe.config.Config
 import org.evactor.ConfigurationException
 import scala.collection.JavaConversions._
+import scala.util.{Try, Success, Failure}
 
 /**
  * Listens on external event producers
@@ -53,7 +54,10 @@ object Listener {
         Nil
       }
             
-      dynamicAccess.createInstanceFor[Listener](clazz, Seq((classOf[ActorRef], sendTo)) ++ args).fold(throw _, p => p)
+      dynamicAccess.createInstanceFor[Listener](clazz, Seq((classOf[ActorRef], sendTo)) ++ args) match {
+        case Success(p) => p
+        case Failure(e) => throw e
+      }
     } else {
       throw new ConfigurationException("listener must specify either a type or a class")
     }

@@ -18,7 +18,7 @@ package org.evactor.process.build
 import akka.actor.Actor
 import Actor._
 import akka.actor.Cancellable
-import scala.concurrent.util.duration._
+import scala.concurrent.duration._
 import org.evactor.model.Timeout
 import akka.dispatch.Dispatchers
 

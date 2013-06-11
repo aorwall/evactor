@@ -32,7 +32,7 @@ import org.evactor.EvactorSpec
 import org.evactor.model.Timeout
 import akka.testkit.TestProbe
 import org.evactor.model.Message
-import scala.concurrent.util.duration._
+import scala.concurrent.duration._
 import org.evactor.publish.StaticPublication
 import org.evactor.publish.TestPublication
 

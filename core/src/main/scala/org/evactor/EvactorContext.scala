@@ -23,7 +23,7 @@ import org.evactor.collect.CollectorManager
 import org.evactor.process.ProcessorManager
 import org.evactor.storage.StorageManager
 import akka.actor.OneForOneStrategy
-import scala.concurrent.util.duration._
+import scala.concurrent.duration._
 import akka.actor.SupervisorStrategy._
 
 class EvactorContext extends Actor with ActorLogging {

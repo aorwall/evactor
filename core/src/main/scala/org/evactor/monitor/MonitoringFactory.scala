@@ -19,6 +19,7 @@ import com.typesafe.config.Config
 import akka.actor.Extension
 import akka.actor.ExtendedActorSystem
 import akka.actor.ActorSystem
+import scala.util.{Try, Success, Failure}
 
 object MonitoringFactory {
   
@@ -43,11 +44,14 @@ class MonitoringFactory(val system: ExtendedActorSystem) extends Extension {
   
   def getMonitoring(): Option[Monitoring] = monitorImplementation
   
-  def monitorImplOf(monitorFQN: String): Either[Throwable, Monitoring] = 
+  def monitorImplOf(monitorFQN: String): Try[Monitoring] = 
     system.dynamicAccess.createInstanceFor[Monitoring](monitorFQN, Seq(classOf[ActorSystem] -> system))
         
   lazy val monitorImplementation: Option[Monitoring] = settings.MonitorImplementation match {
-    case Some(impl) => monitorImplOf(impl).fold (e => {system.log.error("Failed to initiate monitoring, {}", e); None}, Some(_)) 
+    case Some(impl) => monitorImplOf(impl) match {
+      case Failure(e) => system.log.error("Failed to initiate monitoring, {}", e); None
+      case Success(s) => Some(s)
+    }
     case None => None
   }
 }

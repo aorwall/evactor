@@ -19,6 +19,7 @@ import com.typesafe.config.Config
 import akka.actor.Extension
 import akka.actor.ExtendedActorSystem
 import akka.actor.ActorSystem
+import scala.util.{Try, Success, Failure}
 
 object EventStorageFactory {
   
@@ -44,11 +45,14 @@ class EventStorageFactory(val system: ExtendedActorSystem) extends Extension {
 	
   def getEventStorage(): Option[EventStorage] = storageImplementation
 	
-  def storageImplOf(storageFQN: String): Either[Throwable, EventStorage] = 
+  def storageImplOf(storageFQN: String): Try[EventStorage] = 
     system.dynamicAccess.createInstanceFor[EventStorage](storageFQN, Seq(classOf[ActorSystem] -> system))
         
   lazy val storageImplementation: Option[EventStorage] = settings.StorageImplementation match {
-    case Some(impl) => storageImplOf(impl).fold(throw _, Some(_)) 
+    case Some(impl) => storageImplOf(impl) match {
+      case Failure(e) => throw e
+      case Success(v) => Some(v)
+    }
     case None => None
   }
     

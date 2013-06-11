@@ -4,14 +4,14 @@ import com.typesafe.config.Config
 import akka.actor.SupervisorStrategy._
 import akka.actor._
 import akka.actor.ReflectiveDynamicAccess
-import scala.concurrent.util.duration._
+import scala.concurrent.duration._
 import org.evactor.ConfigurationException
 import org.evactor.Start
 import akka.camel.CamelExtension
 import org.apache.activemq.camel.component.ActiveMQComponent
 import scala.collection.JavaConversions._
 import org.apache.camel.Component
-
+import scala.util.{Try, Success, Failure}
 
 /**
  * User: anders
@@ -53,7 +53,10 @@ class BrokerManager extends Actor with ActorLogging {
       val initMethod = c.getString("init")
       val brokerUri = c.getString("brokerUri")
 
-      val component = dynamicAccess.getClassFor[Component](componentType).fold(throw _, p => p.getMethod(initMethod).invoke(brokerUri).asInstanceOf[Component])
+      val component = dynamicAccess.getClassFor[Component](componentType) match {
+        case Failure(e) => throw e
+        case Success(p) => p.getMethod(initMethod).invoke(brokerUri).asInstanceOf[Component]
+      }
 
       log.debug("{} broker added")
 

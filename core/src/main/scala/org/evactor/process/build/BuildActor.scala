@@ -17,7 +17,7 @@ package org.evactor.process.build
 
 import java.util.concurrent.{TimeUnit, ScheduledFuture}
 import akka.actor._
-import scala.concurrent.util.duration._
+import scala.concurrent.duration._
 import org.evactor.model.events.Event
 import org.evactor.model.Timeout
 import org.evactor.process._

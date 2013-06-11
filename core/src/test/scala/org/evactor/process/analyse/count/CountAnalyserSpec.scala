@@ -26,7 +26,7 @@ import akka.testkit.TestActorRef
 import org.evactor.expression.MvelExpression
 import org.evactor.expression.StaticExpression
 import org.evactor.model.events.Event
-import scala.concurrent.util.duration._
+import scala.concurrent.duration._
 import org.evactor.model.events.AlertEvent
 import org.evactor.model.Message
 import org.evactor.model.events.DataEvent

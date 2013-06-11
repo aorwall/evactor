@@ -36,6 +36,7 @@ import org.evactor.subscribe._
 import akka.actor.{ActorLogging, ReflectiveDynamicAccess}
 import com.typesafe.config.{Config, ConfigException}
 import scala.collection.JavaConversions._
+import scala.util.{Try, Success, Failure}
 import java.util.UUID
 import org.evactor.process.produce.CamelProducer
 
@@ -112,7 +113,10 @@ object Processor {
   
         val args = Seq((classOf[List[Subscription]], sub)) ++ pubs ++ arguments
         
-        dynamicAccess.createInstanceFor[Processor](clazz, args).fold(throw _, p => p)
+        dynamicAccess.createInstanceFor[Processor](clazz, args) match {
+          case Failure(e) => throw e
+          case Success(v) => v
+        }
       } else {
         throw new ConfigurationException("processor must specify either a type or a class")
       }

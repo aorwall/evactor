@@ -12,7 +12,7 @@ import akka.testkit.TestProbe
 import akka.camel.CamelExtension
 import org.evactor.model.events.AlertEvent
 import org.evactor.model.events.DataEvent
-import scala.concurrent.util.duration._
+import scala.concurrent.duration._
 
 @RunWith(classOf[JUnitRunner])
 class CamelProducerSpec (_system: ActorSystem) 

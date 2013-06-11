@@ -16,7 +16,7 @@
 package org.evactor.process.analyse.window
 
 import org.evactor.model.Timeout
-import scala.concurrent.util.duration._
+import scala.concurrent.duration._
 import akka.actor.ActorLogging
 import scala.collection.immutable.SortedMap
 import akka.actor.Cancellable

@@ -26,7 +26,7 @@ import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.actor.actorRef2Scala
 import akka.testkit.TestKit
-import scala.concurrent.util.duration._
+import scala.concurrent.duration._
 import org.evactor.model.events.DataEvent
 import org.evactor.EvactorSpec
 import org.evactor.model.events.Event

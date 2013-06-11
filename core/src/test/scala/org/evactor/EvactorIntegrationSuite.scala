@@ -31,7 +31,7 @@ import akka.actor.actorRef2Scala
 import akka.testkit.TestActorRef
 import akka.testkit.TestKit
 import akka.testkit.TestProbe
-import scala.concurrent.util.duration._
+import scala.concurrent.duration._
 import org.evactor.model.Message
 
 /**

@@ -17,7 +17,7 @@ package org.evactor.process.build
 
 import akka.actor._
 import akka.actor.SupervisorStrategy._
-import scala.concurrent.util.duration._
+import scala.concurrent.duration._
 import org.evactor.model.events.Event
 import org.evactor.process.Processor
 import scala.collection.mutable.HashMap

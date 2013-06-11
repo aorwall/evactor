@@ -27,7 +27,7 @@ import akka.testkit.TestProbe._
 import akka.testkit.TestActorRef
 import akka.testkit.TestKit
 import akka.testkit.TestProbe
-import scala.concurrent.util.duration._
+import scala.concurrent.duration._
 import org.evactor.model.events.AlertEvent
 import org.evactor.model.events.RequestEvent
 import org.evactor.model.Success

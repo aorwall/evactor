@@ -26,7 +26,7 @@ import akka.actor.Actor
 import akka.actor.Props
 import akka.pattern.ask
 import akka.util.Timeout
-import scala.concurrent.util.duration._
+import scala.concurrent.duration._
 import scala.concurrent.Await
 import org.evactor.model.events.Event
 import scala.concurrent.ExecutionContext

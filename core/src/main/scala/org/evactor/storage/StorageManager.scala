@@ -7,7 +7,7 @@ import akka.actor.ActorLogging
 import akka.actor.OneForOneStrategy
 import akka.actor.Props
 import akka.actor.Status
-import scala.concurrent.util.duration._
+import scala.concurrent.duration._
 import org.evactor.subscribe.Subscription
 import org.evactor.Start
 import com.typesafe.config.ConfigValueType

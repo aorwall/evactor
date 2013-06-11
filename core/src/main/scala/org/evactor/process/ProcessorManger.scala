@@ -22,7 +22,7 @@ import org.evactor.storage.StorageProcessorRouter
 import com.typesafe.config.Config
 import akka.actor.SupervisorStrategy._
 import akka.actor._
-import scala.concurrent.util.duration._
+import scala.concurrent.duration._
 import org.evactor.ConfigurationException
 import org.evactor.Start
 

@@ -29,7 +29,7 @@ import scala.collection.immutable.SortedMap
 import org.evactor.EvactorSpec
 import akka.testkit.TestProbe
 import akka.testkit.TestActorRef
-import scala.concurrent.util.duration._
+import scala.concurrent.duration._
 
 @RunWith(classOf[JUnitRunner])
 class TimeWindowSpec (_system: ActorSystem) 
