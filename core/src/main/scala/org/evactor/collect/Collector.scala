@@ -15,7 +15,7 @@
  */
 package org.evactor.collect
 
-import java.util.TreeMap
+import java.util.{Collections, TreeMap}
 import scala.collection.JavaConversions._
 import org.evactor.listen.Listener
 import org.evactor.listen.ListenerException
@@ -61,7 +61,7 @@ class Collector(
   val startTime = System.currentTimeMillis
   
   private val ids = new HashSet[String]
-  private val timeline = new TreeMap[Long, List[String]]()
+  private val timeline = Collections.synchronizedSortedMap(new TreeMap[Long, List[String]]()) // TODO: We need a better solution than a synchronized map!
   
   private val dbCheck = context.actorOf(Props(new CollectorStorageCheck(publication)))
   
