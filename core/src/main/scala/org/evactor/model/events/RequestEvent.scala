@@ -22,6 +22,7 @@ import org.evactor.model.State
 /**
  * Represents a completed request to a component 
  */
+@SerialVersionUID(1l)
 case class RequestEvent (
     val id: String,
     val timestamp: Long, 

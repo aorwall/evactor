@@ -23,6 +23,7 @@ import org.evactor.model.{StateDeserializer, State}
 /**
  * Represents a simple log event from a component
  */
+@SerialVersionUID(1l)
 case class LogEvent(
     val id: String,
     val timestamp: Long,

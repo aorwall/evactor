@@ -17,6 +17,7 @@ package org.evactor.model.events
 
 import org.evactor.model.attributes.Categorized
 
+@SerialVersionUID(1l)
 case class AlertEvent (
     val id: String, 
     val timestamp: Long,

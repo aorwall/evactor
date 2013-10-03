@@ -20,6 +20,7 @@ import org.evactor.model.attributes.HasLong
 /**
  * An event with a measurable value
  */
+@SerialVersionUID(1l)
 case class KpiEvent (
     val id: String, 
     val timestamp: Long, 

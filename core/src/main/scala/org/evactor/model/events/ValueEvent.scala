@@ -20,6 +20,7 @@ import org.evactor.model.attributes.Categorized
 /**
  * An event with a value
  */
+@SerialVersionUID(1l)
 case class ValueEvent (    
     val id: String, 
     val timestamp: Long, 

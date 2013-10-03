@@ -18,6 +18,7 @@ import org.evactor.model.attributes.HasLatency
 import org.evactor.model.attributes.HasState
 import org.evactor.model.State
 
+@SerialVersionUID(1l)
 case class SimpleProcessEvent(
     val id: String, 
     val timestamp: Long,
