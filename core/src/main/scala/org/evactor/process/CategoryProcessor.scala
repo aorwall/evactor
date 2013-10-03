@@ -67,8 +67,12 @@ abstract class CategorizedProcessor (
     }
     cs
   }
-  
-  override def receive = super.receive 
+
+  final override def receive = {
+    case msg: Message => incr("process"); sendEvent(msg)
+    case Terminated(supervised) => handleTerminated(supervised)
+    case msg => log.warning("Can't handle {}", msg)
+  }
   
   private[this] def sendNonCategorized(msg: Message) {
     getCategoryProcessor(Set()) ! msg.event
