@@ -56,8 +56,13 @@ class CassandraStorage(override val system: ActorSystem)
   with Logging {
     
   private val settings = CassandraStorageExtension(system)
-  
-  val cluster = HFactory.getOrCreateCluster(settings.Clustername, new CassandraHostConfigurator(settings.Hostname + ":" + settings.Port))
+
+  val conf = new CassandraHostConfigurator(settings.Hostname + ":" + settings.Port)
+  conf.setRetryDownedHosts(true)
+  conf.setRetryDownedHostsQueueSize(10)
+  conf.setRetryDownedHostsDelayInSeconds(5)
+
+  val cluster = HFactory.getOrCreateCluster(settings.Clustername, conf)
   protected val keyspace = HFactory.createKeyspace(settings.Keyspace, cluster)
   
   val CHANNEL_CF = "Channel"
@@ -183,7 +188,7 @@ class CassandraStorage(override val system: ActorSystem)
     val dayDate = new DateTime(time.getYear, time.getMonthOfYear, time.getDayOfMonth, 0, 0)
     val day = new java.lang.Long(dayDate.toDate.getTime)
     val hour = new java.lang.Long(new DateTime(time.getYear, time.getMonthOfYear, time.getDayOfMonth, time.getHourOfDay, 0).toDate.getTime)
-    
+
     mutator.incrementCounter(new StatisticsKey(key, YEAR).keyValue, STATS_CF, year, count)
     mutator.incrementCounter(new StatisticsKey(key, MONTH).keyValue, STATS_CF, month, count)
     mutator.incrementCounter(new StatisticsKey(key, DAY).keyValue, STATS_CF, day, count)
@@ -315,7 +320,7 @@ class CassandraStorage(override val system: ActorSystem)
     
     if(_from.compareTo(to) >= 0) throw new IllegalArgumentException("to is older than from")
 
-    debug("Reading statistics for event with name " + key + " from " + _from + " to " + to + " with interval: " + interval)
+    debug("Reading statistics for event with name " + key.keyValue + " from " + _from + " to " + to + " with interval: " + interval)
         
     // Fix timestamp   
     val from = if(interval == HOUR && _from > 0 && (to-_from) > maxHourTimespan ){
@@ -325,7 +330,7 @@ class CassandraStorage(override val system: ActorSystem)
     } else {
       _from
     }
-    
+
     val columns = HFactory.createCounterSliceQuery(keyspace, StringSerializer.get, LongSerializer.get)
           .setColumnFamily(STATS_CF)
           .setKey(new StatisticsKey(key, interval).keyValue)
