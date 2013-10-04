@@ -21,8 +21,9 @@ import org.evactor.model.events.Event
 import org.mvel2.MVEL
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.mvel2.util.FastList
-import scala.collection.JavaConversions.asJavaList
-
+import scala.collection.JavaConversions.{SeqWrapper, seqAsJavaList}
+import scala.reflect.ClassTag
+import scala.collection.convert.Wrappers
 
 /**
  * Evaluate MVEL Expressions. Supports JSON and strings in message. XML to come...?
@@ -65,10 +66,10 @@ case class MvelExpression(val expression: String) extends Expression {
               
     obj.put("id", event.id)
     obj.put("timestamp", event.timestamp)
-    
+
     val result = try {
       MVEL.executeExpression(compiledExp, obj) match {
-        case f: org.mvel2.util.FastList[Any] => Some(f.toArray.toList)
+        case Wrappers.SeqWrapper(f) => Some(f.toList)
         case a: Any => Some(a)
       }
     } catch {
@@ -85,15 +86,16 @@ case class MvelExpression(val expression: String) extends Expression {
     
     fields.foreach { f =>
       f.setAccessible(true)
-      
+
       f.get(cc) match {
         case Some(o) => map.put(f.getName, o)
         case None => // do nothing
-        case l: Iterable[Any] => map.put(f.getName, asJavaList(l.toList))
+        case l: Iterable[Any] => map.put(f.getName, seqAsJavaList(l.toList))
         case o => map.put(f.getName, o)
       }
       
     }
+
     map
   }
   
