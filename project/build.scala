@@ -16,10 +16,10 @@
 import sbt._
 import Keys._
 
-object BamBuild extends Build {
+object EvactorBuild extends Build {
   
   val Organization = "org.evactor"
-  val Version      = "0.3-SNAPSHOT"
+  val Version      = "0.5-SNAPSHOT"
   val ScalaVersion = "2.10.2"
 
   lazy val evactor = Project(
@@ -71,7 +71,43 @@ object BamBuild extends Build {
     version      := Version,
     scalaVersion := ScalaVersion,
     crossPaths   := false,
-    publishTo	   := Some(Resolver.file("file",  new File(Path.userHome.absolutePath+"/.m2/repository")))
+    publishMavenStyle := true,
+    publishTo := {
+      val nexus = "https://oss.sonatype.org/"
+      if (Version.trim.endsWith("SNAPSHOT"))
+        Some("snapshots" at nexus + "content/repositories/snapshots")
+      else
+        Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+    },
+    pomIncludeRepository := { _ => false },
+    pomExtra := (
+      <url>https://github.com/aorwall/evactor</url>
+      <licenses>
+        <license>
+          <name>Apache 2.0</name>
+          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+          <distribution>repo</distribution>
+        </license>
+      </licenses>
+      <scm>
+        <url>git@github.com:aorwall/evactor.git</url>
+        <connection>scm:git:git@github.com:aorwall/evactor.git</connection>
+      </scm>
+      <developers>
+        <developer>
+          <id>aorwall</id>
+          <name>Albert Örwall</name>
+          <url>https://github.com/aorwall</url>
+        </developer>
+      </developers>
+      <contributors>
+        <contributor>
+          <id>aasplund</id>
+          <name>Anders Asplund</name>
+          <url>https://github.com/aasplund</url>
+        </contributor>
+      </contributors>
+      )
   ) 
 
   lazy val defaultSettings = buildSettings ++ Seq(
@@ -100,7 +136,7 @@ object Dependency {
     val Camel = "2.10.0"
     val Cassandra = "1.0.6"
     val Hector = "1.0-2"
-    val Jackson = "2.0.2"
+    val Jackson = "2.1.3"
     val Scalatest = "1.9.1"
     val Slf4j = "1.6.4"
     val TwitterUtil = "1.12.13"
@@ -121,7 +157,7 @@ object Dependency {
   val camelIrc = "org.apache.camel" % "camel-irc" % V.Camel
   val cassandraAll = "org.apache.cassandra" % "cassandra-all" % V.Cassandra
   val cassandraThrift = "org.apache.cassandra" % "cassandra-thrift" % V.Cassandra
-  val grizzled = "org.clapper" % "grizzled-slf4j_2.9.1" % "0.6.6"
+  val grizzled = "org.clapper" % "grizzled-slf4j_2.10" % "1.0.1"
   val groovy = "org.codehaus.groovy" % "groovy" % "1.8.6" % "runtime"
   val guava = "com.google.guava" % "guava" % "r09"
   val hector = "me.prettyprint" % "hector" % V.Hector
@@ -130,7 +166,7 @@ object Dependency {
   val httpClient = "org.apache.httpcomponents" % "httpclient" % "4.1"
   val jacksonMapper = "com.fasterxml.jackson.core" % "jackson-databind" % V.Jackson
   val jacksonCore = "com.fasterxml.jackson.core" % "jackson-core" % V.Jackson
-  val jacksonScala = "com.fasterxml.jackson.module" % "jackson-module-scala" % V.Jackson
+  val jacksonScala = "com.fasterxml.jackson.module" % "jackson-module-scala_2.10" % V.Jackson
   val jodaConvert = "org.joda" % "joda-convert" % "1.1"
   val jodaTime = "joda-time" % "joda-time" % "2.0"
   val logback = "ch.qos.logback" % "logback-classic" % "1.0.0" % "runtime"
