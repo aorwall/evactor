@@ -70,6 +70,7 @@ case class MvelExpression(val expression: String) extends Expression {
     val result = try {
       MVEL.executeExpression(compiledExp, obj) match {
         case Wrappers.SeqWrapper(f) => Some(f.toList)
+        case f: org.mvel2.util.FastList[Any] => Some(f.toArray.toList)
         case a: Any => Some(a)
       }
     } catch {
