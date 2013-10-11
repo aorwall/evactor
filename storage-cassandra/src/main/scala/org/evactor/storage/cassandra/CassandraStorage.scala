@@ -128,15 +128,19 @@ class CassandraStorage(override val system: ActorSystem)
     // extract index values from event and add by index 
     val idxs = (settings.ChannelIndex.getOrElse(message.channel, Nil) ++ settings.EventTypeIndex.getOrElse(eventType, Nil)).toSet
     idxs.foreach { set => 
-      val idx = set.map { name => 
+      val idx = set.map { name =>
         try {
-          val field = event.getClass.getDeclaredField(name)
+          val n = if(name.indexOf(".") > 0) name.substring(0, name.indexOf(".")) else name
+          val key = if(name.indexOf(".") > 0) Some(name.substring(name.indexOf(".")+1)) else None
+
+          val field = event.getClass.getDeclaredField(n)
           if(field != null){
             field.setAccessible(true)
             name -> (field.get(event) match {
-              case Some(a: Any) => a.toString
-              case a: Iterable[Any] => a.mkString(",")
-              case a: Any => a.toString
+              case m: Map[String, Any] if(key.isDefined) => info("m class:" + m.getClass + ", " +  m(key.get)); m(key.get).toString
+              case Some(o: Any) =>info("o class:" + o.getClass);  o.toString
+              case l: Iterable[Any] =>  info("l class:" + l.getClass); l.mkString(",")
+              case a: Any => info("class:" + a.getClass); a.toString
               case _ => ""
             })
           } else {
