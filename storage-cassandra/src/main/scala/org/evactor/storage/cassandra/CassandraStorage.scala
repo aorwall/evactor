@@ -125,7 +125,7 @@ class CassandraStorage(override val system: ActorSystem)
 
     val eventType = event.getClass.getSimpleName
     
-    // extract index values from event and add by index 
+    // extract index values from event and add by index
     val idxs = (settings.ChannelIndex.getOrElse(message.channel, Nil) ++ settings.EventTypeIndex.getOrElse(eventType, Nil)).toSet
     idxs.foreach { set => 
       val idx = set.map { name =>
@@ -137,25 +137,26 @@ class CassandraStorage(override val system: ActorSystem)
           if(field != null){
             field.setAccessible(true)
             name -> (field.get(event) match {
-              case m: Map[String, Any] if(key.isDefined) => info("m class:" + m.getClass + ", " +  m(key.get)); m(key.get).toString
-              case Some(o: Any) =>info("o class:" + o.getClass);  o.toString
-              case l: Iterable[Any] =>  info("l class:" + l.getClass); l.mkString(",")
-              case a: Any => info("class:" + a.getClass); a.toString
-              case _ => ""
+              case m: Map[String, Any] if(key.isDefined) => Some(m(key.get).toString)
+              case Some(o: Any) => Some(o.toString)
+              case l: Iterable[Any] => Some(l.mkString(","))
+              case a: Any => Some(a.toString)
+              case _ => None
             })
           } else {
-            name -> ""
+            name -> None
           }
         } catch {
-          case e: NoSuchFieldException => warn("No field found with the name %s on event %s".format(name, event), e); name -> ""
-          case e => warn(e); name -> ""
+          case e: NoSuchFieldException => warn("No field found with the name %s on event %s (exception: %s)".format(name, event, e.getMessage)); name -> None
+          case e => warn(e); name -> None
         }
+      }.collect {
+        case (key, Some(value)) => (key -> value)
       }.toMap
       
       storeEventTimeline(mutator, event, new BasicKey(message.channel, Some(idx)), timeuuid)
       storeEventCounters(mutator, event, new BasicKey(message.channel, Some(idx)))
       mutator.incrementCounter(new IndexKey(message.channel, idx.keys).keyValue, INDEX_CF, idx.values.toString, 1)
-      
     }
 
     // add latency (deprecated)
